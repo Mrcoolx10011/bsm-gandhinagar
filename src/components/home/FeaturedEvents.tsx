@@ -1,0 +1,129 @@
+import React from 'react';
+import { Calendar, MapPin, Clock, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const events = [
+  {
+    id: 1,
+    title: 'Community Health Camp',
+    date: '2024-02-15',
+    time: '9:00 AM - 5:00 PM',
+    location: 'Community Center, Downtown',
+    image: 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=400',
+    description: 'Free health checkups and medical consultations for the community.',
+    category: 'Healthcare'
+  },
+  {
+    id: 2,
+    title: 'Education Workshop',
+    date: '2024-02-20',
+    time: '2:00 PM - 6:00 PM',
+    location: 'Local School, Main Street',
+    image: 'https://images.pexels.com/photos/6646919/pexels-photo-6646919.jpeg?auto=compress&cs=tinysrgb&w=400',
+    description: 'Skills development workshop for underprivileged children.',
+    category: 'Education'
+  },
+  {
+    id: 3,
+    title: 'Environmental Cleanup',
+    date: '2024-02-25',
+    time: '8:00 AM - 12:00 PM',
+    location: 'City Park, Green Avenue',
+    image: 'https://images.pexels.com/photos/6646917/pexels-photo-6646917.jpeg?auto=compress&cs=tinysrgb&w=400',
+    description: 'Join us in cleaning and beautifying our local park.',
+    category: 'Environment'
+  }
+];
+
+export const FeaturedEvents: React.FC = () => {
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-4"
+          >
+            Upcoming Events
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
+            Join us in our upcoming events and be part of positive change
+          </motion.p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          {events.map((event, index) => (
+            <motion.div
+              key={event.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+            >
+              <img
+                src={event.image}
+                alt={event.title}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="bg-primary-100 text-primary-800 text-xs font-semibold px-2 py-1 rounded">
+                    {event.category}
+                  </span>
+                  <div className="flex items-center text-gray-500 text-sm">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {new Date(event.date).toLocaleDateString()}
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {event.title}
+                </h3>
+                
+                <p className="text-gray-600 text-sm mb-4">
+                  {event.description}
+                </p>
+                
+                <div className="space-y-2 text-sm text-gray-500 mb-4">
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-2" />
+                    {event.time}
+                  </div>
+                  <div className="flex items-center">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    {event.location}
+                  </div>
+                </div>
+                
+                <button className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
+                  <span>Learn More</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <motion.a
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            href="/events"
+            className="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+          >
+            <span>View All Events</span>
+            <ArrowRight className="w-5 h-5" />
+          </motion.a>
+        </div>
+      </div>
+    </section>
+  );
+};
