@@ -1,17 +1,132 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Eye, Calendar, MapPin, Users, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAdminStore, Event } from '../../store/adminStore';
 import { EventForm } from './EventForm';
 import toast from 'react-hot-toast';
 
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  image: string;
+  gallery?: string[];
+  attendees: number;
+  maxAttendees: number;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const EventsManagement: React.FC = () => {
-  const { events, addEvent, updateEvent, deleteEvent } = useAdminStore();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | undefined>();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
+  // Fetch events from API
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const getAuthToken = () => {
+    return localStorage.getItem('token') || localStorage.getItem('adminToken');
+  };
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/events');
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data);
+      } else {
+        toast.error('Failed to fetch events');
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast.error('Error fetching events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const apiAddEvent = async (eventData: Omit<Event, 'id'>) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(eventData)
+      });
+
+      if (response.ok) {
+        const newEvent = await response.json();
+        setEvents(prev => [...prev, newEvent]);
+        return newEvent;
+      } else {
+        throw new Error('Failed to create event');
+      }
+    } catch (error) {
+      console.error('Error creating event:', error);
+      throw error;
+    }
+  };
+
+  const apiUpdateEvent = async (id: string, eventData: Partial<Event>) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`/api/events/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(eventData)
+      });
+
+      if (response.ok) {
+        const updatedEvent = await response.json();
+        setEvents(prev => prev.map(event => event.id === id ? updatedEvent : event));
+        return updatedEvent;
+      } else {
+        throw new Error('Failed to update event');
+      }
+    } catch (error) {
+      console.error('Error updating event:', error);
+      throw error;
+    }
+  };
+
+  const apiDeleteEvent = async (id: string) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`/api/events/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setEvents(prev => prev.filter(event => event.id !== id));
+      } else {
+        throw new Error('Failed to delete event');
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      throw error;
+    }
+  };
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,20 +145,30 @@ export const EventsManagement: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleSaveEvent = (eventData: Omit<Event, 'id'> | Event) => {
-    if ('id' in eventData) {
-      updateEvent(eventData.id, eventData);
-      toast.success('Event updated successfully!');
-    } else {
-      addEvent(eventData);
-      toast.success('Event created successfully!');
+  const handleSaveEvent = async (eventData: Omit<Event, 'id'> | Event) => {
+    try {
+      if ('id' in eventData) {
+        await apiUpdateEvent(eventData.id, eventData);
+        toast.success('Event updated successfully!');
+      } else {
+        await apiAddEvent(eventData);
+        toast.success('Event created successfully!');
+      }
+      setShowForm(false);
+      setEditingEvent(undefined);
+    } catch (error) {
+      toast.error('Failed to save event');
     }
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
-      deleteEvent(id);
-      toast.success('Event deleted successfully!');
+      try {
+        await apiDeleteEvent(id);
+        toast.success('Event deleted successfully!');
+      } catch (error) {
+        toast.error('Failed to delete event');
+      }
     }
   };
 
@@ -64,8 +189,15 @@ export const EventsManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">Loading events...</span>
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Events Management</h1>
           <p className="mt-1 text-sm text-gray-500">
@@ -101,9 +233,9 @@ export const EventsManagement: React.FC = () => {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Upcoming</p>
+              <p className="text-sm font-medium text-gray-500">Active</p>
               <p className="text-2xl font-bold text-gray-900">
-                {events.filter(e => e.status === 'upcoming').length}
+                {events.filter(e => e.status === 'active').length}
               </p>
             </div>
           </div>
@@ -117,7 +249,7 @@ export const EventsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Attendees</p>
               <p className="text-2xl font-bold text-gray-900">
-                {events.reduce((sum, event) => sum + event.attendees.length, 0)}
+                {events.reduce((sum, event) => sum + (event.attendees || 0), 0)}
               </p>
             </div>
           </div>
@@ -129,9 +261,9 @@ export const EventsManagement: React.FC = () => {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Completed</p>
+              <p className="text-sm font-medium text-gray-500">Inactive</p>
               <p className="text-2xl font-bold text-gray-900">
-                {events.filter(e => e.status === 'completed').length}
+                {events.filter(e => e.status === 'inactive').length}
               </p>
             </div>
           </div>
@@ -219,7 +351,7 @@ export const EventsManagement: React.FC = () => {
                 </div>
                 <div className="flex items-center">
                   <Users className="w-4 h-4 mr-2" />
-                  {event.attendees.length}/{event.maxAttendees} attendees
+                  {event.attendees || 0}/{event.maxAttendees} attendees
                 </div>
               </div>
               
@@ -227,7 +359,7 @@ export const EventsManagement: React.FC = () => {
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-primary-600 h-2 rounded-full"
-                    style={{ width: `${(event.attendees.length / event.maxAttendees) * 100}%` }}
+                    style={{ width: `${((event.attendees || 0) / event.maxAttendees) * 100}%` }}
                   ></div>
                 </div>
               </div>
@@ -266,7 +398,10 @@ export const EventsManagement: React.FC = () => {
           <EventForm
             event={editingEvent}
             onSave={handleSaveEvent}
-            onClose={() => setShowForm(false)}
+            onClose={() => {
+              setShowForm(false);
+              setEditingEvent(undefined);
+            }}
           />
         )}
       </AnimatePresence>
@@ -334,38 +469,23 @@ export const EventsManagement: React.FC = () => {
                     <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                       <div
                         className="bg-primary-600 h-3 rounded-full"
-                        style={{ width: `${(selectedEvent.attendees.length / selectedEvent.maxAttendees) * 100}%` }}
+                        style={{ width: `${((selectedEvent.attendees || 0) / selectedEvent.maxAttendees) * 100}%` }}
                       ></div>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {selectedEvent.attendees.length} / {selectedEvent.maxAttendees} attendees
+                      {selectedEvent.attendees || 0} / {selectedEvent.maxAttendees} attendees
                     </p>
                   </div>
                 </div>
 
-                {selectedEvent.attendees.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Registered Attendees</h4>
-                    <div className="max-h-40 overflow-y-auto">
-                      {selectedEvent.attendees.map((attendee, index) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <div>
-                            <p className="font-medium text-gray-900">{attendee.name}</p>
-                            <p className="text-sm text-gray-600">{attendee.email}</p>
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            {new Date(attendee.registeredAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Attendees list would go here when individual attendee tracking is implemented */}
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+        </>
+      )}
     </div>
   );
 };

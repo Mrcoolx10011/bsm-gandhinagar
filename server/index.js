@@ -1,15 +1,19 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { initDatabase } from '../lib/database.js';
+import { connectToDatabase } from '../lib/mongodb.js';
 
-// Import routes
-import authRoutes from './api/auth.js';
-import membersRoutes from './api/members.js';
-import eventsRoutes from './api/events.js';
-import donationsRoutes from './api/donations.js';
-import inquiriesRoutes from './api/inquiries.js';
+// Load environment variables
+dotenv.config();
+
+// Import routes (using MongoDB-based routes)
+import authRoutes from './routes/auth.js';
+import membersRoutes from './routes/members.js';
+import eventsRoutes from './routes/events.js';
+import donationsRoutes from './routes/donations.js';
+import inquiriesRoutes from './routes/inquiries.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,8 +26,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(join(__dirname, '../dist')));
 
-// Initialize database
-initDatabase()
+// Initialize MongoDB connection
+connectToDatabase()
   .then(() => {
     console.log('Database initialized successfully');
   })

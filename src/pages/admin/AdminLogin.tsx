@@ -29,9 +29,10 @@ export const AdminLogin: React.FC = () => {
         body: JSON.stringify(credentials),
       });
 
-      const data = await response.json();
-
+      // Check if response is ok before parsing JSON
       if (response.ok) {
+        const data = await response.json();
+        
         // Store the token
         localStorage.setItem('token', data.token);
         
@@ -40,11 +41,17 @@ export const AdminLogin: React.FC = () => {
         toast.success('Login successful!');
         navigate('/admin/dashboard');
       } else {
-        toast.error(data.message || 'Invalid credentials');
+        // Try to parse error response, but handle cases where it's not JSON
+        try {
+          const errorData = await response.json();
+          toast.error(errorData.message || 'Invalid credentials');
+        } catch (jsonError) {
+          toast.error(`Login failed: ${response.status} ${response.statusText}`);
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Login failed. Please try again.');
+      toast.error('Login failed. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, MapPin, Phone, Mail, ChevronDown, ChevronRight, MessageCircle, Filter, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 interface Member {
   id: string;
@@ -11,6 +12,8 @@ interface Member {
   location: string;
   image: string;
   bio: string;
+  dateJoined?: string;
+  status?: string;
 }
 
 interface LocationNode {
@@ -208,18 +211,42 @@ export const Members: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root']));
   const [viewMode, setViewMode] = useState<'tree' | 'grid'>('tree');
+  const [members, setMembers] = useState<Member[]>(mockMembers);
+
+  // Fetch members from API
+  const fetchMembers = async () => {
+    try {
+      const response = await fetch('/api/members/public');
+      if (response.ok) {
+        const data = await response.json();
+        setMembers(data);
+      } else {
+        console.error('Failed to fetch members');
+        // Use mock data as fallback
+        setMembers(mockMembers);
+      }
+    } catch (error) {
+      console.error('Error fetching members:', error);
+      // Use mock data as fallback
+      setMembers(mockMembers);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
   // Filter members based on search term
   const filteredMembers = useMemo(() => {
-    if (!searchTerm) return mockMembers;
+    if (!searchTerm) return members;
     
-    return mockMembers.filter(member =>
+    return members.filter(member =>
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.bio.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm]);
+  }, [searchTerm, members]);
 
   // Build location tree from filtered members
   const locationTree = useMemo(() => {
@@ -462,17 +489,17 @@ export const Members: React.FC = () => {
             transition={{ delay: 0.1 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
-            Connect with our dedicated team members across different states of India
+            Meet our dedicated team members working across India to create positive change in communities
           </motion.p>
         </div>
 
-        {/* Controls */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8"
-        >
+          {/* Controls */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8"
+          >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             {/* Search */}
             <div className="relative flex-1 max-w-md">

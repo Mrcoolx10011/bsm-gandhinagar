@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, CreditCard, Smartphone, QrCode, DollarSign, Users, Target, TrendingUp, CheckCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -46,6 +46,14 @@ interface DonationFormData {
   message: string;
 }
 
+interface RecentDonor {
+  id: string;
+  donorName: string;
+  amount: number;
+  date: string;
+  isAnonymous: boolean;
+}
+
 export const Donations: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -54,6 +62,8 @@ export const Donations: React.FC = () => {
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [recentDonors, setRecentDonors] = useState<RecentDonor[]>([]);
+  const [loadingDonors, setLoadingDonors] = useState(true);
   
   const [formData, setFormData] = useState<DonationFormData>({
     donorName: '',
@@ -67,6 +77,43 @@ export const Donations: React.FC = () => {
   });
 
   const totalAmount = selectedAmount || parseFloat(customAmount) || 0;
+
+  // Fetch recent completed donations
+  const fetchRecentDonors = async () => {
+    try {
+      setLoadingDonors(true);
+      const response = await fetch('/api/donations/recent');
+      
+      if (response.ok) {
+        const recentCompletedDonors = await response.json();
+        setRecentDonors(recentCompletedDonors);
+      }
+    } catch (error) {
+      console.error('Error fetching recent donors:', error);
+    } finally {
+      setLoadingDonors(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentDonors();
+  }, []);
+
+  // Helper function to format time ago
+  const getTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const donationDate = new Date(dateString);
+    const diffInHours = Math.floor((now.getTime() - donationDate.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return '1 day ago';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    
+    return donationDate.toLocaleDateString();
+  };
 
   const handleAmountSelect = (amount: number) => {
     setSelectedAmount(amount);
@@ -116,40 +163,54 @@ export const Donations: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate successful payment
-      const transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Here you would typically send the data to your backend
-      console.log('Donation submitted:', {
-        ...formData,
-        transactionId,
-        status: 'completed',
-        date: new Date().toISOString()
+      // Send donation data to backend API
+      const response = await fetch('/api/donations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          donorName: formData.isAnonymous ? 'Anonymous' : formData.donorName,
+          email: formData.email,
+          phone: formData.phone,
+          amount: formData.amount,
+          campaign: formData.campaign,
+          paymentMethod: formData.paymentMethod,
+          isAnonymous: formData.isAnonymous,
+          message: formData.message
+        }),
       });
 
-      setShowDonationForm(false);
-      setShowSuccessModal(true);
-      toast.success('Donation successful! Thank you for your contribution.');
-      
-      // Reset form
-      setFormData({
-        donorName: '',
-        email: '',
-        phone: '',
-        amount: 0,
-        campaign: 'Education for All',
-        paymentMethod: 'card',
-        isAnonymous: false,
-        message: ''
-      });
-      setSelectedAmount(null);
-      setCustomAmount('');
-      
+      if (response.ok) {
+        await response.json();
+        
+        setShowDonationForm(false);
+        setShowSuccessModal(true);
+        toast.success('Donation successful! Thank you for your contribution.');
+        
+        // Refresh recent donors list
+        fetchRecentDonors();
+        
+        // Reset form
+        setFormData({
+          donorName: '',
+          email: '',
+          phone: '',
+          amount: 0,
+          campaign: 'Education for All',
+          paymentMethod: 'card',
+          isAnonymous: false,
+          message: ''
+        });
+        setSelectedAmount(null);
+        setCustomAmount('');
+      } else {
+        const errorData = await response.json();
+        toast.error(`Failed to process donation: ${errorData.message || 'Unknown error'}`);
+      }
     } catch (error) {
-      toast.error('Payment failed. Please try again.');
+      console.error('Error submitting donation:', error);
+      toast.error('Failed to process donation. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -383,22 +444,27 @@ export const Donations: React.FC = () => {
                 Recent Donors
               </h3>
               <div className="space-y-3">
-                {[
-                  { name: 'Anonymous', amount: 100, time: '2 hours ago' },
-                  { name: 'Rajesh K.', amount: 50, time: '5 hours ago' },
-                  { name: 'Priya P.', amount: 250, time: '1 day ago' },
-                  { name: 'Anonymous', amount: 75, time: '2 days ago' },
-                ].map((donor, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium text-gray-900">{donor.name}</div>
-                      <div className="text-sm text-gray-500">{donor.time}</div>
-                    </div>
-                    <div className="font-semibold text-blue-600">
-                      ₹{donor.amount}
-                    </div>
+                {loadingDonors ? (
+                  <div className="text-center text-gray-500 py-4">
+                    Loading recent donors...
                   </div>
-                ))}
+                ) : recentDonors.length > 0 ? (
+                  recentDonors.map((donor) => (
+                    <div key={donor.id} className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium text-gray-900">{donor.donorName}</div>
+                        <div className="text-sm text-gray-500">{getTimeAgo(donor.date)}</div>
+                      </div>
+                      <div className="font-semibold text-blue-600">
+                        ₹{donor.amount.toLocaleString()}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 py-4">
+                    No recent donations yet
+                  </div>
+                )}
               </div>
             </div>
           </div>

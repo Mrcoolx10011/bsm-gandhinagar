@@ -1,41 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const events = [
-  {
-    id: 1,
-    title: 'Community Health Camp',
-    date: '2024-02-15',
-    time: '9:00 AM - 5:00 PM',
-    location: 'Community Center, Downtown',
-    image: 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=400',
-    description: 'Free health checkups and medical consultations for the community.',
-    category: 'Healthcare'
-  },
-  {
-    id: 2,
-    title: 'Education Workshop',
-    date: '2024-02-20',
-    time: '2:00 PM - 6:00 PM',
-    location: 'Local School, Main Street',
-    image: 'https://images.pexels.com/photos/6646919/pexels-photo-6646919.jpeg?auto=compress&cs=tinysrgb&w=400',
-    description: 'Skills development workshop for underprivileged children.',
-    category: 'Education'
-  },
-  {
-    id: 3,
-    title: 'Environmental Cleanup',
-    date: '2024-02-25',
-    time: '8:00 AM - 12:00 PM',
-    location: 'City Park, Green Avenue',
-    image: 'https://images.pexels.com/photos/6646917/pexels-photo-6646917.jpeg?auto=compress&cs=tinysrgb&w=400',
-    description: 'Join us in cleaning and beautifying our local park.',
-    category: 'Environment'
-  }
-];
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  image: string;
+  gallery?: string[];
+  attendees: number;
+  maxAttendees: number;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export const FeaturedEvents: React.FC = () => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUpcomingEvents();
+  }, []);
+
+  const fetchUpcomingEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/events?upcoming=true');
+      if (response.ok) {
+        const data = await response.json();
+        // Show only first 3 events for featured section
+        setEvents(data.slice(0, 3));
+      } else {
+        console.error('Failed to fetch events');
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Calendar, Clock, MapPin, Tag, Users, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Event } from '../../store/adminStore';
+
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  image: string;
+  gallery?: string[];
+  attendees: number;
+  maxAttendees: number;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 interface EventFormProps {
   event?: Event;
@@ -16,23 +32,42 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
     date: '',
     time: '',
     location: '',
-    category: 'Community',
+    category: 'Healthcare',
     image: '',
     gallery: [] as string[],
-    attendees: [] as Array<{ name: string; email: string; phone: string; registeredAt: string }>,
+    attendees: 0,
     maxAttendees: 50,
-    status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
+    status: 'active' as 'active' | 'inactive'
   });
 
   useEffect(() => {
     if (event) {
-      setFormData(event);
+      setFormData({
+        title: event.title,
+        description: event.description,
+        date: event.date,
+        time: event.time,
+        location: event.location,
+        category: event.category,
+        image: event.image,
+        gallery: event.gallery || [],
+        attendees: event.attendees,
+        maxAttendees: event.maxAttendees,
+        status: event.status
+      });
     }
   }, [event]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    if (event) {
+      // Update existing event
+      onSave({ ...formData, id: event.id });
+    } else {
+      // Create new event
+      onSave(formData);
+    }
     onClose();
   };
 
@@ -44,7 +79,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
     }));
   };
 
-  const categories = ['Healthcare', 'Education', 'Environment', 'Community', 'Other'];
+  const categories = ['Healthcare', 'Education', 'Environment', 'Community Development', 'Emergency Relief'];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -190,10 +225,8 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
-                  <option value="upcoming">Upcoming</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
             </div>
