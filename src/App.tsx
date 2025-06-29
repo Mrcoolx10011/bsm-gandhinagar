@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Header } from './components/layout/Header';
@@ -32,18 +31,60 @@ function App() {
           
           {/* Public Routes - With Header/Footer */}
           <Route 
-            path="/*" 
+            path="/" 
             element={
               <>
                 <Header />
                 <main className="flex-1">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/members" element={<Members />} />
-                    <Route path="/events" element={<Events />} />
-                    <Route path="/donations" element={<Donations />} />
-                    <Route path="/contact" element={<Contact />} />
-                  </Routes>
+                  <Home />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/members" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Members />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/events" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Events />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/donations" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Donations />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/contact" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Contact />
                 </main>
                 <Footer />
               </>

@@ -21,23 +21,29 @@ export const AdminLogin: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock authentication - in real app, this would be an API call
-      if (credentials.username === 'admin' && credentials.password === 'admin123') {
-        login({
-          id: '1',
-          username: 'admin',
-          email: 'admin@ngofoundation.org',
-          role: 'admin'
-        });
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store the token
+        localStorage.setItem('token', data.token);
+        
+        // Update auth store
+        login(data.user);
         toast.success('Login successful!');
         navigate('/admin/dashboard');
       } else {
-        toast.error('Invalid credentials');
+        toast.error(data.message || 'Invalid credentials');
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
     } finally {
       setIsLoading(false);
