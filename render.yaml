@@ -3,11 +3,15 @@ services:
     name: bsm-website
     env: node
     plan: free
-    buildCommand: ./render-build.sh
+    region: oregon
+    buildCommand: npm ci && npm run build
     startCommand: npm start
+    numInstances: 1
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 18
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
