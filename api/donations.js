@@ -1,13 +1,39 @@
 import { connectToDatabase } from './_lib/mongodb.js';
 import { ObjectId } from 'mongodb';
+import jwt from 'jsonwebtoken';
 
-// Middleware for JWT verification
+// Improved JWT verification
 const verifyToken = (token) => {
-  // Simple token validation for Vercel serverless
-  return token === process.env.ADMIN_TOKEN || token?.includes('Bearer');
+  if (!token) return false;
+  
+  try {
+    // Remove Bearer prefix if present
+    const cleanToken = token.replace('Bearer ', '');
+    
+    // Verify JWT token
+    const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET || 'fallback-secret');
+    return decoded;
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return false;
+  }
 };
 
 export default async function handler(req, res) {
+  // Add CORS and cache control headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   try {
     const db = await connectToDatabase();
     const donationsCollection = db.collection('donations');
