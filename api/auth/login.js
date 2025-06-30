@@ -3,6 +3,17 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
+  // Add CORS headers for Vercel
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -14,6 +25,27 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
+    // For demo purposes, check against environment variables first
+    if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+      const token = jwt.sign(
+        { id: 'admin', username: username },
+        process.env.JWT_SECRET || 'fallback-secret',
+        { expiresIn: '24h' }
+      );
+
+      return res.status(200).json({
+        message: 'Login successful',
+        token,
+        user: {
+          id: 'admin',
+          username: username,
+          email: process.env.ADMIN_EMAIL || 'admin@bsmgandhinagar.org',
+          role: 'admin'
+        }
+      });
+    }
+
+    // Also check database
     const db = await connectToDatabase();
     const usersCollection = db.collection('users');
 
@@ -33,7 +65,7 @@ export default async function handler(req, res) {
     // Generate JWT token
     const token = jwt.sign(
       { id: user._id.toString(), username: user.username },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '24h' }
     );
 
@@ -44,11 +76,11 @@ export default async function handler(req, res) {
         id: user._id.toString(),
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role || 'admin'
       }
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
