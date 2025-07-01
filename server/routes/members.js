@@ -26,7 +26,7 @@ router.get('/public', async (req, res) => {
       role: member.membershipType || 'Member',
       location: member.address || 'India',
       bio: `${member.membershipType || 'Member'} since ${new Date(member.joinDate || member.createdAt).getFullYear()}`,
-      image: member.image || '',
+      image: member.profileImage || '',
       dateJoined: member.joinDate || member.createdAt,
       status: member.status
     }));

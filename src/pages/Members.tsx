@@ -378,11 +378,23 @@ export const Members: React.FC = () => {
                 >
                   <div className="flex items-center space-x-4">
                     <div className="relative">
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-primary-200 transition-all duration-200"
-                      />
+                      {member.image ? (
+                        <img
+                          src={member.image}
+                          alt={member.name}
+                          className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-primary-200 transition-all duration-200"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=6366f1&color=ffffff`;
+                          }}
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center ring-2 ring-gray-100 group-hover:ring-primary-200 transition-all duration-200">
+                          <span className="text-white font-semibold text-lg">
+                            {member.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
                     
@@ -436,11 +448,23 @@ export const Members: React.FC = () => {
           onClick={() => setSelectedMember(member)}
         >
           <div className="text-center mb-4">
-            <img
-              src={member.image}
-              alt={member.name}
-              className="w-20 h-20 rounded-full object-cover mx-auto mb-3 ring-2 ring-gray-100"
-            />
+            {member.image ? (
+              <img
+                src={member.image}
+                alt={member.name}
+                className="w-20 h-20 rounded-full object-cover mx-auto mb-3 ring-2 ring-gray-100"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=6366f1&color=ffffff`;
+                }}
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center mx-auto mb-3 ring-2 ring-gray-100">
+                <span className="text-white font-semibold text-2xl">
+                  {member.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
             <h3 className="font-semibold text-gray-900">{member.name}</h3>
             <p className="text-sm text-gray-600">{member.role}</p>
             <p className="text-xs text-gray-500 mt-1">{member.location}</p>
@@ -583,11 +607,23 @@ export const Members: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="text-center mb-6">
-                  <img
-                    src={selectedMember.image}
-                    alt={selectedMember.name}
-                    className="w-24 h-24 rounded-full object-cover mx-auto mb-4 ring-4 ring-primary-100"
-                  />
+                  {selectedMember.image ? (
+                    <img
+                      src={selectedMember.image}
+                      alt={selectedMember.name}
+                      className="w-24 h-24 rounded-full object-cover mx-auto mb-4 ring-4 ring-primary-100"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedMember.name)}&background=6366f1&color=ffffff`;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center mx-auto mb-4 ring-4 ring-primary-100">
+                      <span className="text-white font-semibold text-3xl">
+                        {selectedMember.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <h3 className="text-2xl font-semibold text-gray-900">
                     {selectedMember.name}
                   </h3>
