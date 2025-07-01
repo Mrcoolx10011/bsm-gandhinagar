@@ -38,24 +38,16 @@ router.get('/', async (req, res) => {
 // POST /api/posts - Create new post (admin only)
 router.post('/', async (req, res) => {
   try {
-    console.log('POST /api/posts - Creating new post');
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
-    
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
-      console.log('No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    console.log('Token received:', token.substring(0, 20) + '...');
     const user = verifyToken(token);
     if (!user) {
-      console.log('Token verification failed');
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    console.log('User verified:', user);
     const { title, content, image, category, featured } = req.body;
     
     if (!title || !content) {
@@ -77,9 +69,7 @@ router.post('/', async (req, res) => {
       views: 0
     };
 
-    console.log('Creating post:', newPost);
     const result = await db.collection('posts').insertOne(newPost);
-    console.log('Post created with ID:', result.insertedId);
     
     res.status(201).json({ 
       message: 'Post created successfully',
@@ -87,7 +77,6 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating post:', error);
-    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Internal server error',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
