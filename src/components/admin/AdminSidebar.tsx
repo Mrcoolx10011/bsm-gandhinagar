@@ -12,7 +12,8 @@ import {
   ExternalLink,
   Home,
   Phone,
-  DollarSign
+  DollarSign,
+  Edit3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'Members', href: '/admin/members', icon: Users },
   { name: 'Events', href: '/admin/events', icon: Calendar },
   { name: 'Donations', href: '/admin/donations', icon: Heart },
+  { name: 'Posts', href: '/admin/posts', icon: Edit3 },
   { name: 'Messages', href: '/admin/inquiries', icon: MessageSquare },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
@@ -36,6 +38,7 @@ const frontendPages = [
   { name: 'Members', href: '/members', icon: Users },
   { name: 'Events', href: '/events', icon: Calendar },
   { name: 'Donations', href: '/donations', icon: DollarSign },
+  { name: 'Posts', href: '/posts', icon: Edit3 },
   { name: 'Contact', href: '/contact', icon: Phone },
 ];
 

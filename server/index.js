@@ -14,6 +14,7 @@ import membersRoutes from './routes/members.js';
 import eventsRoutes from './routes/events.js';
 import donationsRoutes from './routes/donations.js';
 import inquiriesRoutes from './routes/inquiries.js';
+import postsRoutes from './routes/posts.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,6 +42,7 @@ app.use('/api/members', membersRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/donations', donationsRoutes);
 app.use('/api/inquiries', inquiriesRoutes);
+app.use('/api/posts', postsRoutes);
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {

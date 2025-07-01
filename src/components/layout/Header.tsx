@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Users, Calendar, Phone } from 'lucide-react';
+import { Menu, X, Users, Calendar, Phone, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Header: React.FC = () => {
@@ -12,6 +12,7 @@ export const Header: React.FC = () => {
     { name: 'Members', href: '/members', icon: Users },
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'Donations', href: '/donations', icon: Users },
+    { name: 'Posts', href: '/posts', icon: Edit3 },
     { name: 'Contact', href: '/contact', icon: Phone },
   ];
 

@@ -6,6 +6,7 @@ import { Home } from './pages/Home';
 import { Members } from './pages/Members';
 import { Events } from './pages/Events';
 import { Donations } from './pages/Donations';
+import { Posts } from './pages/Posts';
 import { Contact } from './pages/Contact';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -73,6 +74,18 @@ function App() {
                 <Header />
                 <main className="flex-1">
                   <Donations />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/posts" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Posts />
                 </main>
                 <Footer />
               </>

@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 export const createJWTToken = (payload) => {
   return jwt.sign(
     payload,
-    process.env.JWT_SECRET || 'fallback-secret-key-for-development',
+    process.env.JWT_SECRET || 'fallback-secret',
     { expiresIn: '24h' }
   );
 };
@@ -16,7 +16,7 @@ export const verifyJWTToken = (token) => {
     const cleanToken = token.replace('Bearer ', '');
     
     // Verify JWT token
-    const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET || 'fallback-secret-key-for-development');
+    const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET || 'fallback-secret');
     return decoded;
   } catch (error) {
     console.error('Token verification error:', error);
