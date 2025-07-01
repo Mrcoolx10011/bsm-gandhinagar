@@ -14,6 +14,25 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Environment check endpoint - GET request
+  if (req.method === 'GET') {
+    const envStatus = {
+      timestamp: new Date().toISOString(),
+      hasDatabase: !!process.env.DATABASE_URL,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      hasAdminUsername: !!process.env.ADMIN_USERNAME,
+      hasAdminPassword: !!process.env.ADMIN_PASSWORD,
+      hasAdminEmail: !!process.env.ADMIN_EMAIL,
+      nodeEnv: process.env.NODE_ENV || 'not-set',
+      adminUsername: process.env.ADMIN_USERNAME || 'NOT_SET'
+    };
+    
+    return res.status(200).json({
+      message: 'Environment check completed',
+      environment: envStatus
+    });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
