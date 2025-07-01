@@ -16,10 +16,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1",
-      "headers": {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate"
-      }
+      "dest": "/api/$1"
     },
     {
       "handle": "filesystem"
