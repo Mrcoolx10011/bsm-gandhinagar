@@ -25,6 +25,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
+    // Check if environment variables are set
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET environment variable is not set');
+      return res.status(500).json({ message: 'Server configuration error: JWT_SECRET not set' });
+    }
+
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL environment variable is not set');
+      return res.status(500).json({ message: 'Server configuration error: DATABASE_URL not set' });
+    }
+
     // For demo purposes, check against environment variables first
     if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
       const token = jwt.sign(
@@ -81,6 +92,16 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    console.error('Environment check:', {
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      hasDatabase: !!process.env.DATABASE_URL,
+      hasAdminUsername: !!process.env.ADMIN_USERNAME,
+      hasAdminPassword: !!process.env.ADMIN_PASSWORD,
+      nodeEnv: process.env.NODE_ENV
+    });
+    res.status(500).json({ 
+      message: 'Internal server error', 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Server error' 
+    });
   }
 }
