@@ -3,6 +3,17 @@ import { Search, Plus, Edit, Trash2, Users, Phone, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
+// URL validation function
+const isValidImageUrl = (url: string): boolean => {
+  if (!url) return true; // Empty URL is valid (optional field)
+  try {
+    const urlObj = new URL(url);
+    return ['http:', 'https:'].includes(urlObj.protocol);
+  } catch {
+    return false;
+  }
+};
+
 interface Member {
   id: string;
   name: string;
@@ -12,6 +23,7 @@ interface Member {
   membershipType: string;
   status: string;
   joinDate: string;
+  profileImage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,7 +43,8 @@ export const MembersManagement: React.FC = () => {
     phone: '',
     address: '',
     membershipType: 'regular',
-    status: 'active'
+    status: 'active',
+    profileImage: ''
   });
 
   // Fetch members from API
@@ -79,7 +92,8 @@ export const MembersManagement: React.FC = () => {
       phone: '',
       address: '',
       membershipType: 'regular',
-      status: 'active'
+      status: 'active',
+      profileImage: ''
     });
     setShowForm(true);
   };
@@ -92,7 +106,8 @@ export const MembersManagement: React.FC = () => {
       phone: member.phone,
       address: member.address,
       membershipType: member.membershipType,
-      status: member.status
+      status: member.status,
+      profileImage: member.profileImage || ''
     });
     setShowForm(true);
   };
@@ -100,12 +115,21 @@ export const MembersManagement: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Basic URL validation (less strict)
+    if (formData.profileImage && formData.profileImage.trim() !== '' && !formData.profileImage.startsWith('http')) {
+      toast.error('Profile Image URL must start with http:// or https://');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
       
       if (editingMember) {
         // Update existing member
-        const response = await fetch(`/api/members?id=${editingMember.id}`, {
+        console.log('Updating member ID:', editingMember.id);
+        console.log('Form data to send:', formData);
+        
+        const response = await fetch(`/api/members/${editingMember.id}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -114,12 +138,18 @@ export const MembersManagement: React.FC = () => {
           body: JSON.stringify(formData),
         });
 
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
+          const responseData = await response.json();
+          console.log('Update successful:', responseData);
           toast.success('Member updated successfully!');
           fetchMembers();
           setShowForm(false);
         } else {
-          toast.error('Failed to update member');
+          const errorData = await response.json();
+          console.error('Update error response:', errorData);
+          toast.error(errorData.message || 'Failed to update member');
         }
       } else {
         // Create new member
@@ -151,7 +181,7 @@ export const MembersManagement: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/members?id=${id}`, {
+        const response = await fetch(`/api/members/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -303,9 +333,30 @@ export const MembersManagement: React.FC = () => {
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                      <div className="text-sm text-gray-500">{member.address}</div>
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        {member.profileImage ? (
+                          <img
+                            className="h-10 w-10 rounded-full object-cover"
+                            src={member.profileImage}
+                            alt={member.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=6366f1&color=ffffff`;
+                            }}
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {member.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                        <div className="text-sm text-gray-500">{member.address}</div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -404,6 +455,39 @@ export const MembersManagement: React.FC = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
                   rows={3}
                 />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Profile Image URL</label>
+                <input
+                  type="url"
+                  value={formData.profileImage}
+                  onChange={(e) => setFormData({...formData, profileImage: e.target.value})}
+                  placeholder="https://example.com/image.jpg"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500 ${
+                    formData.profileImage && !isValidImageUrl(formData.profileImage) 
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300'
+                  }`}
+                />
+                {formData.profileImage && isValidImageUrl(formData.profileImage) && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.profileImage}
+                      alt="Profile preview"
+                      className="w-16 h-16 rounded-full object-cover border border-gray-300"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                {formData.profileImage && !isValidImageUrl(formData.profileImage) && (
+                  <p className="mt-2 text-sm text-red-600">
+                    Invalid URL. Please enter a valid image URL.
+                  </p>
+                )}
               </div>
               
               <div>

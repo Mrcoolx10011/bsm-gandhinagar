@@ -34,10 +34,33 @@ export const MembersManagement: React.FC = () => {
     status: 'active'
   });
 
+  // Reset form data
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      membershipType: 'regular',
+      status: 'active'
+    });
+    setEditingMember(null);
+    setShowForm(false);
+  };
+
   // Fetch members from API
   const fetchMembers = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        toast.error('Authentication token not found. Please login again.');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Fetching members...');
+      
       const response = await fetch('/api/members', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -45,15 +68,21 @@ export const MembersManagement: React.FC = () => {
         },
       });
 
+      console.log('Fetch response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched members:', data.length);
         setMembers(data);
       } else {
-        toast.error('Failed to fetch members');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to fetch members' }));
+        console.error('Fetch error:', errorData);
+        toast.error(errorData.message || 'Failed to fetch members');
       }
     } catch (error) {
       console.error('Error fetching members:', error);
-      toast.error('Error fetching members');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Error fetching members: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -72,15 +101,7 @@ export const MembersManagement: React.FC = () => {
   });
 
   const handleAddMember = () => {
-    setEditingMember(null);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      membershipType: 'regular',
-      status: 'active'
-    });
+    resetForm();
     setShowForm(true);
   };
 
@@ -100,11 +121,36 @@ export const MembersManagement: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+    
+    if (!formData.email.trim()) {
+      toast.error('Email is required');
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
       
+      if (!token) {
+        toast.error('Authentication token not found. Please login again.');
+        return;
+      }
+      
       if (editingMember) {
         // Update existing member
+        console.log('Updating member:', editingMember.id, formData);
+        
         const response = await fetch(`/api/members?id=${editingMember.id}`, {
           method: 'PUT',
           headers: {
@@ -114,15 +160,23 @@ export const MembersManagement: React.FC = () => {
           body: JSON.stringify(formData),
         });
 
+        console.log('Update response status:', response.status);
+        
         if (response.ok) {
+          const result = await response.json();
+          console.log('Update result:', result);
           toast.success('Member updated successfully!');
-          fetchMembers();
-          setShowForm(false);
+          await fetchMembers();
+          resetForm();
         } else {
-          toast.error('Failed to update member');
+          const errorData = await response.json().catch(() => ({ message: 'Failed to update member' }));
+          console.error('Update error:', errorData);
+          toast.error(errorData.message || 'Failed to update member');
         }
       } else {
         // Create new member
+        console.log('Creating new member:', formData);
+        
         const response = await fetch('/api/members', {
           method: 'POST',
           headers: {
@@ -132,18 +186,24 @@ export const MembersManagement: React.FC = () => {
           body: JSON.stringify(formData),
         });
 
+        console.log('Create response status:', response.status);
+
         if (response.ok) {
+          const result = await response.json();
+          console.log('Create result:', result);
           toast.success('Member added successfully!');
-          fetchMembers();
-          setShowForm(false);
+          await fetchMembers();
+          resetForm();
         } else {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ message: 'Failed to add member' }));
+          console.error('Create error:', errorData);
           toast.error(errorData.message || 'Failed to add member');
         }
       }
     } catch (error) {
       console.error('Error saving member:', error);
-      toast.error('Error saving member');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Error saving member: ${errorMessage}`);
     }
   };
 
@@ -151,6 +211,14 @@ export const MembersManagement: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
         const token = localStorage.getItem('token');
+        
+        if (!token) {
+          toast.error('Authentication token not found. Please login again.');
+          return;
+        }
+        
+        console.log('Deleting member:', id);
+        
         const response = await fetch(`/api/members?id=${id}`, {
           method: 'DELETE',
           headers: {
@@ -158,15 +226,22 @@ export const MembersManagement: React.FC = () => {
           },
         });
 
+        console.log('Delete response status:', response.status);
+
         if (response.ok) {
+          const result = await response.json();
+          console.log('Delete result:', result);
           toast.success('Member deleted successfully!');
-          fetchMembers();
+          await fetchMembers();
         } else {
-          toast.error('Failed to delete member');
+          const errorData = await response.json().catch(() => ({ message: 'Failed to delete member' }));
+          console.error('Delete error:', errorData);
+          toast.error(errorData.message || 'Failed to delete member');
         }
       } catch (error) {
         console.error('Error deleting member:', error);
-        toast.error('Error deleting member');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        toast.error(`Error deleting member: ${errorMessage}`);
       }
     }
   };
@@ -434,7 +509,7 @@ export const MembersManagement: React.FC = () => {
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={resetForm}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
                 >
                   Cancel

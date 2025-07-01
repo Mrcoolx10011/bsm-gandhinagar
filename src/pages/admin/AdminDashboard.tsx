@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { DashboardOverview } from '../../components/admin/DashboardOverview';
-import { MembersManagement } from '../../components/admin/MembersManagement';
+import { MembersManagement } from '../../components/admin/MembersManagement-new';
 import { EventsManagement } from '../../components/admin/EventsManagement';
 import { DonationsManagement } from '../../components/admin/DonationsManagement';
 import { InquiriesManagement } from '../../components/admin/InquiriesManagement';

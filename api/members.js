@@ -90,6 +90,18 @@ export default async function handler(req, res) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
+      // Validate required fields
+      const { name, email } = req.body;
+      if (!name || !email) {
+        return res.status(400).json({ message: 'Name and email are required' });
+      }
+
+      // Check if member with email already exists
+      const existingMember = await membersCollection.findOne({ email: email });
+      if (existingMember) {
+        return res.status(400).json({ message: 'Member with this email already exists' });
+      }
+
       const memberData = {
         ...req.body,
         createdAt: new Date(),
@@ -97,8 +109,12 @@ export default async function handler(req, res) {
         joinDate: new Date()
       };
 
+      console.log('Creating member:', memberData);
+
       const result = await membersCollection.insertOne(memberData);
       const newMember = await membersCollection.findOne({ _id: result.insertedId });
+
+      console.log('Created member:', newMember);
 
       res.status(201).json({
         id: newMember._id.toString(),
@@ -113,15 +129,29 @@ export default async function handler(req, res) {
       }
 
       const { id } = req.query;
+      
+      if (!id) {
+        return res.status(400).json({ message: 'Member ID is required' });
+      }
+
+      // Validate ObjectId format
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid member ID format' });
+      }
+
       const updateData = {
         ...req.body,
         updatedAt: new Date()
       };
 
+      console.log('Updating member:', id, updateData);
+
       const result = await membersCollection.updateOne(
         { _id: new ObjectId(id) },
         { $set: updateData }
       );
+
+      console.log('Update result:', result);
 
       if (result.matchedCount === 0) {
         return res.status(404).json({ message: 'Member not found' });
@@ -141,7 +171,21 @@ export default async function handler(req, res) {
       }
 
       const { id } = req.query;
+      
+      if (!id) {
+        return res.status(400).json({ message: 'Member ID is required' });
+      }
+
+      // Validate ObjectId format
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid member ID format' });
+      }
+
+      console.log('Deleting member:', id);
+
       const result = await membersCollection.deleteOne({ _id: new ObjectId(id) });
+
+      console.log('Delete result:', result);
 
       if (result.deletedCount === 0) {
         return res.status(404).json({ message: 'Member not found' });
@@ -153,6 +197,22 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('Members API error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+      if (error.code === 11000) {
+        return res.status(400).json({ message: 'Duplicate entry detected' });
+      }
+    }
+    
+    // Handle ObjectId conversion errors
+    if (error.message && error.message.includes('ObjectId')) {
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
+    
+    res.status(500).json({ 
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }

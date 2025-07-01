@@ -75,6 +75,7 @@ router.get('/', auth, async (req, res) => {
       membershipType: member.membershipType,
       status: member.status,
       joinDate: member.joinDate,
+      profileImage: member.profileImage || '',
       createdAt: member.createdAt,
       updatedAt: member.updatedAt
     }));
@@ -100,7 +101,7 @@ router.post('/', auth, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, phone, address, membershipType } = req.body;
+    const { name, email, phone, address, membershipType, profileImage } = req.body;
 
     const db = await connectToDatabase();
     const membersCollection = db.collection('members');
@@ -118,6 +119,7 @@ router.post('/', auth, [
       address,
       membershipType,
       status: 'active',
+      profileImage: profileImage || '',
       joinDate: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -153,7 +155,7 @@ router.put('/:id', auth, [
     }
 
     const { id } = req.params;
-    const { name, email, phone, address, membershipType, status } = req.body;
+    const { name, email, phone, address, membershipType, status, profileImage } = req.body;
 
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid member ID' });
@@ -169,6 +171,7 @@ router.put('/:id', auth, [
       address,
       membershipType,
       status,
+      profileImage: profileImage || '',
       updatedAt: new Date().toISOString()
     };
 
