@@ -4,6 +4,7 @@ import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
+import { useLogin } from '../../hooks/useApi';
 
 export const AdminLogin: React.FC = () => {
   const [credentials, setCredentials] = useState({
@@ -15,39 +16,28 @@ export const AdminLogin: React.FC = () => {
   
   const navigate = useNavigate();
   const login = useAuthStore(state => state.login);
+  const { login: apiLogin } = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      // Check if response is ok before parsing JSON
-      if (response.ok) {
-        const data = await response.json();
-        
+      console.log('🔐 Attempting login with:', { username: credentials.username });
+      
+      const result = await apiLogin(credentials);
+      
+      if (result.data && !result.error) {
         // Store the token
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('token', result.data.token);
         
         // Update auth store
-        login(data.user);
+        login(result.data.user);
+        
         toast.success('Login successful!');
         navigate('/admin/dashboard');
       } else {
-        // Try to parse error response, but handle cases where it's not JSON
-        try {
-          const errorData = await response.json();
-          toast.error(errorData.message || 'Invalid credentials');
-        } catch (jsonError) {
-          toast.error(`Login failed: ${response.status} ${response.statusText}`);
-        }
+        toast.error(result.error || 'Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);

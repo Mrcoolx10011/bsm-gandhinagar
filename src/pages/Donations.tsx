@@ -82,11 +82,13 @@ export const Donations: React.FC = () => {
   const fetchRecentDonors = async () => {
     try {
       setLoadingDonors(true);
-      const response = await fetch('/api/donations/recent');
+      const response = await fetch('/api/donations?recent=true');
       
       if (response.ok) {
         const recentCompletedDonors = await response.json();
         setRecentDonors(recentCompletedDonors);
+      } else {
+        console.error('Failed to fetch recent donors:', response.status);
       }
     } catch (error) {
       console.error('Error fetching recent donors:', error);

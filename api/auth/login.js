@@ -18,13 +18,16 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const envStatus = {
       timestamp: new Date().toISOString(),
-      hasDatabase: !!process.env.DATABASE_URL,
+      hasDatabase: !!(process.env.DATABASE_URL || process.env.MONGODB_URI || process.env.MONGO_URL),
       hasJwtSecret: !!process.env.JWT_SECRET,
       hasAdminUsername: !!process.env.ADMIN_USERNAME,
       hasAdminPassword: !!process.env.ADMIN_PASSWORD,
       hasAdminEmail: !!process.env.ADMIN_EMAIL,
       nodeEnv: process.env.NODE_ENV || 'not-set',
-      adminUsername: process.env.ADMIN_USERNAME || 'NOT_SET'
+      adminUsername: process.env.ADMIN_USERNAME || 'NOT_SET',
+      databaseVar: process.env.DATABASE_URL ? 'DATABASE_URL' : 
+                   process.env.MONGODB_URI ? 'MONGODB_URI' : 
+                   process.env.MONGO_URL ? 'MONGO_URL' : 'NONE'
     };
     
     return res.status(200).json({
@@ -50,9 +53,10 @@ export default async function handler(req, res) {
       return res.status(500).json({ message: 'Server configuration error: JWT_SECRET not set' });
     }
 
-    if (!process.env.DATABASE_URL) {
-      console.error('DATABASE_URL environment variable is not set');
-      return res.status(500).json({ message: 'Server configuration error: DATABASE_URL not set' });
+    const dbUri = process.env.DATABASE_URL || process.env.MONGODB_URI || process.env.MONGO_URL;
+    if (!dbUri) {
+      console.error('Database environment variable is not set (DATABASE_URL, MONGODB_URI, or MONGO_URL)');
+      return res.status(500).json({ message: 'Server configuration error: Database URL not set' });
     }
 
     // For demo purposes, check against environment variables first
@@ -113,7 +117,7 @@ export default async function handler(req, res) {
     console.error('Login error:', error);
     console.error('Environment check:', {
       hasJwtSecret: !!process.env.JWT_SECRET,
-      hasDatabase: !!process.env.DATABASE_URL,
+      hasDatabase: !!(process.env.DATABASE_URL || process.env.MONGODB_URI || process.env.MONGO_URL),
       hasAdminUsername: !!process.env.ADMIN_USERNAME,
       hasAdminPassword: !!process.env.ADMIN_PASSWORD,
       nodeEnv: process.env.NODE_ENV

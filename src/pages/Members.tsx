@@ -216,12 +216,34 @@ export const Members: React.FC = () => {
   // Fetch members from API
   const fetchMembers = async () => {
     try {
-      const response = await fetch('/api/members/public');
+      console.log('Fetching members from API...');
+      const response = await fetch('/api/members?public=true');
+      console.log('Members API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        setMembers(data);
+        console.log('Members API data:', data);
+        
+        // Transform the data to match the expected interface
+        const transformedMembers = data.map((member: any) => ({
+          id: member.id || member._id,
+          name: member.name,
+          role: member.role || member.membershipType || 'Member',
+          phone: member.phone,
+          email: member.email,
+          location: member.location || member.address || 'Location not specified',
+          image: member.image || member.profileImage || 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150',
+          bio: member.bio || `Member since ${new Date(member.joinDate || member.createdAt).getFullYear()}. Status: ${member.status}`,
+          dateJoined: member.dateJoined || member.joinDate || member.createdAt,
+          status: member.status
+        }));
+        
+        console.log('Transformed members:', transformedMembers);
+        setMembers(transformedMembers);
       } else {
-        console.error('Failed to fetch members');
+        console.error('Failed to fetch members:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         // Use mock data as fallback
         setMembers(mockMembers);
       }

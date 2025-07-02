@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - BSM Gandhinagar</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .log { background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🧪 BSM Gandhinagar API Test</h1>
+    
+    <div class="test-section">
+        <h3>Environment Check</h3>
+        <button onclick="testEnvironment()">Check Environment</button>
+        <div id="envResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Admin Login Test</h3>
+        <button onclick="testLogin()">Test Login (admin/admin123)</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Members API Test</h3>
+        <button onclick="testMembers()">Test Members API</button>
+        <div id="membersResult"></div>
+    </div>
+
+    <script>
+        let currentToken = null;
+
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            const logDiv = document.createElement('div');
+            logDiv.className = 'log ' + (isError ? 'error' : 'success');
+            logDiv.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            element.appendChild(logDiv);
+            element.scrollTop = element.scrollHeight;
+        }
+
+        async function testEnvironment() {
+            const resultDiv = document.getElementById('envResult');
+            resultDiv.innerHTML = '';
+            
+            try {
+                log('envResult', '🌍 Testing environment...');
+                
+                const response = await fetch('/api/auth/login', { method: 'GET' });
+                
+                log('envResult', `Response status: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('envResult', '✅ Environment check successful!');
+                    log('envResult', JSON.stringify(data.environment, null, 2));
+                } else {
+                    const errorText = await response.text();
+                    log('envResult', '❌ Environment check failed: ' + errorText, true);
+                }
+            } catch (error) {
+                log('envResult', '❌ Environment error: ' + error.message, true);
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '';
+            
+            try {
+                log('loginResult', '🔐 Testing login...');
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+
+                log('loginResult', `Response status: ${response.status}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentToken = data.token;
+                    localStorage.setItem('token', data.token);
+                    log('loginResult', '✅ Login successful!');
+                    log('loginResult', 'Token: ' + data.token.substring(0, 20) + '...');
+                    log('loginResult', 'User: ' + JSON.stringify(data.user));
+                } else {
+                    const errorText = await response.text();
+                    log('loginResult', '❌ Login failed: ' + errorText, true);
+                }
+            } catch (error) {
+                log('loginResult', '❌ Login error: ' + error.message, true);
+            }
+        }
+
+        async function testMembers() {
+            const resultDiv = document.getElementById('membersResult');
+            resultDiv.innerHTML = '';
+            
+            try {
+                const token = localStorage.getItem('token') || currentToken;
+                if (!token) {
+                    log('membersResult', '❌ No token found. Please login first.', true);
+                    return;
+                }
+
+                log('membersResult', '👥 Testing members API...');
+                
+                const response = await fetch('/api/members', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                log('membersResult', `Response status: ${response.status}`);
+
+                if (response.ok) {
+                    const members = await response.json();
+                    log('membersResult', `✅ Fetched ${Array.isArray(members) ? members.length : 'data'} members`);
+                    if (Array.isArray(members) && members.length > 0) {
+                        log('membersResult', 'First member: ' + JSON.stringify(members[0], null, 2));
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log('membersResult', '❌ Members test failed: ' + errorText, true);
+                }
+            } catch (error) {
+                log('membersResult', '❌ Members error: ' + error.message, true);
+            }
+        }
+
+        // Auto-test environment on page load
+        window.addEventListener('load', () => {
+            setTimeout(testEnvironment, 500);
+        });
+    </script>
+</body>
+</html>

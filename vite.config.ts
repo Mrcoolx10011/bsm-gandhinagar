@@ -23,10 +23,19 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
-      },
-    },
-  },
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('Proxy error - make sure Vercel dev server is running on port 3000:', err.message);
+          });
+          proxy.on('proxyReq', (_proxyReq, req, _res) => {
+            console.log('Proxying API request:', req.method, req.url);
+          });
+        },
+      }
+    }
+  }
 });

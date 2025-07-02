@@ -4,15 +4,16 @@ import bcrypt from 'bcryptjs';
 let client = null;
 let db = null;
 
-export async function connectToDatabase() {
+async function connectToDatabase() {
   if (db) {
     return db;
   }
 
   try {
-    const uri = process.env.DATABASE_URL;
+    // Check for multiple possible environment variable names
+    const uri = process.env.DATABASE_URL || process.env.MONGODB_URI || process.env.MONGO_URL;
     if (!uri) {
-      throw new Error('DATABASE_URL is not defined');
+      throw new Error('DATABASE_URL, MONGODB_URI, or MONGO_URL is not defined');
     }
 
     client = new MongoClient(uri);
@@ -62,5 +63,4 @@ async function initializeDefaultUser() {
   }
 }
 
-export { client, db };
-export default connectToDatabase;
+export { connectToDatabase, client, db };

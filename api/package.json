@@ -1,3 +1,14 @@
 {
-  "type": "commonjs"
+  "name": "bsm-api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "hello.js",
+  "dependencies": {
+    "mongodb": "^6.17.0",
+    "jsonwebtoken": "^9.0.1",
+    "bcryptjs": "^2.4.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

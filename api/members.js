@@ -50,7 +50,32 @@ export default async function handler(req, res) {
           .limit(12)
           .toArray();
 
-        const publicMembers = members.map(member => ({
+        // Generate avatar URL based on first letter of name
+        const generateAvatarUrl = (name) => {
+          if (!name) return 'https://ui-avatars.com/api/?name=U&background=random&color=fff&size=150';
+          
+          const firstLetter = name.charAt(0).toUpperCase();
+          const colors = [
+            '3B82F6', // blue
+            '10B981', // emerald
+            'F59E0B', // amber
+            'EF4444', // red
+            '8B5CF6', // violet
+            '06B6D4', // cyan
+            'F97316', // orange
+            '84CC16', // lime
+            'EC4899', // pink
+            '6366F1'  // indigo
+          ];
+          
+          // Use name length to pick a consistent color for each person
+          const colorIndex = name.length % colors.length;
+          const backgroundColor = colors[colorIndex];
+          
+          return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstLetter)}&background=${backgroundColor}&color=fff&size=150&font-size=0.6`;
+        };
+
+        const publicMembers = members.map((member) => ({
           id: member._id.toString(),
           name: member.name,
           email: member.email,
@@ -58,7 +83,7 @@ export default async function handler(req, res) {
           role: member.membershipType || 'Member',
           location: member.address || 'India',
           bio: `${member.membershipType || 'Member'} since ${new Date(member.joinDate || member.createdAt).getFullYear()}`,
-          image: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150',
+          image: member.profileImage || member.image || generateAvatarUrl(member.name),
           dateJoined: member.joinDate || member.createdAt,
           status: member.status
         }));
@@ -74,9 +99,35 @@ export default async function handler(req, res) {
 
         const members = await membersCollection.find({}).sort({ createdAt: -1 }).toArray();
         
+        // Generate avatar URL based on first letter of name
+        const generateAvatarUrl = (name) => {
+          if (!name) return 'https://ui-avatars.com/api/?name=U&background=random&color=fff&size=150';
+          
+          const firstLetter = name.charAt(0).toUpperCase();
+          const colors = [
+            '3B82F6', // blue
+            '10B981', // emerald
+            'F59E0B', // amber
+            'EF4444', // red
+            '8B5CF6', // violet
+            '06B6D4', // cyan
+            'F97316', // orange
+            '84CC16', // lime
+            'EC4899', // pink
+            '6366F1'  // indigo
+          ];
+          
+          // Use name length to pick a consistent color for each person
+          const colorIndex = name.length % colors.length;
+          const backgroundColor = colors[colorIndex];
+          
+          return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstLetter)}&background=${backgroundColor}&color=fff&size=150&font-size=0.6`;
+        };
+        
         const formattedMembers = members.map(member => ({
           id: member._id.toString(),
           ...member,
+          image: member.profileImage || member.image || generateAvatarUrl(member.name),
           createdAt: member.createdAt || new Date()
         }));
 
