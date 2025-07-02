@@ -80,27 +80,46 @@ export default async function handler(req, res) {
         res.status(200).json(formattedDonations);
       }
     } else if (req.method === 'POST') {
-      // Create new donation
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      if (!verifyToken(token)) {
-        return res.status(401).json({ message: 'Unauthorized' });
+      // Create new donation - Allow public submissions
+      const { donorName, email, amount, campaign, isAnonymous } = req.body;
+      
+      // Validate required fields
+      if (!donorName || !email || !amount) {
+        return res.status(400).json({ message: 'Donor name, email and amount are required' });
+      }
+
+      // Validate amount
+      if (amount <= 0) {
+        return res.status(400).json({ message: 'Amount must be greater than 0' });
       }
 
       const donationData = {
         ...req.body,
+        status: 'completed', // For demo purposes, mark as completed
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
+      console.log('Creating donation:', donationData);
+
       const result = await donationsCollection.insertOne(donationData);
       const newDonation = await donationsCollection.findOne({ _id: result.insertedId });
 
+      console.log('Created donation:', newDonation);
+
       res.status(201).json({
         id: newDonation._id.toString(),
-        ...newDonation
+        message: 'Donation created successfully',
+        donation: {
+          id: newDonation._id.toString(),
+          donorName: newDonation.donorName,
+          amount: newDonation.amount,
+          campaign: newDonation.campaign,
+          createdAt: newDonation.createdAt
+        }
       });
     } else if (req.method === 'PUT') {
-      // Update donation
+      // Update donation - Admin only
       const token = req.headers.authorization?.replace('Bearer ', '');
       if (!verifyToken(token)) {
         return res.status(401).json({ message: 'Unauthorized' });
