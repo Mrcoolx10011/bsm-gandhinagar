@@ -91,42 +91,8 @@ function testWithCurrentToken() {
   }
 }
 
-// Make functions available globally
-window.testAdminLogin = testAdminLogin;
-window.testApiCalls = testApiCalls;
-window.testWithCurrentToken = testWithCurrentToken;
-
-console.log('\n🎯 Debug functions available:');
-console.log('- testAdminLogin() - Test login and store token');
-console.log('- testWithCurrentToken() - Test API calls with current token');
-console.log('- testApiCalls(token) - Test API calls with specific token');
-
-// Auto-test with current token if available
-testWithCurrentToken();
-            console.log('❌ Delete failed:', errorText);
-          }
-        }
-      } else {
-        const errorText = await response.text();
-        console.log('❌ Members fetch failed:', errorText);
-      }
-    } catch (error) {
-      console.error('❌ API test error:', error);
-    }
-  }
-  
-  if (token) {
-    testDeleteAPI();
-  } else {
-    console.log('❌ No token found - please log in first');
-  }
-  
-} else {
-  console.log('❌ Not in browser environment');
-}
-
-// Helper function to manually check token
-window.debugToken = function() {
+// Helper function to check token validity
+function debugToken() {
   const token = localStorage.getItem('token');
   if (!token) {
     console.log('❌ No token in localStorage');
@@ -143,6 +109,19 @@ window.debugToken = function() {
   } catch (error) {
     console.log('❌ Invalid token format:', error);
   }
-};
+}
 
-console.log('💡 Run debugToken() to check your token manually');
+// Make functions available globally
+window.testAdminLogin = testAdminLogin;
+window.testApiCalls = testApiCalls;
+window.testWithCurrentToken = testWithCurrentToken;
+window.debugToken = debugToken;
+
+console.log('\n🎯 Debug functions available:');
+console.log('- testAdminLogin() - Test login and store token');
+console.log('- testWithCurrentToken() - Test API calls with current token');
+console.log('- testApiCalls(token) - Test API calls with specific token');
+console.log('- debugToken() - Check current token validity');
+
+// Auto-test with current token if available
+testWithCurrentToken();

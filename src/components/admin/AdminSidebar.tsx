@@ -27,6 +27,7 @@ const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Members', href: '/admin/members', icon: Users },
   { name: 'Events', href: '/admin/events', icon: Calendar },
+  { name: 'Campaigns', href: '/admin/campaigns', icon: DollarSign },
   { name: 'Donations', href: '/admin/donations', icon: Heart },
   { name: 'Posts', href: '/admin/posts', icon: Edit3 },
   { name: 'Messages', href: '/admin/inquiries', icon: MessageSquare },

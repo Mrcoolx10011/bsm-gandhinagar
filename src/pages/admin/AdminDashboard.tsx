@@ -4,6 +4,7 @@ import { AdminLayout } from '../../components/admin/AdminLayout';
 import { DashboardOverview } from '../../components/admin/DashboardOverview';
 import { MembersManagement } from '../../components/admin/MembersManagement-new';
 import { EventsManagement } from '../../components/admin/EventsManagement';
+import { CampaignsManagement } from '../../components/admin/CampaignsManagement';
 import { DonationsManagement } from '../../components/admin/DonationsManagement';
 import { InquiriesManagement } from '../../components/admin/InquiriesManagement';
 import { PostsManagement } from '../../components/admin/PostsManagement';
@@ -16,6 +17,7 @@ export const AdminDashboard: React.FC = () => {
         <Route path="/" element={<DashboardOverview />} />
         <Route path="/members" element={<MembersManagement />} />
         <Route path="/events" element={<EventsManagement />} />
+        <Route path="/campaigns" element={<CampaignsManagement />} />
         <Route path="/donations" element={<DonationsManagement />} />
         <Route path="/inquiries" element={<InquiriesManagement />} />
         <Route path="/posts" element={<PostsManagement />} />

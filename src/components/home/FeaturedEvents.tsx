@@ -30,13 +30,19 @@ export const FeaturedEvents: React.FC = () => {
   const fetchUpcomingEvents = async () => {
     try {
       setLoading(true);
+      console.log('Fetching upcoming events...');
       const response = await fetch('/api/events?upcoming=true');
+      console.log('Events API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Events API data:', data);
         // Show only first 3 events for featured section
         setEvents(data.slice(0, 3));
       } else {
-        console.error('Failed to fetch events');
+        console.error('Failed to fetch events:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -66,8 +72,21 @@ export const FeaturedEvents: React.FC = () => {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {events.map((event, index) => (
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading events...</span>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="text-center py-12">
+            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Upcoming Events</h3>
+            <p className="text-gray-600">Check back soon for new events!</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {events.map((event, index) => (
             <motion.div
               key={event.id}
               initial={{ opacity: 0, y: 30 }}
@@ -117,20 +136,22 @@ export const FeaturedEvents: React.FC = () => {
               </div>
             </motion.div>
           ))}
-        </div>
+            </div>
 
-        <div className="text-center">
-          <motion.a
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            href="/events"
-            className="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-          >
-            <span>View All Events</span>
-            <ArrowRight className="w-5 h-5" />
-          </motion.a>
-        </div>
+            <div className="text-center">
+              <motion.a
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                href="/events"
+                className="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+              >
+                <span>View All Events</span>
+                <ArrowRight className="w-5 h-5" />
+              </motion.a>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

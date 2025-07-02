@@ -49,6 +49,40 @@ Before running this project, make sure you have:
 
 ## 🚀 Installation & Setup
 
+1. Clone the repository
+   ```bash
+   git clone https://github.com/your-username/bsm-website.git
+   cd bsm-website
+   ```
+
+2. Install dependencies
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env` file in the root directory with the following variables:
+   ```
+   MONGODB_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret
+   ```
+
+4. Start the development servers (API server and Vite)
+   ```bash
+   # Option 1: Start both servers with one command
+   npm run dev:all
+   
+   # Option 2: Start servers separately in different terminals
+   # Terminal 1 - Start API server first:
+   npm run dev:api
+   
+   # Terminal 2 - Then start Vite server:
+   npm run dev:vite
+   ```
+
+5. Open your browser and navigate to `http://localhost:5173`
+
+> **Important**: Always start the API server (port 3000) before the Vite server (port 5173). See `DEVELOPMENT_WORKFLOW.md` for detailed instructions and troubleshooting.
+
 ### 1. Clone the Repository
 
 ```bash

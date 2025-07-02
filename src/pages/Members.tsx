@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Phone, Mail, ChevronDown, ChevronRight, MessageCircle, Filter, Users } from 'lucide-react';
+import { Search, MapPin, Phone, Mail, ChevronRight, MessageCircle, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
 
 interface Member {
   id: string;
@@ -384,7 +383,7 @@ export const Members: React.FC = () => {
               className="overflow-hidden"
             >
               {/* Child Nodes */}
-              {node.children.map((child, index) => 
+              {node.children.map((child) => 
                 renderTreeNode(child, `${nodeKey}-${child.name}`, depth + 1)
               )}
               

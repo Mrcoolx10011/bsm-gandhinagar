@@ -5,35 +5,16 @@ import toast from 'react-hot-toast';
 
 const donationAmounts = [25, 50, 100, 250, 500, 1000];
 
-const campaigns = [
-  {
-    id: '1',
-    title: 'Education for All',
-    description: 'Help us provide quality education to underprivileged children',
-    target: 50000,
-    raised: 32500,
-    donors: 145,
-    image: 'https://images.pexels.com/photos/6646919/pexels-photo-6646919.jpeg?auto=compress&cs=tinysrgb&w=400'
-  },
-  {
-    id: '2',
-    title: 'Healthcare Initiative',
-    description: 'Supporting community health programs and medical camps',
-    target: 30000,
-    raised: 18750,
-    donors: 89,
-    image: 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=400'
-  },
-  {
-    id: '3',
-    title: 'Environmental Conservation',
-    description: 'Protecting our environment through various green initiatives',
-    target: 20000,
-    raised: 15600,
-    donors: 67,
-    image: 'https://images.pexels.com/photos/6646917/pexels-photo-6646917.jpeg?auto=compress&cs=tinysrgb&w=400'
-  }
-];
+interface Campaign {
+  id: string;
+  title: string;
+  description: string;
+  target: number;
+  raised: number;
+  donors: number;
+  image: string;
+  category?: string;
+}
 
 interface DonationFormData {
   donorName: string;
@@ -64,6 +45,8 @@ export const Donations: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [recentDonors, setRecentDonors] = useState<RecentDonor[]>([]);
   const [loadingDonors, setLoadingDonors] = useState(true);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   
   const [formData, setFormData] = useState<DonationFormData>({
     donorName: '',
@@ -99,7 +82,29 @@ export const Donations: React.FC = () => {
 
   useEffect(() => {
     fetchRecentDonors();
+    fetchCampaigns();
   }, []);
+
+  // Fetch active campaigns with real donation data
+  const fetchCampaigns = async () => {
+    try {
+      setLoadingCampaigns(true);
+      const response = await fetch('/api/campaigns?active=true');
+      
+      if (response.ok) {
+        const campaignsData = await response.json();
+        setCampaigns(campaignsData);
+        console.log('Fetched campaigns:', campaignsData);
+      } else {
+        console.error('Failed to fetch campaigns:', response.status);
+        // Keep empty array as fallback
+      }
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+    } finally {
+      setLoadingCampaigns(false);
+    }
+  };
 
   // Helper function to format time ago
   const getTimeAgo = (dateString: string) => {
@@ -478,64 +483,75 @@ export const Donations: React.FC = () => {
             Active Campaigns
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {campaigns.map((campaign, index) => (
-              <motion.div
-                key={campaign.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-lg shadow-lg overflow-hidden"
-              >
-                <img
-                  src={campaign.image}
-                  alt={campaign.title}
-                  className="w-full h-48 object-cover"
-                />
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {campaign.title}
-                  </h3>
+          {loadingCampaigns ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading campaigns...</p>
+            </div>
+          ) : campaigns.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {campaigns.map((campaign, index) => (
+                <motion.div
+                  key={campaign.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="bg-white rounded-lg shadow-lg overflow-hidden"
+                >
+                  <img
+                    src={campaign.image}
+                    alt={campaign.title}
+                    className="w-full h-48 object-cover"
+                  />
                   
-                  <p className="text-gray-600 text-sm mb-4">
-                    {campaign.description}
-                  </p>
-                  
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm text-gray-600 mb-2">
-                      <span>Raised: ₹{campaign.raised.toLocaleString()}</span>
-                      <span>Goal: ₹{campaign.target.toLocaleString()}</span>
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {campaign.title}
+                    </h3>
+                    
+                    <p className="text-gray-600 text-sm mb-4">
+                      {campaign.description}
+                    </p>
+                    
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Raised: ₹{campaign.raised.toLocaleString()}</span>
+                        <span>Goal: ₹{campaign.target.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${Math.min((campaign.raised / campaign.target) * 100, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(campaign.raised / campaign.target) * 100}%` }}
-                      ></div>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-1" />
+                        {campaign.donors} donors
+                      </div>
+                      <div className="flex items-center">
+                        <TrendingUp className="w-4 h-4 mr-1" />
+                        {Math.round((campaign.raised / campaign.target) * 100)}% funded
+                      </div>
                     </div>
+                    
+                    <button 
+                      onClick={() => handleCampaignDonate(campaign.title)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
+                    >
+                      Donate to Campaign
+                    </button>
                   </div>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      {campaign.donors} donors
-                    </div>
-                    <div className="flex items-center">
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      {Math.round((campaign.raised / campaign.target) * 100)}% funded
-                    </div>
-                  </div>
-                  
-                  <button 
-                    onClick={() => handleCampaignDonate(campaign.title)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
-                  >
-                    Donate to Campaign
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No active campaigns available at the moment.</p>
+            </div>
+          )}
         </div>
 
         {/* Donation Form Modal */}

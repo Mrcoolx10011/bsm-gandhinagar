@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Connection Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    button {
+      margin: 10px 0;
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow: auto;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>API Connection Test</h1>
+  <p>This page tests the connection to API endpoints through the Vite proxy.</p>
+
+  <div>
+    <h2>Test Public API Endpoints</h2>
+    <button onclick="testPublicEndpoint('/api/simple-check')">Test Simple Check</button>
+    <button onclick="testPublicEndpoint('/api/members?public=true')">Test Public Members</button>
+    <pre id="publicResult">Results will appear here...</pre>
+  </div>
+
+  <div>
+    <h2>Test Authenticated API Endpoints</h2>
+    <button onclick="testAuthEndpoint('/api/members')">Test Members API</button>
+    <button onclick="testAuthEndpoint('/api/campaigns')">Test Campaigns API</button>
+    <button onclick="testAuthEndpoint('/api/donations')">Test Donations API</button>
+    <button onclick="testAuthEndpoint('/api/recent-activities')">Test Recent Activities</button>
+    <pre id="authResult">Results will appear here (requires authentication)...</pre>
+  </div>
+
+  <script>
+    async function testPublicEndpoint(url) {
+      const resultElement = document.getElementById('publicResult');
+      resultElement.innerHTML = 'Fetching data...';
+      
+      try {
+        const start = Date.now();
+        const response = await fetch(url);
+        const duration = Date.now() - start;
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultElement.innerHTML = `<span class="success">✅ Success (${duration}ms)</span>\n${JSON.stringify(data, null, 2)}`;
+        } else {
+          resultElement.innerHTML = `<span class="error">❌ Error ${response.status}: ${response.statusText} (${duration}ms)</span>\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<span class="error">❌ Fetch Error: ${error.message}</span>`;
+      }
+    }
+
+    async function testAuthEndpoint(url) {
+      const resultElement = document.getElementById('authResult');
+      resultElement.innerHTML = 'Fetching data...';
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        resultElement.innerHTML = '<span class="error">❌ No authentication token found in localStorage</span>\nPlease log in first.';
+        return;
+      }
+      
+      try {
+        const start = Date.now();
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const duration = Date.now() - start;
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultElement.innerHTML = `<span class="success">✅ Success (${duration}ms)</span>\n${JSON.stringify(data, null, 2)}`;
+        } else {
+          resultElement.innerHTML = `<span class="error">❌ Error ${response.status}: ${response.statusText} (${duration}ms)</span>\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<span class="error">❌ Fetch Error: ${error.message}</span>`;
+      }
+    }
+  </script>
+</body>
+</html>

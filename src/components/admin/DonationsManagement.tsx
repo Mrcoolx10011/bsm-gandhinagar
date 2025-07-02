@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Download, Eye, DollarSign, TrendingUp, Calendar, Filter, Plus, Edit, Trash2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { makeAuthenticatedRequest, handleApiError } from '../../utils/auth';
 
 interface Donation {
   id: string;
@@ -13,6 +14,7 @@ interface Donation {
   paymentMethod: string;
   transactionId: string;
   status: 'pending' | 'completed' | 'failed';
+  approved: boolean;
   isAnonymous: boolean;
   message: string;
   date: string;
@@ -25,6 +27,7 @@ export const DonationsManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [approvalFilter, setApprovalFilter] = useState('all');
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [editingDonation, setEditingDonation] = useState<Donation | null>(null);
@@ -37,30 +40,49 @@ export const DonationsManagement: React.FC = () => {
     campaign: '',
     paymentMethod: 'upi',
     isAnonymous: false,
+    approved: false,
     message: '',
     status: 'pending'
   });
 
+  // Helper function to format dates safely
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return date.toLocaleDateString();
+  };
+
+  // Helper function to format dates with time safely
+  const formatDateTime = (dateString: string | undefined | null) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return date.toLocaleString();
+  };
+
   // Fetch donations from API
   const fetchDonations = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/donations', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
+      setLoading(true);
+      console.log('🚀 Fetching donations...');
+      
+      const response = await makeAuthenticatedRequest('/api/donations');
+      
+      console.log('📡 Donations response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Donations data received:', data);
         setDonations(data);
       } else {
-        toast.error('Failed to fetch donations');
+        const errorMessage = handleApiError(response);
+        console.error('❌ Failed to fetch donations:', errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Error fetching donations:', error);
-      toast.error('Error fetching donations');
+      console.error('❌ Error fetching donations:', error);
+      toast.error(error instanceof Error ? error.message : 'Error fetching donations');
     } finally {
       setLoading(false);
     }
@@ -163,6 +185,32 @@ export const DonationsManagement: React.FC = () => {
     }
   };
 
+  // Update donation approval status
+  const handleToggleApproval = async (id: string, currentApproval: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/donations?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approved: !currentApproval }),
+      });
+
+      if (response.ok) {
+        const updatedDonation = await response.json();
+        setDonations(donations.map(d => d.id === id ? updatedDonation : d));
+        toast.success(`Donation ${!currentApproval ? 'approved' : 'disapproved'} successfully`);
+      } else {
+        toast.error('Failed to update approval status');
+      }
+    } catch (error) {
+      console.error('Error updating approval:', error);
+      toast.error('Error updating approval status');
+    }
+  };
+
   // Open edit modal
   const handleEditDonation = (donation: Donation) => {
     setEditingDonation(donation);
@@ -174,6 +222,7 @@ export const DonationsManagement: React.FC = () => {
       campaign: donation.campaign,
       paymentMethod: donation.paymentMethod,
       isAnonymous: donation.isAnonymous,
+      approved: donation.approved || false,
       message: donation.message || '',
       status: donation.status
     });
@@ -196,6 +245,7 @@ export const DonationsManagement: React.FC = () => {
       campaign: '',
       paymentMethod: 'upi',
       isAnonymous: false,
+      approved: false,
       message: '',
       status: 'pending'
     });
@@ -213,14 +263,17 @@ export const DonationsManagement: React.FC = () => {
                          donation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          donation.campaign.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || donation.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesApproval = approvalFilter === 'all' || 
+                          (approvalFilter === 'approved' && donation.approved) || 
+                          (approvalFilter === 'pending' && !donation.approved);
+    return matchesSearch && matchesStatus && matchesApproval;
   });
 
   const totalDonations = donations.reduce((sum, donation) => 
-    donation.status === 'completed' ? sum + donation.amount : sum, 0
+    donation.status === 'completed' && donation.approved ? sum + donation.amount : sum, 0
   );
-  const completedDonations = donations.filter(d => d.status === 'completed').length;
-  const pendingDonations = donations.filter(d => d.status === 'pending').length;
+  const approvedDonations = donations.filter(d => d.approved).length;
+  const pendingApproval = donations.filter(d => !d.approved).length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -297,8 +350,8 @@ export const DonationsManagement: React.FC = () => {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Completed</p>
-              <p className="text-2xl font-bold text-gray-900">{completedDonations}</p>
+              <p className="text-sm font-medium text-gray-500">Approved</p>
+              <p className="text-2xl font-bold text-gray-900">{approvedDonations}</p>
             </div>
           </div>
         </motion.div>
@@ -314,8 +367,8 @@ export const DonationsManagement: React.FC = () => {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingDonations}</p>
+              <p className="text-sm font-medium text-gray-500">Pending Approval</p>
+              <p className="text-2xl font-bold text-gray-900">{pendingApproval}</p>
             </div>
           </div>
         </motion.div>
@@ -323,7 +376,7 @@ export const DonationsManagement: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -346,6 +399,19 @@ export const DonationsManagement: React.FC = () => {
               <option value="completed">Completed</option>
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
+            </select>
+          </div>
+          
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <select
+              value={approvalFilter}
+              onChange={(e) => setApprovalFilter(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none"
+            >
+              <option value="all">All Approvals</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending Approval</option>
             </select>
           </div>
           
@@ -380,6 +446,9 @@ export const DonationsManagement: React.FC = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Approval
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -404,7 +473,7 @@ export const DonationsManagement: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ₹{donation.amount.toLocaleString()}
+                    ₹{(donation.amount || 0).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {donation.campaign}
@@ -413,12 +482,34 @@ export const DonationsManagement: React.FC = () => {
                     {donation.paymentMethod.toUpperCase()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(donation.date).toLocaleDateString()}
+                    {formatDate(donation.date || donation.createdAt)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(donation.status)}`}>
                       {donation.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        donation.approved 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {donation.approved ? 'Approved' : 'Pending'}
+                      </span>
+                      <button
+                        onClick={() => handleToggleApproval(donation.id, donation.approved)}
+                        className={`px-2 py-1 text-xs rounded ${
+                          donation.approved
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        } transition-colors`}
+                        title={donation.approved ? 'Disapprove' : 'Approve'}
+                      >
+                        {donation.approved ? 'Disapprove' : 'Approve'}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
@@ -579,6 +670,19 @@ export const DonationsManagement: React.FC = () => {
                 </label>
               </div>
 
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="approved"
+                  checked={formData.approved}
+                  onChange={(e) => setFormData({ ...formData, approved: e.target.checked })}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="approved" className="ml-2 block text-sm text-gray-900">
+                  Approved for Frontend Display
+                </label>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Message</label>
                 <textarea
@@ -684,7 +788,7 @@ export const DonationsManagement: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Date</label>
-                <p className="mt-1 text-sm text-gray-900">{new Date(viewingDonation.date).toLocaleDateString()}</p>
+                <p className="mt-1 text-sm text-gray-900">{formatDateTime(viewingDonation.date || viewingDonation.createdAt)}</p>
               </div>
 
               {viewingDonation.message && (

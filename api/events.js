@@ -47,7 +47,7 @@ export default async function handler(req, res) {
         const today = new Date().toISOString().split('T')[0];
         query = { 
           date: { $gte: today },
-          status: 'upcoming'
+          status: 'active'
         };
       }
 

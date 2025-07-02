@@ -42,10 +42,11 @@ export default async function handler(req, res) {
       const { recent } = req.query;
       
       if (recent) {
-        // Public endpoint - Get recent completed donations (for frontend display)
+        // Public endpoint - Get recent completed and approved donations (for frontend display)
         const donations = await donationsCollection
           .find({ 
             status: 'completed',
+            approved: true,
             isAnonymous: false 
           })
           .sort({ createdAt: -1 })
@@ -74,7 +75,9 @@ export default async function handler(req, res) {
         const formattedDonations = donations.map(donation => ({
           id: donation._id.toString(),
           ...donation,
-          createdAt: donation.createdAt || new Date()
+          date: donation.date || donation.createdAt || new Date(),
+          createdAt: donation.createdAt || new Date(),
+          updatedAt: donation.updatedAt || new Date()
         }));
 
         res.status(200).json(formattedDonations);
@@ -96,6 +99,8 @@ export default async function handler(req, res) {
       const donationData = {
         ...req.body,
         status: 'completed', // For demo purposes, mark as completed
+        approved: false, // Require admin approval to show in frontend
+        date: new Date(), // Set the donation date
         createdAt: new Date(),
         updatedAt: new Date()
       };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Users, Phone, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { makeAuthenticatedRequest, handleApiError } from '../../utils/auth';
 
 // URL validation function
 const isValidImageUrl = (url: string): boolean => {
@@ -50,23 +51,25 @@ export const MembersManagement: React.FC = () => {
   // Fetch members from API
   const fetchMembers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/members', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
+      setLoading(true);
+      console.log('🚀 Fetching members...');
+      
+      const response = await makeAuthenticatedRequest('/api/members');
+      
+      console.log('📡 Members response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Members data received:', data);
         setMembers(data);
       } else {
-        toast.error('Failed to fetch members');
+        const errorMessage = handleApiError(response);
+        console.error('❌ Failed to fetch members:', errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Error fetching members:', error);
-      toast.error('Error fetching members');
+      console.error('❌ Error fetching members:', error);
+      toast.error(error instanceof Error ? error.message : 'Error fetching members');
     } finally {
       setLoading(false);
     }
