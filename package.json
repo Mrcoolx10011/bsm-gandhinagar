@@ -4,18 +4,21 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node start-dev.js",
     "dev:api": "vercel dev --yes",
     "dev:vite": "vite",
-    "dev:all": "node start-dev-environment.js",
-    "dev:full": "concurrently \"npm run server\" \"npm run client\"",
-    "client": "vite",
+    "dev:all": "node start-dev.js",
+    "dev:full": "concurrently --kill-others \"npm run dev:api\" \"npm run client\"",
+    "client": "vite --port 5173",
     "server": "node server/index.js",
     "start": "node server/index.js",
     "build": "tsc && vite build",
     "vercel-build": "npm run build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:api": "node test-api-health.js",
+    "status": "node status-check.js",
+    "test:admin": "node test-admin-quick.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

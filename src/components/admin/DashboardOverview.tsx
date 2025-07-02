@@ -1,16 +1,18 @@
 import React from 'react';
-import { Users, Calendar, Heart, MessageSquare, TrendingUp, TrendingDown, Plus, ExternalLink } from 'lucide-react';
+import { Users, Calendar, Heart, MessageSquare, TrendingUp, TrendingDown, ExternalLink, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useAdminStore } from '../../store/adminStore';
 import { Link } from 'react-router-dom';
+import { useDashboardData } from '../../hooks/useDashboardData';
+import { Charts } from './Charts';
 
 export const DashboardOverview: React.FC = () => {
-  const { members, events, donations, inquiries } = useAdminStore();
+  const { stats, recentActivities, activitiesLoading, refreshData } = useDashboardData();
 
-  const stats = [
+  // Create stats cards using real-time data
+  const statsCards = [
     {
       name: 'Total Members',
-      value: members.length.toString(),
+      value: stats.loading ? '...' : stats.totalMembers.toString(),
       change: '+12%',
       changeType: 'increase',
       icon: Users,
@@ -19,7 +21,7 @@ export const DashboardOverview: React.FC = () => {
     },
     {
       name: 'Active Events',
-      value: events.filter(e => e.status === 'upcoming').length.toString(),
+      value: stats.loading ? '...' : stats.activeEvents.toString(),
       change: '+5%',
       changeType: 'increase',
       icon: Calendar,
@@ -28,7 +30,7 @@ export const DashboardOverview: React.FC = () => {
     },
     {
       name: 'Total Donations',
-      value: `₹${donations.reduce((sum, d) => d.status === 'completed' ? sum + d.amount : sum, 0).toLocaleString()}`,
+      value: stats.loading ? '...' : `₹${stats.totalDonationAmount.toLocaleString()}`,
       change: '+18%',
       changeType: 'increase',
       icon: Heart,
@@ -37,7 +39,7 @@ export const DashboardOverview: React.FC = () => {
     },
     {
       name: 'New Inquiries',
-      value: inquiries.filter(i => i.status === 'new').length.toString(),
+      value: stats.loading ? '...' : stats.newInquiries.toString(),
       change: '-3%',
       changeType: 'decrease',
       icon: MessageSquare,
@@ -46,36 +48,31 @@ export const DashboardOverview: React.FC = () => {
     }
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'member',
-      message: `New member ${members[0]?.name || 'Rajesh Kumar Sharma'} joined`,
-      time: '2 hours ago',
-      icon: Users
-    },
-    {
-      id: 2,
-      type: 'donation',
-      message: `Received ₹${donations[0]?.amount || 5000} donation from ${donations[0]?.donorName || 'Anonymous Donor'}`,
-      time: '4 hours ago',
-      icon: Heart
-    },
-    {
-      id: 3,
-      type: 'event',
-      message: `${events[0]?.title || 'Community Health Camp'} event created`,
-      time: '6 hours ago',
-      icon: Calendar
-    },
-    {
-      id: 4,
-      type: 'inquiry',
-      message: `New inquiry from ${inquiries[0]?.name || 'Sarah Johnson'}`,
-      time: '8 hours ago',
-      icon: MessageSquare
+  // Format recent activities for display
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const activityTime = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - activityTime.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} days ago`;
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'member': return Users;
+      case 'donation': return Heart;
+      case 'event': return Calendar;
+      case 'inquiry': return MessageSquare;
+      default: return Users;
     }
-  ];
+  };
 
   const quickActions = [
     { name: 'Add Member', icon: Users, link: '/admin/members', color: 'text-blue-600' },
@@ -95,15 +92,29 @@ export const DashboardOverview: React.FC = () => {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome to Admin Dashboard</h1>
-        <p className="text-primary-100">
-          Manage your NGO operations efficiently with our comprehensive admin panel
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Welcome to Admin Dashboard</h1>
+            <p className="text-primary-100">
+              Manage your NGO operations efficiently with our comprehensive admin panel
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-primary-100">
+              {stats.loading ? 'Loading...' : 'Data updated'}
+            </div>
+            {stats.error && (
+              <div className="text-xs text-red-200 mt-1">
+                {stats.error}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
+        {statsCards.map((stat, index) => {
           const Icon = stat.icon;
           const TrendIcon = stat.changeType === 'increase' ? TrendingUp : TrendingDown;
           
@@ -145,22 +156,46 @@ export const DashboardOverview: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
+            <button
+              onClick={refreshData}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Refresh data"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
           <div className="space-y-4">
-            {recentActivities.map((activity) => {
-              const Icon = activity.icon;
-              return (
-                <div key={activity.id} className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-gray-600" />
+            {activitiesLoading ? (
+              <div className="text-center py-4">
+                <div className="text-gray-500">Loading recent activities...</div>
+              </div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-center py-4">
+                <div className="text-gray-500">No recent activities found</div>
+              </div>
+            ) : (
+              recentActivities.map((activity) => {
+                const Icon = getActivityIcon(activity.type);
+                return (
+                  <div key={activity.id} className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-900">{activity.description}</p>
+                      <p className="text-xs text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
+                    </div>
+                    {activity.approved === false && (
+                      <div className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+                        Pending Approval
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">{activity.message}</p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </motion.div>
 
@@ -218,41 +253,13 @@ export const DashboardOverview: React.FC = () => {
       </motion.div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Member Growth Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Member Growth</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <div className="text-center">
-              <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Chart visualization would be here</p>
-              <p className="text-sm text-gray-500">Showing member growth over time</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Donation Trends */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Donation Trends</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <div className="text-center">
-              <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Chart visualization would be here</p>
-              <p className="text-sm text-gray-500">Showing donation trends and campaigns</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <Charts />
+      </motion.div>
     </div>
   );
 };
