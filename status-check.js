@@ -10,7 +10,7 @@ async function checkStatus() {
     // Check API Server
     console.log('📡 API Server Status:');
     try {
-      const apiHealth = await fetch(`${baseUrl}/api/hello`);
+      const apiHealth = await fetch(`${baseUrl}/api/utils?type=hello`);
       if (apiHealth.ok) {
         console.log('✅ API Server: Running on port 3000');
       } else {
@@ -36,7 +36,7 @@ async function checkStatus() {
     // Test Key API Endpoints
     console.log('\n🔧 API Endpoints Status:');
     const endpoints = [
-      { path: '/api/hello', name: 'Hello API', public: true },
+      { path: '/api/utils?type=hello', name: 'Hello API', public: true },
       { path: '/api/members?public=true', name: 'Public Members', public: true },
       { path: '/api/events', name: 'Events', public: true },
       { path: '/api/auth/login', name: 'Auth Login', public: true, method: 'POST' }

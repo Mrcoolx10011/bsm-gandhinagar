@@ -74,22 +74,22 @@ const createRoute = (handler) => {
 // Import and setup API routes
 const setupApiRoutes = async () => {
   try {
-    // Hello route (simple test)
+    // Utils route (consolidated hello, simple-check, test, test-cjs, env-check)
     try {
-      const { default: helloHandler } = await import('./api/hello.js');
-      app.all('/api/hello', createRoute(helloHandler));
-      console.log('✅ Hello API loaded');
+      const { default: utilsHandler } = await import('./api/utils.js');
+      app.all('/api/utils', createRoute(utilsHandler));
+      // Legacy routes for backward compatibility
+      app.all('/api/hello', createRoute((req, res) => {
+        req.query.type = 'hello';
+        return utilsHandler(req, res);
+      }));
+      app.all('/api/simple-check', createRoute((req, res) => {
+        req.query.type = 'simple-check';
+        return utilsHandler(req, res);
+      }));
+      console.log('✅ Utils API loaded (consolidated)');
     } catch (error) {
-      console.error('❌ Error loading hello API:', error.message);
-    }
-
-    // Simple check route
-    try {
-      const { default: simpleCheckHandler } = await import('./api/simple-check.js');
-      app.all('/api/simple-check', createRoute(simpleCheckHandler));
-      console.log('✅ Simple-check API loaded');
-    } catch (error) {
-      console.error('❌ Error loading simple-check API:', error.message);
+      console.error('❌ Error loading utils API:', error.message);
     }
 
     // Login route
@@ -110,13 +110,22 @@ const setupApiRoutes = async () => {
       console.error('❌ Error loading members API:', error.message);
     }
 
-    // Posts route
+    // Admin route (consolidated posts and recent-activities)
     try {
-      const { default: postsHandler } = await import('./api/posts.js');
-      app.all('/api/posts', createRoute(postsHandler));
-      console.log('✅ Posts API loaded');
+      const { default: adminHandler } = await import('./api/admin.js');
+      app.all('/api/admin', createRoute(adminHandler));
+      // Legacy routes for backward compatibility
+      app.all('/api/posts', createRoute((req, res) => {
+        req.query.type = 'posts';
+        return adminHandler(req, res);
+      }));
+      app.all('/api/recent-activities', createRoute((req, res) => {
+        req.query.type = 'recent-activities';
+        return adminHandler(req, res);
+      }));
+      console.log('✅ Admin API loaded (consolidated)');
     } catch (error) {
-      console.error('❌ Error loading posts API:', error.message);
+      console.error('❌ Error loading admin API:', error.message);
     }
 
     // Events route

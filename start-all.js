@@ -161,7 +161,7 @@ async function testServers() {
   
   // Test API
   try {
-    const response = await fetch('http://localhost:3000/api/hello');
+    const response = await fetch('http://localhost:3000/api/utils?type=hello');
     if (response.ok) {
       const data = await response.json();
       console.log('✅ API Server responding:', data.message);

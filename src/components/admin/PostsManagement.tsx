@@ -46,7 +46,7 @@ export const PostsManagement: React.FC = () => {
   // Fetch posts from API
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/posts');
+      const response = await fetch('/api/admin?type=posts');
       const data = await response.json();
       
       if (response.ok) {
@@ -79,7 +79,7 @@ export const PostsManagement: React.FC = () => {
         return;
       }
       
-      const url = editingPost ? '/api/posts' : '/api/posts';
+      const url = editingPost ? '/api/admin?type=posts' : '/api/admin?type=posts';
       const method = editingPost ? 'PUT' : 'POST';
       
       const payload = editingPost 
@@ -125,7 +125,7 @@ export const PostsManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/posts?id=${id}`, {
+      const response = await fetch(`/api/admin?type=posts&id=${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

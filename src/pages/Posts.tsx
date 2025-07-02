@@ -38,7 +38,7 @@ export const Posts: React.FC = () => {
   // Fetch posts from API
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/posts');
+      const response = await fetch('/api/admin?type=posts');
       const data = await response.json();
       
       if (response.ok) {

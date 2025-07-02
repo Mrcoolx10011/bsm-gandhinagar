@@ -9,13 +9,13 @@ const API_BASE = 'http://localhost:3000';
 
 // Test endpoints
 const endpoints = [
-  { path: '/api/hello', method: 'GET', description: 'Hello API' },
+  { path: '/api/utils?type=hello', method: 'GET', description: 'Hello API' },
   { path: '/api/simple-check', method: 'GET', description: 'Simple Check' },
   { path: '/api/members?public=true', method: 'GET', description: 'Public Members' },
   { path: '/api/events', method: 'GET', description: 'Events' },
   { path: '/api/donations?recent=true', method: 'GET', description: 'Recent Donations' },
   { path: '/api/campaigns?active=true', method: 'GET', description: 'Active Campaigns' },
-  { path: '/api/posts', method: 'GET', description: 'Posts' }
+  { path: '/api/admin?type=posts', method: 'GET', description: 'Posts' }
 ];
 
 // Auth endpoints (require login)
@@ -24,7 +24,7 @@ const authEndpoints = [
   { path: '/api/donations', method: 'GET', description: 'Admin Donations' },
   { path: '/api/campaigns', method: 'GET', description: 'Admin Campaigns' },
   { path: '/api/inquiries', method: 'GET', description: 'Admin Inquiries' },
-  { path: '/api/recent-activities', method: 'GET', description: 'Recent Activities' }
+  { path: '/api/admin?type=recent-activities', method: 'GET', description: 'Recent Activities' }
 ];
 
 async function testEndpoint(endpoint, token = null) {
@@ -109,7 +109,7 @@ async function runHealthCheck() {
 // Check if API server is running first
 async function checkApiServer() {
   try {
-    const response = await fetch(`${API_BASE}/api/hello`);
+    const response = await fetch(`${API_BASE}/api/utils?type=hello`);
     return response.ok;
   } catch (error) {
     return false;
