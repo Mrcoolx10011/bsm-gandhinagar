@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
+import { AboutUs } from './pages/AboutUs';
 import { Members } from './pages/Members';
 import { Events } from './pages/Events';
 import { Donations } from './pages/Donations';
@@ -38,6 +39,18 @@ function App() {
                 <Header />
                 <main className="flex-1">
                   <Home />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/about" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <AboutUs />
                 </main>
                 <Footer />
               </>
@@ -98,6 +111,18 @@ function App() {
                 <Header />
                 <main className="flex-1">
                   <Contact />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/about" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <AboutUs />
                 </main>
                 <Footer />
               </>

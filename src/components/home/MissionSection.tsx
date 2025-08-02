@@ -5,23 +5,23 @@ import { motion } from 'framer-motion';
 const values = [
   {
     icon: Heart,
-    title: 'Compassion',
-    description: 'We approach every initiative with empathy and understanding for those we serve.'
+    title: 'Cultural Heritage',
+    description: 'Preserving and promoting the rich traditions and values of Bihar and Purvanchal.'
   },
   {
     icon: Users,
-    title: 'Community',
-    description: 'Building stronger communities through collaboration and shared responsibility.'
+    title: 'Community Unity',
+    description: 'Building stronger communities through cultural exchange and shared celebrations.'
   },
   {
     icon: Globe,
-    title: 'Impact',
-    description: 'Creating lasting positive change that extends beyond immediate assistance.'
+    title: 'Social Impact',
+    description: 'Creating lasting positive change through cultural awareness and youth empowerment.'
   },
   {
     icon: Award,
     title: 'Excellence',
-    description: 'Maintaining the highest standards in all our programs and initiatives.'
+    description: 'Maintaining authenticity and highest standards in all our cultural programs.'
   }
 ];
 
@@ -44,8 +44,8 @@ export const MissionSection: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
-            We are dedicated to creating positive change in our community through 
-            education, healthcare, and social development programs.
+            We are dedicated to preserving Bihar's rich cultural heritage while empowering our community through 
+            traditional arts, cultural education, and progressive social development programs.
           </motion.p>
         </div>
 

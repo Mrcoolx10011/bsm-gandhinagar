@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
               const user = {
                 id: payload.id || payload.userId || 'admin',
                 username: payload.username || 'admin',
-                email: payload.email || 'admin@bsmgandhinagar.org',
+                email: payload.email || 'admin@biharsamskritikmandal.org',
                 role: payload.role || 'admin'
               };
               set({ user, isAuthenticated: true });

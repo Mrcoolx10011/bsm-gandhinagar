@@ -8,20 +8,20 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Organization Info */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <img 
-                src="/bsm-logo.png" 
-                alt="BSM Logo" 
-                className="w-8 h-8 object-contain filter brightness-0 invert"
+                src="/bihar-cultural-logo.png" 
+                alt="Bihar Sanskritik Mandal Logo" 
+                className="w-16 h-16 object-contain rounded-lg"
               />
               <div>
-                <span className="text-lg font-heading font-bold">BSM Gandhinagar</span>
-                <p className="text-xs text-gray-400">Business Service Management</p>
+                <span className="text-lg font-heading font-bold">Bihar Sanskritik Mandal</span>
+                <p className="text-xs text-gray-400">संस्कृति की जड़ें | समाज का कल्याण</p>
               </div>
             </div>
             <p className="text-gray-300 text-sm">
-              Dedicated to making a positive impact in our community through 
-              various social initiatives and programs.
+              Dedicated to preserving Bihar's cultural heritage and empowering our community through 
+              traditional arts, social initiatives, and progressive programs.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
@@ -72,12 +72,12 @@ export const Footer: React.FC = () => {
                 <span className="text-gray-300">Gandhinagar, Gujarat, India</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                <Phone className="w-4 h-4 text-orange-400 flex-shrink-0" />
                 <span className="text-gray-300">+91 (XXX) XXX-XXXX</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span className="text-gray-300">info@bsmgandhinagar.org</span>
+                <Mail className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                <span className="text-gray-300">info@biharsamskritikmandal.org</span>
               </div>
             </div>
           </div>
@@ -85,7 +85,7 @@ export const Footer: React.FC = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © 2024 BSM Gandhinagar. All rights reserved. | Privacy Policy | Terms of Service
+            © 2025 Bihar Sanskritik Mandal. All rights reserved. | Privacy Policy | Terms of Service
           </p>
         </div>
       </div>

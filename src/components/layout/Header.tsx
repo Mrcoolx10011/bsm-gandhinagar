@@ -9,6 +9,7 @@ export const Header: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/', icon: Users },
+    { name: 'About Us', href: '/about', icon: Users },
     { name: 'Members', href: '/members', icon: Users },
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'Donations', href: '/donations', icon: Users },
@@ -21,20 +22,20 @@ export const Header: React.FC = () => {
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo and Brand */}
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-4">
             <img 
-              src="/bsm-logo.png" 
-              alt="BSM Logo" 
-              className="w-10 h-10 object-contain"
+              src="/bihar-cultural-logo.png" 
+              alt="Bihar Sanskritik Mandal Logo" 
+              className="w-20 h-20 rounded-xl object-contain"
             />
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-blue-900">
-                BSM Gandhinagar
+              <span className="text-xl font-bold text-orange-600">
+                Bihar Sanskritik Mandal
               </span>
               <span className="text-xs text-gray-600 -mt-1">
-                Business Service Management
+                संस्कृति की जड़ें | समाज का कल्याण
               </span>
             </div>
           </Link>
@@ -47,8 +48,8 @@ export const Header: React.FC = () => {
                 to={item.href}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive(item.href)
-                    ? 'text-blue-700 bg-blue-50'
-                    : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50'
+                    ? 'text-orange-700 bg-orange-50'
+                    : 'text-gray-700 hover:text-orange-700 hover:bg-gray-50'
                 }`}
               >
                 {item.name}

@@ -7,7 +7,7 @@ const slides = [
     id: 1,
     image: 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
     title: 'Making a Difference Together',
-    subtitle: 'Join BSM Gandhinagar in creating positive change in our community',
+    subtitle: 'Join Bihar Sanskritik Mandal in creating positive change in our community',
     cta: 'Get Involved',
     ctaLink: '/members'
   },
@@ -100,7 +100,7 @@ export const HeroSection: React.FC = () => {
           >
             <a
               href={slides[currentSlide].ctaLink}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
             >
               <Heart className="w-5 h-5" />
               <span>{slides[currentSlide].cta}</span>
@@ -148,24 +148,24 @@ export const HeroSection: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-white text-center">
             <div className="flex items-center justify-center space-x-3">
-              <Users className="w-8 h-8 text-blue-400" />
+              <Users className="w-8 h-8 text-orange-400" />
               <div>
-                <div className="text-2xl font-bold">500+</div>
+                <div className="text-2xl font-bold">2,500+</div>
                 <div className="text-sm text-gray-300">Active Members</div>
               </div>
             </div>
             <div className="flex items-center justify-center space-x-3">
-              <Calendar className="w-8 h-8 text-blue-400" />
+              <Calendar className="w-8 h-8 text-orange-400" />
               <div>
-                <div className="text-2xl font-bold">50+</div>
-                <div className="text-sm text-gray-300">Events Organized</div>
+                <div className="text-2xl font-bold">200+</div>
+                <div className="text-sm text-gray-300">Cultural Events</div>
               </div>
             </div>
             <div className="flex items-center justify-center space-x-3">
-              <Heart className="w-8 h-8 text-blue-400" />
+              <Heart className="w-8 h-8 text-orange-400" />
               <div>
-                <div className="text-2xl font-bold">$100K+</div>
-                <div className="text-sm text-gray-300">Funds Raised</div>
+                <div className="text-2xl font-bold">37+</div>
+                <div className="text-sm text-gray-300">Years of Service</div>
               </div>
             </div>
           </div>

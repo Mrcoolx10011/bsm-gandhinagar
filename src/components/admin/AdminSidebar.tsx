@@ -72,54 +72,55 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:inset-0 lg:shadow-none lg:border-r lg:border-gray-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out
+        lg:translate-x-0 lg:static lg:inset-0 lg:shadow-lg lg:border-r lg:border-gray-200
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <Link to="/admin" className="flex items-center space-x-3">
+        <div className="flex items-center justify-between h-24 px-6 border-b border-gray-200 bg-gradient-to-r from-orange-600 to-red-600">
+          <Link to="/admin" className="flex items-center space-x-4">
             <img 
-              src="/bsm-logo.png" 
-              alt="BSM Logo" 
-              className="w-8 h-8 object-contain"
+              src="/bihar-cultural-logo.png" 
+              alt="Bihar Sanskritik Mandal Logo" 
+              className="w-20 h-20 rounded-xl object-contain"
             />
             <div>
-              <span className="text-lg font-bold text-blue-900">BSM Gandhinagar</span>
-              <p className="text-xs text-gray-500">Admin Panel</p>
+              <span className="text-lg font-bold text-white">Bihar Sanskritik Mandal</span>
+              <p className="text-xs text-orange-100">Admin Panel</p>
             </div>
           </Link>
           <button
             onClick={onClose}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-xl text-white hover:bg-white hover:bg-opacity-20 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         <div className="flex-1 flex flex-col overflow-y-auto">
           {/* User Info */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg">
+                <Users className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.username || 'Admin'}
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {user?.username || 'admin'}
                 </p>
-                <p className="text-xs text-gray-500">Administrator</p>
+                <p className="text-xs text-orange-600 font-medium">Administrator</p>
               </div>
             </div>
           </div>
 
           {/* Admin Navigation */}
-          <nav className="flex-1 px-4 py-6">
+          <nav className="flex-1 px-4 py-6 bg-gray-50">
             <div className="mb-6">
-              <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              <h3 className="px-3 text-xs font-semibold text-orange-600 uppercase tracking-wider mb-4 flex items-center">
+                <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                 Admin Functions
               </h3>
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
@@ -129,15 +130,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                         to={item.href}
                         onClick={onClose}
                         className={`
-                          w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
+                          w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200
                           ${active
-                            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg transform scale-105'
+                            : 'text-gray-700 hover:bg-white hover:text-orange-600 hover:shadow-md hover:transform hover:scale-102'
                           }
                         `}
                       >
                         <Icon className={`mr-3 h-5 w-5 ${
-                          active ? 'text-blue-500' : 'text-gray-400'
+                          active ? 'text-white' : 'text-orange-500'
                         }`} />
                         {item.name}
                       </Link>
@@ -149,10 +150,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
 
             {/* Frontend Pages */}
             <div className="mb-6">
-              <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              <h3 className="px-3 text-xs font-semibold text-red-600 uppercase tracking-wider mb-4 flex items-center">
+                <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
                 Frontend Pages
               </h3>
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {frontendPages.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -161,11 +163,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                         href={item.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 group"
+                        className="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 text-gray-700 hover:bg-white hover:text-red-600 hover:shadow-md hover:transform hover:scale-102 group"
                       >
-                        <Icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-600" />
+                        <Icon className="mr-3 h-5 w-5 text-red-500 group-hover:text-red-600" />
                         <span className="flex-1">{item.name}</span>
-                        <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                        <ExternalLink className="h-4 w-4 text-red-400 group-hover:text-red-600" />
                       </a>
                     </li>
                   );
@@ -175,15 +177,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 bg-gray-50">
             <button
               onClick={() => {
                 logout();
                 onClose();
               }}
-              className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+              className="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 group"
             >
-              <LogOut className="mr-3 h-5 w-5 text-gray-400" />
+              <LogOut className="mr-3 h-5 w-5 text-gray-500 group-hover:text-red-500" />
               Sign Out
             </button>
           </div>
