@@ -291,7 +291,7 @@ export const DonationsManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600"></div>
       </div>
     );
   }
@@ -309,7 +309,7 @@ export const DonationsManagement: React.FC = () => {
         <div className="mt-4 sm:mt-0 flex space-x-3">
           <button 
             onClick={handleCreateDonation}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Donation
@@ -346,7 +346,7 @@ export const DonationsManagement: React.FC = () => {
           className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
         >
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -384,7 +384,7 @@ export const DonationsManagement: React.FC = () => {
               placeholder="Search donations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           
@@ -393,7 +393,7 @@ export const DonationsManagement: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none"
             >
               <option value="all">All Status</option>
               <option value="completed">Completed</option>
@@ -407,7 +407,7 @@ export const DonationsManagement: React.FC = () => {
             <select
               value={approvalFilter}
               onChange={(e) => setApprovalFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none"
             >
               <option value="all">All Approvals</option>
               <option value="approved">Approved</option>
@@ -515,14 +515,14 @@ export const DonationsManagement: React.FC = () => {
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => handleViewDonation(donation)}
-                        className="text-blue-600 hover:text-blue-900 transition-colors"
+                        className="text-orange-600 hover:text-orange-900 transition-colors"
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleEditDonation(donation)}
-                        className="text-primary-600 hover:text-primary-900 transition-colors"
+                        className="text-orange-600 hover:text-orange-900 transition-colors"
                         title="Edit Donation"
                       >
                         <Edit className="w-4 h-4" />
@@ -570,7 +570,7 @@ export const DonationsManagement: React.FC = () => {
                   type="text"
                   value={formData.donorName}
                   onChange={(e) => setFormData({ ...formData, donorName: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   required
                   disabled={formData.isAnonymous}
                 />
@@ -582,7 +582,7 @@ export const DonationsManagement: React.FC = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   required
                   disabled={formData.isAnonymous}
                 />
@@ -594,7 +594,7 @@ export const DonationsManagement: React.FC = () => {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
 
@@ -606,7 +606,7 @@ export const DonationsManagement: React.FC = () => {
                   step="0.01"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   required
                 />
               </div>
@@ -616,7 +616,7 @@ export const DonationsManagement: React.FC = () => {
                 <select
                   value={formData.campaign}
                   onChange={(e) => setFormData({ ...formData, campaign: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   required
                 >
                   <option value="">Select Campaign</option>
@@ -633,7 +633,7 @@ export const DonationsManagement: React.FC = () => {
                 <select
                   value={formData.paymentMethod}
                   onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   required
                 >
                   <option value="upi">UPI</option>
@@ -648,7 +648,7 @@ export const DonationsManagement: React.FC = () => {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   required
                 >
                   <option value="pending">Pending</option>
@@ -663,7 +663,7 @@ export const DonationsManagement: React.FC = () => {
                   id="isAnonymous"
                   checked={formData.isAnonymous}
                   onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                 />
                 <label htmlFor="isAnonymous" className="ml-2 block text-sm text-gray-900">
                   Anonymous Donation
@@ -676,7 +676,7 @@ export const DonationsManagement: React.FC = () => {
                   id="approved"
                   checked={formData.approved}
                   onChange={(e) => setFormData({ ...formData, approved: e.target.checked })}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                 />
                 <label htmlFor="approved" className="ml-2 block text-sm text-gray-900">
                   Approved for Frontend Display
@@ -689,7 +689,7 @@ export const DonationsManagement: React.FC = () => {
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   rows={3}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   placeholder="Optional message from donor"
                 />
               </div>
@@ -708,7 +708,7 @@ export const DonationsManagement: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 transition-colors"
                 >
                   {editingDonation ? 'Update' : 'Create'} Donation
                 </button>
@@ -832,3 +832,4 @@ export const DonationsManagement: React.FC = () => {
     </div>
   );
 };
+

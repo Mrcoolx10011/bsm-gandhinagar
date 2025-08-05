@@ -99,7 +99,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter full name"
                 />
               </div>
@@ -115,7 +115,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter email address"
                 />
               </div>
@@ -131,7 +131,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="+91-XXXXX-XXXXX"
                 />
               </div>
@@ -147,7 +147,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   required
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter role or position"
                 />
               </div>
@@ -162,7 +162,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   required
                   value={formData.location.state}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="">Select State</option>
                   {indianStates.map(state => (
@@ -181,7 +181,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   required
                   value={formData.location.city}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter city"
                 />
               </div>
@@ -195,7 +195,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   name="image"
                   value={formData.image}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
@@ -208,7 +208,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -226,7 +226,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
                 rows={4}
                 value={formData.bio}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                 placeholder="Enter a brief description about the member..."
               />
             </div>
@@ -234,7 +234,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
             <div className="flex space-x-4 pt-6">
               <button
                 type="submit"
-                className="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
               >
                 <Save className="w-5 h-5" />
                 <span>{member ? 'Update Member' : 'Add Member'}</span>
@@ -253,3 +253,4 @@ export const MemberForm: React.FC<MemberFormProps> = ({ member, onSave, onClose 
     </div>
   );
 };
+

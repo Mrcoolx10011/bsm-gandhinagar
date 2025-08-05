@@ -51,7 +51,7 @@ export const FeaturedEvents: React.FC = () => {
     }
   };
   return (
-    <section className="py-20 bg-gray-50">
+    <section id="featured-events" className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2
@@ -74,7 +74,7 @@ export const FeaturedEvents: React.FC = () => {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
             <span className="ml-3 text-gray-600">Loading events...</span>
           </div>
         ) : events.length === 0 ? (
@@ -101,7 +101,7 @@ export const FeaturedEvents: React.FC = () => {
               />
               <div className="p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="bg-primary-100 text-primary-800 text-xs font-semibold px-2 py-1 rounded">
+                  <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-1 rounded">
                     {event.category}
                   </span>
                   <div className="flex items-center text-gray-500 text-sm">
@@ -129,7 +129,7 @@ export const FeaturedEvents: React.FC = () => {
                   </div>
                 </div>
                 
-                <button className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
+                <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
                   <span>Learn More</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -144,7 +144,7 @@ export const FeaturedEvents: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
                 href="/events"
-                className="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+                className="inline-flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
               >
                 <span>View All Events</span>
                 <ArrowRight className="w-5 h-5" />
@@ -156,3 +156,4 @@ export const FeaturedEvents: React.FC = () => {
     </section>
   );
 };
+

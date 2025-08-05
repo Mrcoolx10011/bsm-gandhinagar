@@ -99,7 +99,7 @@ export const Posts: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50">
       {/* Hero Section with Featured Posts Slider */}
       {featuredPosts.length > 0 && (
         <section className="relative h-96 md:h-[500px] overflow-hidden">
@@ -126,7 +126,7 @@ export const Posts: React.FC = () => {
                     transition={{ delay: 0.3, duration: 0.6 }}
                     className="max-w-2xl"
                   >
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white mb-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-600 text-white mb-4">
                       <Tag size={12} className="mr-1" />
                       {categories.find(c => c.value === featuredPosts[currentFeaturedIndex]?.category)?.label}
                     </span>
@@ -140,7 +140,7 @@ export const Posts: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handlePostClick(featuredPosts[currentFeaturedIndex])}
-                      className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                      className="bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
                     >
                       Read More
                     </motion.button>
@@ -214,7 +214,7 @@ export const Posts: React.FC = () => {
                 placeholder="Search posts..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export const Posts: React.FC = () => {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 {categories.map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -235,7 +235,7 @@ export const Posts: React.FC = () => {
         {/* Posts Grid */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           </div>
         ) : filteredPosts.length === 0 ? (
           <motion.div
@@ -276,7 +276,7 @@ export const Posts: React.FC = () => {
                 
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                       <Tag size={10} className="mr-1" />
                       {categories.find(c => c.value === post.category)?.label}
                     </span>
@@ -287,7 +287,7 @@ export const Posts: React.FC = () => {
                     )}
                   </div>
                   
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
                     {post.title}
                   </h3>
                   
@@ -347,7 +347,7 @@ export const Posts: React.FC = () => {
               
               <div className="p-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
                     <Tag size={12} className="mr-1" />
                     {categories.find(c => c.value === selectedPost.category)?.label}
                   </span>
@@ -400,3 +400,4 @@ export const Posts: React.FC = () => {
     </div>
   );
 };
+

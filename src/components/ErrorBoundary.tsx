@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700"
             >
               Refresh Page
             </button>
@@ -53,3 +53,4 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+

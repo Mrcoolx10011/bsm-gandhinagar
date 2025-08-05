@@ -61,7 +61,7 @@ export const TestimonialsSection: React.FC = () => {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="bg-gray-50 rounded-lg p-6 relative"
             >
-              <Quote className="w-8 h-8 text-primary-300 mb-4" />
+              <Quote className="w-8 h-8 text-orange-300 mb-4" />
               
               <p className="text-gray-600 mb-6 leading-relaxed">
                 "{testimonial.content}"

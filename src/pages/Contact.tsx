@@ -55,8 +55,8 @@ export const Contact: React.FC = () => {
 
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-primary-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Address</h3>
@@ -69,8 +69,8 @@ export const Contact: React.FC = () => {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-primary-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Phone</h3>
@@ -80,8 +80,8 @@ export const Contact: React.FC = () => {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-primary-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Email</h3>
@@ -91,8 +91,8 @@ export const Contact: React.FC = () => {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-5 h-5 text-primary-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Office Hours</h3>
@@ -109,7 +109,7 @@ export const Contact: React.FC = () => {
               <div className="mt-8 space-y-3">
                 <a
                   href="tel:+15551234567"
-                  className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                 >
                   <Phone className="w-5 h-5" />
                   <span>Call Us Now</span>
@@ -153,7 +153,7 @@ export const Contact: React.FC = () => {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="Your full name"
                     />
                   </div>
@@ -169,7 +169,7 @@ export const Contact: React.FC = () => {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -186,7 +186,7 @@ export const Contact: React.FC = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
@@ -201,7 +201,7 @@ export const Contact: React.FC = () => {
                       required
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     >
                       <option value="">Select a subject</option>
                       <option value="general">General Inquiry</option>
@@ -225,14 +225,14 @@ export const Contact: React.FC = () => {
                     rows={6}
                     value={formData.message}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                     placeholder="Tell us how we can help you..."
                   ></textarea>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-primary-600 hover:bg-primary-700 text-white py-4 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                 >
                   <Send className="w-5 h-5" />
                   <span>Send Message</span>

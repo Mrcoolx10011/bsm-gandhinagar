@@ -250,7 +250,7 @@ export const DashboardOverview: React.FC = () => {
       change: '+12%',
       changeType: 'increase',
       icon: Users,
-      color: 'bg-blue-500',
+      color: 'bg-orange-500',
       link: '/admin/members'
     },
     {
@@ -283,7 +283,7 @@ export const DashboardOverview: React.FC = () => {
   ];
 
   const quickActions = [
-    { name: 'Add Member', icon: Users, link: '/admin/members', color: 'text-blue-600' },
+    { name: 'Add Member', icon: Users, link: '/admin/members', color: 'text-orange-600' },
     { name: 'Create Event', icon: Calendar, link: '/admin/events', color: 'text-green-600' },
     { name: 'View Donations', icon: Heart, link: '/admin/donations', color: 'text-red-600' },
     { name: 'Check Messages', icon: MessageSquare, link: '/admin/inquiries', color: 'text-yellow-600' }
@@ -291,7 +291,7 @@ export const DashboardOverview: React.FC = () => {
 
   const frontendLinks = [
     { name: 'View Website', icon: ExternalLink, link: '/', color: 'text-purple-600' },
-    { name: 'Members Page', icon: Users, link: '/members', color: 'text-blue-600' },
+    { name: 'Members Page', icon: Users, link: '/members', color: 'text-orange-600' },
     { name: 'Events Page', icon: Calendar, link: '/events', color: 'text-green-600' },
     { name: 'Donations Page', icon: Heart, link: '/donations', color: 'text-red-600' }
   ];
@@ -299,11 +299,11 @@ export const DashboardOverview: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-orange-600 to-orange-800 rounded-lg p-6 text-white">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold mb-2">Welcome to Admin Dashboard</h1>
-            <p className="text-primary-100">
+            <p className="text-orange-100">
               Manage your NGO operations efficiently with our comprehensive admin panel
             </p>
           </div>
@@ -450,3 +450,4 @@ export const DashboardOverview: React.FC = () => {
     </div>
   );
 };
+

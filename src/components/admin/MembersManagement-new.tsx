@@ -207,7 +207,7 @@ export const MembersManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600"></div>
       </div>
     );
   }
@@ -224,7 +224,7 @@ export const MembersManagement: React.FC = () => {
         </div>
         <button
           onClick={handleAddMember}
-          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Member
@@ -235,7 +235,7 @@ export const MembersManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -284,14 +284,14 @@ export const MembersManagement: React.FC = () => {
               placeholder="Search members..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -373,7 +373,7 @@ export const MembersManagement: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
                       {member.membershipType}
                     </span>
                   </td>
@@ -390,7 +390,7 @@ export const MembersManagement: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEditMember(member)}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-orange-600 hover:text-orange-900"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -424,7 +424,7 @@ export const MembersManagement: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                   required
                 />
               </div>
@@ -435,7 +435,7 @@ export const MembersManagement: React.FC = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                   required
                 />
               </div>
@@ -446,7 +446,7 @@ export const MembersManagement: React.FC = () => {
                   type="text"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
               
@@ -455,7 +455,7 @@ export const MembersManagement: React.FC = () => {
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                   rows={3}
                 />
               </div>
@@ -467,7 +467,7 @@ export const MembersManagement: React.FC = () => {
                   value={formData.profileImage}
                   onChange={(e) => setFormData({...formData, profileImage: e.target.value})}
                   placeholder="https://example.com/image.jpg"
-                  className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500 ${
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500 ${
                     formData.profileImage && !isValidImageUrl(formData.profileImage) 
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
                       : 'border-gray-300'
@@ -498,7 +498,7 @@ export const MembersManagement: React.FC = () => {
                 <select
                   value={formData.membershipType}
                   onChange={(e) => setFormData({...formData, membershipType: e.target.value})}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="regular">Regular</option>
                   <option value="premium">Premium</option>
@@ -511,7 +511,7 @@ export const MembersManagement: React.FC = () => {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -528,7 +528,7 @@ export const MembersManagement: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md"
                 >
                   {editingMember ? 'Update' : 'Create'}
                 </button>
@@ -540,3 +540,6 @@ export const MembersManagement: React.FC = () => {
     </div>
   );
 };
+
+
+

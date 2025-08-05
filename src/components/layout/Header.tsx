@@ -10,6 +10,7 @@ export const Header: React.FC = () => {
   const navigation = [
     { name: 'Home', href: '/', icon: Users },
     { name: 'About Us', href: '/about', icon: Users },
+    { name: 'Media Gallery', href: '/media', icon: Users },
     { name: 'Members', href: '/members', icon: Users },
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'Donations', href: '/donations', icon: Users },
@@ -60,7 +61,7 @@ export const Header: React.FC = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-md text-gray-700 hover:text-blue-700 hover:bg-gray-50"
+            className="md:hidden p-2 rounded-md text-gray-700 hover:text-orange-700 hover:bg-gray-50"
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -86,8 +87,8 @@ export const Header: React.FC = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
                       isActive(item.href)
-                        ? 'text-blue-700 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50'
+                        ? 'text-orange-700 bg-orange-50'
+                        : 'text-gray-700 hover:text-orange-700 hover:bg-gray-50'
                     }`}
                   >
                     <Icon className="w-5 h-5" />

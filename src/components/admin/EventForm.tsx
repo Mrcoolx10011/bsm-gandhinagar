@@ -113,7 +113,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                 required
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Enter event title"
               />
             </div>
@@ -128,7 +128,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                 rows={4}
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                 placeholder="Enter event description"
               />
             </div>
@@ -145,7 +145,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   required
                   value={formData.date}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
 
@@ -160,7 +160,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   required
                   value={formData.time}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="e.g., 9:00 AM - 5:00 PM"
                 />
               </div>
@@ -176,7 +176,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   required
                   value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter event location"
                 />
               </div>
@@ -191,7 +191,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   required
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   {categories.map(category => (
                     <option key={category} value={category}>{category}</option>
@@ -211,7 +211,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   min="1"
                   value={formData.maxAttendees}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
 
@@ -223,7 +223,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -240,7 +240,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                 name="image"
                 value={formData.image}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="https://example.com/image.jpg"
               />
             </div>
@@ -248,7 +248,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
             <div className="flex space-x-4 pt-6">
               <button
                 type="submit"
-                className="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
               >
                 <Save className="w-5 h-5" />
                 <span>{event ? 'Update Event' : 'Create Event'}</span>
@@ -267,3 +267,4 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
     </div>
   );
 };
+

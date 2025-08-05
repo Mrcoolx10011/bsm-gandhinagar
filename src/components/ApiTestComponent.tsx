@@ -78,7 +78,7 @@ export const ApiTestComponent: React.FC = () => {
       <div className="space-y-2 mb-3">
         <button 
           onClick={testEnvironment}
-          className="w-full text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+          className="w-full text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600"
         >
           Test Environment
         </button>
@@ -112,3 +112,4 @@ export const ApiTestComponent: React.FC = () => {
 };
 
 export default ApiTestComponent;
+

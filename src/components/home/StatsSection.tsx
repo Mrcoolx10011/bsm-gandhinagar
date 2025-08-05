@@ -31,7 +31,7 @@ const stats = [
 
 export const StatsSection: React.FC = () => {
   return (
-    <section className="py-20 bg-primary-600">
+    <section className="py-20 bg-orange-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2
@@ -46,7 +46,7 @@ export const StatsSection: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-primary-100 max-w-3xl mx-auto"
+            className="text-xl text-orange-100 max-w-3xl mx-auto"
           >
             See the difference we've made together in our community
           </motion.p>
@@ -68,7 +68,7 @@ export const StatsSection: React.FC = () => {
                 </div>
                 <div className="text-4xl font-bold mb-2">{stat.number}</div>
                 <div className="text-xl font-semibold mb-2">{stat.label}</div>
-                <div className="text-primary-100 text-sm">{stat.description}</div>
+                <div className="text-orange-100 text-sm">{stat.description}</div>
               </motion.div>
             );
           })}

@@ -55,7 +55,7 @@ export const InquiriesManagement: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'new':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-orange-100 text-orange-800';
       case 'replied':
         return 'bg-green-100 text-green-800';
       case 'archived':
@@ -98,7 +98,7 @@ export const InquiriesManagement: React.FC = () => {
           className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
         >
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -153,14 +153,14 @@ export const InquiriesManagement: React.FC = () => {
               placeholder="Search inquiries..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="all">All Status</option>
             <option value="new">New</option>
@@ -217,7 +217,7 @@ export const InquiriesManagement: React.FC = () => {
                       e.stopPropagation();
                       setSelectedInquiry(inquiry);
                     }}
-                    className="p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded-lg transition-colors"
+                    className="p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-colors"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
@@ -303,7 +303,7 @@ export const InquiriesManagement: React.FC = () => {
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                       placeholder="Type your reply here..."
                     />
                   </div>
@@ -313,7 +313,7 @@ export const InquiriesManagement: React.FC = () => {
                   {selectedInquiry.status !== 'replied' && (
                     <button
                       onClick={() => handleReply(selectedInquiry)}
-                      className="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                      className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                     >
                       <Reply className="w-4 h-4" />
                       <span>Send Reply</span>
@@ -346,3 +346,4 @@ export const InquiriesManagement: React.FC = () => {
     </div>
   );
 };
+

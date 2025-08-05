@@ -97,7 +97,7 @@ export const Events: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600"></div>
       </div>
     );
   }
@@ -105,7 +105,7 @@ export const Events: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary-600 to-primary-800 text-white py-20">
+      <section className="relative bg-gradient-to-r from-orange-600 to-orange-800 text-white py-20">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -136,7 +136,7 @@ export const Events: React.FC = () => {
                 placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
 
@@ -147,7 +147,7 @@ export const Events: React.FC = () => {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="all">All Categories</option>
                   {categories.map(category => (
@@ -161,7 +161,7 @@ export const Events: React.FC = () => {
                   type="checkbox"
                   checked={showUpcoming}
                   onChange={(e) => setShowUpcoming(e.target.checked)}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                 />
                 <span className="text-sm text-gray-700">Upcoming Only</span>
               </label>
@@ -209,7 +209,7 @@ export const Events: React.FC = () => {
                       }}
                     />
                     <div className="absolute top-4 left-4">
-                      <span className="bg-primary-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      <span className="bg-orange-600 text-white px-3 py-1 rounded-full text-sm font-medium">
                         {event.category}
                       </span>
                     </div>
@@ -226,22 +226,22 @@ export const Events: React.FC = () => {
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm text-gray-600">
-                        <Calendar className="w-4 h-4 mr-2 text-primary-600" />
+                        <Calendar className="w-4 h-4 mr-2 text-orange-600" />
                         {formatDate(event.date)}
                       </div>
                       
                       <div className="flex items-center text-sm text-gray-600">
-                        <Clock className="w-4 h-4 mr-2 text-primary-600" />
+                        <Clock className="w-4 h-4 mr-2 text-orange-600" />
                         {event.time}
                       </div>
                       
                       <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2 text-primary-600" />
+                        <MapPin className="w-4 h-4 mr-2 text-orange-600" />
                         {event.location}
                       </div>
                       
                       <div className="flex items-center text-sm text-gray-600">
-                        <Users className="w-4 h-4 mr-2 text-primary-600" />
+                        <Users className="w-4 h-4 mr-2 text-orange-600" />
                         {event.attendees}/{event.maxAttendees} attendees
                       </div>
                     </div>
@@ -249,7 +249,7 @@ export const Events: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-orange-600 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${Math.min((event.attendees / event.maxAttendees) * 100, 100)}%` }}
                         ></div>
                       </div>
@@ -258,7 +258,7 @@ export const Events: React.FC = () => {
                       </span>
                     </div>
 
-                    <button className="w-full mt-4 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors duration-200 flex items-center justify-center gap-2">
+                    <button className="w-full mt-4 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors duration-200 flex items-center justify-center gap-2">
                       Learn More
                       <ArrowRight className="w-4 h-4" />
                     </button>
@@ -272,3 +272,4 @@ export const Events: React.FC = () => {
     </div>
   );
 };
+

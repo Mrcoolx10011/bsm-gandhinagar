@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 export const CallToAction: React.FC = () => {
   return (
-    <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-800">
+    <section className="py-20 bg-gradient-to-r from-orange-600 to-orange-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <motion.h2
@@ -20,7 +20,7 @@ export const CallToAction: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-primary-100 max-w-3xl mx-auto mb-12"
+            className="text-xl text-orange-100 max-w-3xl mx-auto mb-12"
           >
             Join our community of changemakers and help us create a better world for everyone
           </motion.p>
@@ -33,7 +33,7 @@ export const CallToAction: React.FC = () => {
           >
             <a
               href="/members"
-              className="bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
+              className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
             >
               <Users className="w-5 h-5" />
               <span>Become a Member</span>
@@ -42,7 +42,7 @@ export const CallToAction: React.FC = () => {
             
             <a
               href="/donations"
-              className="border-2 border-white text-white hover:bg-white hover:text-primary-600 px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
+              className="border-2 border-white text-white hover:bg-white hover:text-orange-600 px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
             >
               <Heart className="w-5 h-5" />
               <span>Donate Now</span>

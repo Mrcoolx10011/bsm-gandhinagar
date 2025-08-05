@@ -1,31 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Heart, Users, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Users, Heart, Calendar } from 'lucide-react';
 
 const slides = [
   {
     id: 1,
-    image: 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-    title: 'Making a Difference Together',
-    subtitle: 'Join Bihar Sanskritik Mandal in creating positive change in our community',
-    cta: 'Get Involved',
+    image: 'https://images.unsplash.com/photo-1524863479829-916d8e77f114?auto=format&fit=crop&w=1920&h=1080&q=80',
+    title: 'बिहार संस्कृतिक मंडल',
+    subtitle: 'संस्कृति की पहचान, बिहार और पूर्वांचल की शान',
+    englishSubtitle: 'Folk Dance & Cultural Heritage',
+    cta: 'Join Us',
     ctaLink: '/members'
   },
   {
     id: 2,
-    image: 'https://images.pexels.com/photos/6646919/pexels-photo-6646919.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-    title: 'Education for All',
-    subtitle: 'Supporting underprivileged children with quality education',
+    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=1920&h=1080&q=80',
+    title: 'भारतीय त्योहार',
+    subtitle: 'संस्कृति की पहचान, बिहार और पूर्वांचल की शान',
+    englishSubtitle: 'Indian Festivals & Celebrations',
     cta: 'Donate Now',
     ctaLink: '/donations'
   },
   {
     id: 3,
-    image: 'https://images.pexels.com/photos/6646917/pexels-photo-6646917.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-    title: 'Community Events',
-    subtitle: 'Building stronger communities through meaningful events',
+    image: 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=1920&h=1080&q=80',
+    title: 'ग्रामीण भारत उत्सव',
+    subtitle: 'संस्कृति की पहचान, बिहार और पूर्वांचल की शान',
+    englishSubtitle: 'Rural India Celebrations',
     cta: 'View Events',
     ctaLink: '/events'
+  },
+  {
+    id: 4,
+    image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1920&h=1080&q=80',
+    title: 'सेवा कार्य',
+    subtitle: 'संस्कृति की पहचान, बिहार और पूर्वांचल की शान',
+    englishSubtitle: 'Volunteer India & Community Service',
+    cta: 'Get Involved',
+    ctaLink: '/contact'
   }
 ];
 
@@ -76,20 +89,29 @@ export const HeroSection: React.FC = () => {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-4xl md:text-6xl font-heading font-bold mb-6"
+            className="text-4xl md:text-7xl font-bold mb-4"
+            style={{ fontFamily: 'serif' }}
           >
             {slides[currentSlide].title}
           </motion.h1>
           
-          <motion.p
+          <motion.div
             key={`subtitle-${currentSlide}`}
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-xl md:text-2xl mb-8 text-gray-200"
+            className="mb-6"
           >
-            {slides[currentSlide].subtitle}
-          </motion.p>
+            <p 
+              className="text-2xl md:text-4xl font-semibold text-orange-300 mb-2"
+              style={{ fontFamily: 'serif' }}
+            >
+              {slides[currentSlide].subtitle}
+            </p>
+            <p className="text-lg md:text-xl text-orange-100">
+              {slides[currentSlide].englishSubtitle}
+            </p>
+          </motion.div>
 
           <motion.div
             key={`cta-${currentSlide}`}

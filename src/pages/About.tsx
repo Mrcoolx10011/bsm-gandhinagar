@@ -134,7 +134,7 @@ const AboutUs = () => {
       </section>
 
       {/* Section 7: Header Tagline Suggestions */}
-      <section className="text-center bg-teal-600 text-white p-8 rounded-lg">
+      <section className="text-center bg-orange-600 text-white p-8 rounded-lg">
         <h2 className="text-3xl font-semibold mb-4">Header Tagline Suggestions</h2>
         <div className="space-y-2 text-lg">
           <p>1. "Our Heritage, Our Future: Uniting Generations Through Culture."</p>
@@ -147,3 +147,4 @@ const AboutUs = () => {
 };
 
 export default AboutUs;
+

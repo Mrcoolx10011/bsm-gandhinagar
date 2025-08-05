@@ -175,7 +175,7 @@ export const EventsManagement: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-orange-100 text-orange-800';
       case 'ongoing':
         return 'bg-green-100 text-green-800';
       case 'completed':
@@ -191,7 +191,7 @@ export const EventsManagement: React.FC = () => {
     <div className="space-y-6">
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
           <span className="ml-3 text-gray-600">Loading events...</span>
         </div>
       ) : (
@@ -206,7 +206,7 @@ export const EventsManagement: React.FC = () => {
         </div>
         <button
           onClick={handleAddEvent}
-          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Event
@@ -217,7 +217,7 @@ export const EventsManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -280,14 +280,14 @@ export const EventsManagement: React.FC = () => {
               placeholder="Search events..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="all">All Status</option>
             <option value="upcoming">Upcoming</option>
@@ -320,7 +320,7 @@ export const EventsManagement: React.FC = () => {
             
             <div className="p-6">
               <div className="flex items-center justify-between mb-3">
-                <span className="bg-primary-100 text-primary-800 text-xs font-semibold px-2 py-1 rounded">
+                <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-1 rounded">
                   {event.category}
                 </span>
                 <span className={`px-2 py-1 text-xs font-semibold rounded ${getStatusColor(event.status)}`}>
@@ -358,7 +358,7 @@ export const EventsManagement: React.FC = () => {
               <div className="mb-4">
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-primary-600 h-2 rounded-full"
+                    className="bg-orange-600 h-2 rounded-full"
                     style={{ width: `${((event.attendees || 0) / event.maxAttendees) * 100}%` }}
                   ></div>
                 </div>
@@ -367,7 +367,7 @@ export const EventsManagement: React.FC = () => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => setSelectedEvent(event)}
-                  className="flex-1 text-primary-600 hover:text-primary-900 text-sm font-medium py-2 px-3 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
+                  className="flex-1 text-orange-600 hover:text-orange-900 text-sm font-medium py-2 px-3 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors"
                 >
                   <Eye className="w-4 h-4 inline mr-1" />
                   View
@@ -432,7 +432,7 @@ export const EventsManagement: React.FC = () => {
               
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="bg-primary-100 text-primary-800 text-sm font-semibold px-3 py-1 rounded">
+                  <span className="bg-orange-100 text-orange-800 text-sm font-semibold px-3 py-1 rounded">
                     {selectedEvent.category}
                   </span>
                   <span className={`px-3 py-1 text-sm font-semibold rounded ${getStatusColor(selectedEvent.status)}`}>
@@ -468,7 +468,7 @@ export const EventsManagement: React.FC = () => {
                     <h4 className="font-semibold text-gray-900 mb-2">Attendance</h4>
                     <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                       <div
-                        className="bg-primary-600 h-3 rounded-full"
+                        className="bg-orange-600 h-3 rounded-full"
                         style={{ width: `${((selectedEvent.attendees || 0) / selectedEvent.maxAttendees) * 100}%` }}
                       ></div>
                     </div>
@@ -489,3 +489,4 @@ export const EventsManagement: React.FC = () => {
     </div>
   );
 };
+

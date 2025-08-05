@@ -259,7 +259,7 @@ export const Donations: React.FC = () => {
                 <select
                   value={selectedCampaign}
                   onChange={(e) => setSelectedCampaign(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   {campaigns.map((campaign) => (
                     <option key={campaign.id} value={campaign.title}>
@@ -278,8 +278,8 @@ export const Donations: React.FC = () => {
                     onClick={() => handleAmountSelect(amount)}
                     className={`p-4 rounded-lg border-2 transition-colors ${
                       selectedAmount === amount
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 hover:border-blue-300'
+                        ? 'border-orange-600 bg-orange-50 text-orange-700'
+                        : 'border-gray-300 hover:border-orange-300'
                     }`}
                   >
                     <div className="text-2xl font-bold">₹{amount}</div>
@@ -299,7 +299,7 @@ export const Donations: React.FC = () => {
                     placeholder="Enter amount"
                     value={customAmount}
                     onChange={(e) => handleCustomAmountChange(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -317,7 +317,7 @@ export const Donations: React.FC = () => {
                       value="card"
                       checked={paymentMethod === 'card'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="text-blue-600"
+                      className="text-orange-600"
                     />
                     <CreditCard className="w-5 h-5 text-gray-600" />
                     <span>Credit/Debit Card</span>
@@ -330,7 +330,7 @@ export const Donations: React.FC = () => {
                       value="upi"
                       checked={paymentMethod === 'upi'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="text-blue-600"
+                      className="text-orange-600"
                     />
                     <Smartphone className="w-5 h-5 text-gray-600" />
                     <span>UPI/Digital Wallet</span>
@@ -343,7 +343,7 @@ export const Donations: React.FC = () => {
                       value="qr"
                       checked={paymentMethod === 'qr'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="text-blue-600"
+                      className="text-orange-600"
                     />
                     <QrCode className="w-5 h-5 text-gray-600" />
                     <span>QR Code</span>
@@ -371,7 +371,7 @@ export const Donations: React.FC = () => {
 
               {/* Donation Summary */}
               {totalAmount > 0 && (
-                <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <div className="bg-orange-50 p-4 rounded-lg mb-6">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-lg font-semibold text-gray-900">
                       Campaign:
@@ -382,7 +382,7 @@ export const Donations: React.FC = () => {
                     <span className="text-lg font-semibold text-gray-900">
                       Total Donation:
                     </span>
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-2xl font-bold text-orange-600">
                       ₹{totalAmount}
                     </span>
                   </div>
@@ -395,7 +395,7 @@ export const Donations: React.FC = () => {
                 onClick={handleProceedToDonate}
                 className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
                   totalAmount > 0
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
@@ -414,8 +414,8 @@ export const Donations: React.FC = () => {
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Users className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Users className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">₹25</div>
@@ -424,8 +424,8 @@ export const Donations: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">₹50</div>
@@ -434,8 +434,8 @@ export const Donations: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Target className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Target className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">₹100</div>
@@ -462,7 +462,7 @@ export const Donations: React.FC = () => {
                         <div className="font-medium text-gray-900">{donor.donorName}</div>
                         <div className="text-sm text-gray-500">{getTimeAgo(donor.date)}</div>
                       </div>
-                      <div className="font-semibold text-blue-600">
+                      <div className="font-semibold text-orange-600">
                         ₹{donor.amount.toLocaleString()}
                       </div>
                     </div>
@@ -485,7 +485,7 @@ export const Donations: React.FC = () => {
           
           {loadingCampaigns ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">Loading campaigns...</p>
             </div>
           ) : campaigns.length > 0 ? (
@@ -520,7 +520,7 @@ export const Donations: React.FC = () => {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-blue-600 h-2 rounded-full"
+                          className="bg-orange-600 h-2 rounded-full"
                           style={{ width: `${Math.min((campaign.raised / campaign.target) * 100, 100)}%` }}
                         ></div>
                       </div>
@@ -539,7 +539,7 @@ export const Donations: React.FC = () => {
                     
                     <button 
                       onClick={() => handleCampaignDonate(campaign.title)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
                     >
                       Donate to Campaign
                     </button>
@@ -586,7 +586,7 @@ export const Donations: React.FC = () => {
                         required
                         value={formData.donorName}
                         onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         placeholder="Enter your full name"
                       />
                     </div>
@@ -601,7 +601,7 @@ export const Donations: React.FC = () => {
                         required
                         value={formData.email}
                         onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         placeholder="Enter your email"
                       />
                     </div>
@@ -615,7 +615,7 @@ export const Donations: React.FC = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         placeholder="Enter your phone number"
                       />
                     </div>
@@ -629,7 +629,7 @@ export const Donations: React.FC = () => {
                         rows={3}
                         value={formData.message}
                         onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                         placeholder="Leave a message..."
                       />
                     </div>
@@ -640,14 +640,14 @@ export const Donations: React.FC = () => {
                         name="isAnonymous"
                         checked={formData.isAnonymous}
                         onChange={handleFormChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                       />
                       <label className="ml-2 block text-sm text-gray-700">
                         Make this donation anonymous
                       </label>
                     </div>
 
-                    <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="bg-orange-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-gray-700">Campaign:</span>
                         <span className="text-sm text-gray-900">{formData.campaign}</span>
@@ -658,7 +658,7 @@ export const Donations: React.FC = () => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                        <span className="text-xl font-bold text-blue-600">₹{formData.amount}</span>
+                        <span className="text-xl font-bold text-orange-600">₹{formData.amount}</span>
                       </div>
                     </div>
 
@@ -668,7 +668,7 @@ export const Donations: React.FC = () => {
                       className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
                         isProcessing
                           ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-orange-600 hover:bg-orange-700'
                       } text-white`}
                     >
                       {isProcessing ? (
@@ -714,7 +714,7 @@ export const Donations: React.FC = () => {
                 
                 <button
                   onClick={() => setShowSuccessModal(false)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
                 >
                   Close
                 </button>
@@ -726,3 +726,4 @@ export const Donations: React.FC = () => {
     </div>
   );
 };
+

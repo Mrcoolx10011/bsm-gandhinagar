@@ -24,16 +24,16 @@ export const Footer: React.FC = () => {
               traditional arts, social initiatives, and progressive programs.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors">
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
@@ -68,7 +68,7 @@ export const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold">Contact Info</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-3">
-                <MapPin className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
                 <span className="text-gray-300">Gandhinagar, Gujarat, India</span>
               </div>
               <div className="flex items-center space-x-3">

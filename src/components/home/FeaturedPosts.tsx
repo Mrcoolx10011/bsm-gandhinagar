@@ -65,7 +65,7 @@ export const FeaturedPosts: React.FC = () => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
           </div>
         </div>
       </section>
@@ -80,7 +80,7 @@ export const FeaturedPosts: React.FC = () => {
   const totalSlides = Math.ceil(posts.length / postsPerSlide);
 
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-50 to-blue-50">
+    <section className="py-16 bg-gradient-to-br from-gray-50 to-orange-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -90,7 +90,7 @@ export const FeaturedPosts: React.FC = () => {
           className="text-center mb-12"
         >
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Latest <span className="text-blue-600">Posts</span>
+            Latest <span className="text-orange-600">Posts</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Stay updated with our latest news, events, and community updates
@@ -134,7 +134,7 @@ export const FeaturedPosts: React.FC = () => {
                         
                         <div className="p-6">
                           <div className="flex items-center gap-2 mb-3">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                               {post.category}
                             </span>
                             {post.featured && (
@@ -144,7 +144,7 @@ export const FeaturedPosts: React.FC = () => {
                             )}
                           </div>
                           
-                          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors line-clamp-2">
                             {post.title}
                           </h3>
                           
@@ -164,7 +164,7 @@ export const FeaturedPosts: React.FC = () => {
                               </div>
                             </div>
                             <motion.div
-                              className="flex items-center text-blue-600 group-hover:text-blue-800"
+                              className="flex items-center text-orange-600 group-hover:text-orange-800"
                               whileHover={{ x: 5 }}
                             >
                               <span className="text-sm font-medium mr-1">Read More</span>
@@ -184,17 +184,17 @@ export const FeaturedPosts: React.FC = () => {
             <>
               <button
                 onClick={prevSlide}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-blue-50 transition-colors z-10"
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-orange-50 transition-colors z-10"
                 aria-label="Previous posts"
               >
-                <ChevronLeft size={24} className="text-blue-600" />
+                <ChevronLeft size={24} className="text-orange-600" />
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-blue-50 transition-colors z-10"
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-orange-50 transition-colors z-10"
                 aria-label="Next posts"
               >
-                <ChevronRight size={24} className="text-blue-600" />
+                <ChevronRight size={24} className="text-orange-600" />
               </button>
             </>
           )}
@@ -207,7 +207,7 @@ export const FeaturedPosts: React.FC = () => {
                   key={index}
                   onClick={() => setCurrentIndex(index)}
                   className={`w-3 h-3 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
+                    index === currentIndex ? 'bg-orange-600' : 'bg-gray-300'
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
@@ -227,7 +227,7 @@ export const FeaturedPosts: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+              className="bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors inline-flex items-center gap-2"
             >
               View All Posts
               <ArrowRight size={20} />
@@ -238,3 +238,4 @@ export const FeaturedPosts: React.FC = () => {
     </section>
   );
 };
+

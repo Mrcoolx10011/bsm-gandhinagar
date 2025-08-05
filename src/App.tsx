@@ -4,6 +4,7 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
 import { AboutUs } from './pages/AboutUs';
+import MediaGallery from './pages/MediaGallery';
 import { Members } from './pages/Members';
 import { Events } from './pages/Events';
 import { Donations } from './pages/Donations';
@@ -51,6 +52,18 @@ function App() {
                 <Header />
                 <main className="flex-1">
                   <AboutUs />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/media" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <MediaGallery />
                 </main>
                 <Footer />
               </>

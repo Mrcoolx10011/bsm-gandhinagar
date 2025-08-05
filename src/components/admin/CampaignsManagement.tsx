@@ -241,7 +241,7 @@ export const CampaignsManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
         <span className="ml-3 text-gray-600">Loading campaigns...</span>
       </div>
     );
@@ -267,7 +267,7 @@ export const CampaignsManagement: React.FC = () => {
           </button>
           <button
             onClick={handleAddNew}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Campaign
@@ -279,7 +279,7 @@ export const CampaignsManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
               <Target className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -338,14 +338,14 @@ export const CampaignsManagement: React.FC = () => {
               placeholder="Search campaigns..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -377,13 +377,13 @@ export const CampaignsManagement: React.FC = () => {
             
             <div className="p-6">
               <div className="flex items-center justify-between mb-3">
-                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-1 rounded">
                   {campaign.category}
                 </span>
                 <span className={`px-2 py-1 text-xs font-semibold rounded ${
                   campaign.status === 'active' ? 'bg-green-100 text-green-800' :
                   campaign.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                  'bg-blue-100 text-blue-800'
+                  'bg-orange-100 text-orange-800'
                 }`}>
                   {campaign.status}
                 </span>
@@ -406,7 +406,7 @@ export const CampaignsManagement: React.FC = () => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-orange-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${Math.min(((campaign.raised || 0) / (campaign.target || 1)) * 100, 100)}%` }}
                   ></div>
                 </div>
@@ -419,7 +419,7 @@ export const CampaignsManagement: React.FC = () => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => setSelectedCampaign(campaign)}
-                  className="flex-1 text-blue-600 hover:text-blue-900 text-sm font-medium py-2 px-3 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="flex-1 text-orange-600 hover:text-orange-900 text-sm font-medium py-2 px-3 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors"
                 >
                   <Eye className="w-4 h-4 inline mr-1" />
                   View
@@ -456,7 +456,7 @@ export const CampaignsManagement: React.FC = () => {
           {campaigns.length === 0 && (
             <button
               onClick={handleAddNew}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 transition-colors"
             >
               <Plus className="h-4 w-4 mr-2" />
               Create First Campaign
@@ -505,7 +505,7 @@ export const CampaignsManagement: React.FC = () => {
                       required
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="Enter campaign title"
                     />
                   </div>
@@ -519,7 +519,7 @@ export const CampaignsManagement: React.FC = () => {
                       rows={4}
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                       placeholder="Enter campaign description"
                     />
                   </div>
@@ -535,7 +535,7 @@ export const CampaignsManagement: React.FC = () => {
                         min="1000"
                         value={formData.target}
                         onChange={(e) => setFormData(prev => ({ ...prev, target: parseFloat(e.target.value) }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         placeholder="50000"
                       />
                     </div>
@@ -547,7 +547,7 @@ export const CampaignsManagement: React.FC = () => {
                       <select
                         value={formData.category}
                         onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       >
                         <option value="General">General</option>
                         <option value="Education">Education</option>
@@ -567,7 +567,7 @@ export const CampaignsManagement: React.FC = () => {
                       type="url"
                       value={formData.image}
                       onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
@@ -582,7 +582,7 @@ export const CampaignsManagement: React.FC = () => {
                         required
                         value={formData.startDate}
                         onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
 
@@ -594,7 +594,7 @@ export const CampaignsManagement: React.FC = () => {
                         type="date"
                         value={formData.endDate}
                         onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
 
@@ -605,7 +605,7 @@ export const CampaignsManagement: React.FC = () => {
                       <select
                         value={formData.status}
                         onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' | 'completed' }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       >
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
@@ -628,7 +628,7 @@ export const CampaignsManagement: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                      className="flex-1 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 transition-colors"
                     >
                       {editingCampaign ? 'Update Campaign' : 'Create Campaign'}
                     </button>
@@ -666,13 +666,13 @@ export const CampaignsManagement: React.FC = () => {
               
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded">
+                  <span className="bg-orange-100 text-orange-800 text-sm font-semibold px-3 py-1 rounded">
                     {selectedCampaign.category}
                   </span>
                   <span className={`px-3 py-1 text-sm font-semibold rounded ${
                     selectedCampaign.status === 'active' ? 'bg-green-100 text-green-800' :
                     selectedCampaign.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                    'bg-blue-100 text-blue-800'
+                    'bg-orange-100 text-orange-800'
                   }`}>
                     {selectedCampaign.status}
                   </span>
@@ -702,7 +702,7 @@ export const CampaignsManagement: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-500">Total Donors</span>
-                      <span className="text-lg font-semibold text-blue-600">
+                      <span className="text-lg font-semibold text-orange-600">
                         {selectedCampaign.donors || 0}
                       </span>
                     </div>
@@ -717,7 +717,7 @@ export const CampaignsManagement: React.FC = () => {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div
-                        className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                        className="bg-orange-600 h-3 rounded-full transition-all duration-300"
                         style={{ width: `${Math.min((selectedCampaign.raised / selectedCampaign.target) * 100, 100)}%` }}
                       ></div>
                     </div>
@@ -737,3 +737,4 @@ export const CampaignsManagement: React.FC = () => {
     </div>
   );
 };
+

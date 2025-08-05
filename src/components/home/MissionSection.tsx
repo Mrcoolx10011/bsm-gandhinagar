@@ -102,10 +102,10 @@ export const MissionSection: React.FC = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="text-center p-6 rounded-lg bg-gray-50 hover:bg-primary-50 transition-colors group"
+                className="text-center p-6 rounded-lg bg-gray-50 hover:bg-orange-50 transition-colors group"
               >
-                <div className="w-16 h-16 bg-primary-100 group-hover:bg-primary-200 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
-                  <Icon className="w-8 h-8 text-primary-600" />
+                <div className="w-16 h-16 bg-orange-100 group-hover:bg-orange-200 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                  <Icon className="w-8 h-8 text-orange-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {value.title}

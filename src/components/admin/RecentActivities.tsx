@@ -37,7 +37,7 @@ export const RecentActivities: React.FC = () => {
   const getActivityColor = (type: string) => {
     switch (type) {
       case 'member':
-        return 'text-blue-600 bg-blue-100';
+        return 'text-orange-600 bg-orange-100';
       case 'donation':
         return 'text-red-600 bg-red-100';
       case 'inquiry':
@@ -147,7 +147,7 @@ export const RecentActivities: React.FC = () => {
           <p className="text-sm text-gray-500 mb-4">{error}</p>
           <button
             onClick={handleRefresh}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
           >
             Try Again
           </button>
@@ -248,3 +248,5 @@ export const RecentActivities: React.FC = () => {
     </div>
   );
 };
+
+

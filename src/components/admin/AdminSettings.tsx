@@ -77,12 +77,12 @@ export const AdminSettings: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-primary-50 text-primary-700'
+                      ? 'bg-orange-50 text-orange-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <Icon className={`mr-3 h-5 w-5 ${
-                    activeTab === tab.id ? 'text-primary-500' : 'text-gray-400'
+                    activeTab === tab.id ? 'text-orange-500' : 'text-gray-400'
                   }`} />
                   {tab.name}
                 </button>
@@ -114,7 +114,7 @@ export const AdminSettings: React.FC = () => {
                         name="username"
                         value={formData.username}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
 
@@ -127,7 +127,7 @@ export const AdminSettings: React.FC = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -136,7 +136,7 @@ export const AdminSettings: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleSave}
-                    className="bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                    className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
                   >
                     <Save className="w-4 h-4" />
                     <span>Save Changes</span>
@@ -165,7 +165,7 @@ export const AdminSettings: React.FC = () => {
                         name="currentPassword"
                         value={formData.currentPassword}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
 
@@ -178,7 +178,7 @@ export const AdminSettings: React.FC = () => {
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
 
@@ -191,7 +191,7 @@ export const AdminSettings: React.FC = () => {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -200,7 +200,7 @@ export const AdminSettings: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleSave}
-                    className="bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                    className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
                   >
                     <Lock className="w-4 h-4" />
                     <span>Update Password</span>
@@ -233,7 +233,7 @@ export const AdminSettings: React.FC = () => {
                           onChange={handleChange}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                       </label>
                     </div>
 
@@ -250,7 +250,7 @@ export const AdminSettings: React.FC = () => {
                           onChange={handleChange}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                       </label>
                     </div>
 
@@ -267,7 +267,7 @@ export const AdminSettings: React.FC = () => {
                           onChange={handleChange}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                       </label>
                     </div>
                   </div>
@@ -276,7 +276,7 @@ export const AdminSettings: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleSave}
-                    className="bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                    className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
                   >
                     <Bell className="w-4 h-4" />
                     <span>Save Preferences</span>
@@ -303,7 +303,7 @@ export const AdminSettings: React.FC = () => {
                       </p>
                       <button
                         onClick={handleExportData}
-                        className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                        className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center space-x-2"
                       >
                         <Download className="w-4 h-4" />
                         <span>Export Data</span>
@@ -329,3 +329,4 @@ export const AdminSettings: React.FC = () => {
     </div>
   );
 };
+

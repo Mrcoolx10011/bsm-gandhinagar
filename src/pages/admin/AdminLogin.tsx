@@ -55,7 +55,7 @@ export const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-600 to-orange-800 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -63,7 +63,7 @@ export const AdminLogin: React.FC = () => {
         className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
@@ -84,7 +84,7 @@ export const AdminLogin: React.FC = () => {
                 required
                 value={credentials.username}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Enter your username"
               />
             </div>
@@ -103,7 +103,7 @@ export const AdminLogin: React.FC = () => {
                 required
                 value={credentials.password}
                 onChange={handleChange}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Enter your password"
               />
               <button
@@ -122,7 +122,7 @@ export const AdminLogin: React.FC = () => {
             className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
               isLoading
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-primary-600 hover:bg-primary-700'
+                : 'bg-orange-600 hover:bg-orange-700'
             } text-white`}
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
