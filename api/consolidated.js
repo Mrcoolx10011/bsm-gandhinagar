@@ -110,14 +110,14 @@ async function handleMembers(req, res, db) {
         updatedAt: new Date()
       };
       await collection.updateOne(
-        { _id: new MongoClient.ObjectId(id) },
+        { _id: new ObjectId(id) },
         { $set: updateData }
       );
       return res.status(200).json({ message: 'Member updated successfully' });
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      await collection.deleteOne({ _id: new MongoClient.ObjectId(deleteId) });
+      await collection.deleteOne({ _id: new ObjectId(deleteId) });
       return res.status(200).json({ message: 'Member deleted successfully' });
 
     default:
@@ -150,14 +150,14 @@ async function handleEvents(req, res, db) {
         updatedAt: new Date()
       };
       await collection.updateOne(
-        { _id: new MongoClient.ObjectId(id) },
+        { _id: new ObjectId(id) },
         { $set: updateData }
       );
       return res.status(200).json({ message: 'Event updated successfully' });
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      await collection.deleteOne({ _id: new MongoClient.ObjectId(deleteId) });
+      await collection.deleteOne({ _id: new ObjectId(deleteId) });
       return res.status(200).json({ message: 'Event deleted successfully' });
 
     default:
@@ -236,14 +236,14 @@ async function handlePosts(req, res, db) {
         updatedAt: new Date()
       };
       await collection.updateOne(
-        { _id: new MongoClient.ObjectId(id) },
+        { _id: new ObjectId(id) },
         { $set: updateData }
       );
       return res.status(200).json({ message: 'Post updated successfully' });
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      await collection.deleteOne({ _id: new MongoClient.ObjectId(deleteId) });
+      await collection.deleteOne({ _id: new ObjectId(deleteId) });
       return res.status(200).json({ message: 'Post deleted successfully' });
 
     default:
@@ -364,7 +364,7 @@ async function handleContent(req, res, db) {
         updatedAt: new Date()
       };
       await collection.updateOne(
-        { _id: new MongoClient.ObjectId(id) },
+        { _id: new ObjectId(id) },
         { $set: updateData }
       );
       return res.status(200).json({ message: 'Content updated successfully' });
