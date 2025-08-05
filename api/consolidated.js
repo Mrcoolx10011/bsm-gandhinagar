@@ -276,7 +276,8 @@ async function handleCampaigns(req, res, db) {
 
 // Admin API Handler
 async function handleAdmin(req, res, db) {
-  if (req.method === 'POST' && req.url?.includes('/login')) {
+  // Handle admin login - check for login in the endpoint or body
+  if (req.method === 'POST' && (req.query.action === 'login' || req.body?.action === 'login' || req.url?.includes('/login'))) {
     const { username, password } = req.body;
     
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
