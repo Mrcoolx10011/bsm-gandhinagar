@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Event {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
   description: string;
   date: string;
@@ -88,7 +89,7 @@ export const FeaturedEvents: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {events.map((event, index) => (
             <motion.div
-              key={event.id}
+              key={event.id || event._id || `event-${index}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}

@@ -16,7 +16,8 @@ const isValidImageUrl = (url: string): boolean => {
 };
 
 interface Member {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   phone: string;
@@ -129,10 +130,11 @@ export const MembersManagement: React.FC = () => {
       
       if (editingMember) {
         // Update existing member
-        console.log('Updating member ID:', editingMember.id);
+        const memberId = editingMember.id || editingMember._id;
+        console.log('Updating member ID:', memberId);
         console.log('Form data to send:', formData);
         
-        const response = await fetch(`/api/members/${editingMember.id}`, {
+        const response = await fetch(`/api/members/${memberId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -330,7 +332,7 @@ export const MembersManagement: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredMembers.map((member, index) => (
                 <motion.tr
-                  key={member.id}
+                  key={member.id || member._id || `member-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -395,7 +397,7 @@ export const MembersManagement: React.FC = () => {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteMember(member.id)}
+                        onClick={() => handleDeleteMember(member.id || member._id || '')}
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="w-4 h-4" />

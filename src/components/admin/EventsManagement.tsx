@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Eye, Calendar, MapPin, Users, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EventForm } from './EventForm';
 import toast from 'react-hot-toast';
 
 interface Event {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
   description: string;
   date: string;
@@ -147,9 +148,12 @@ export const EventsManagement: React.FC = () => {
 
   const handleSaveEvent = async (eventData: Omit<Event, 'id'> | Event) => {
     try {
-      if ('id' in eventData) {
-        await apiUpdateEvent(eventData.id, eventData);
-        toast.success('Event updated successfully!');
+      if ('id' in eventData && (eventData.id || eventData._id)) {
+        const eventId = eventData.id || eventData._id;
+        if (eventId) {
+          await apiUpdateEvent(eventId, eventData);
+          toast.success('Event updated successfully!');
+        }
       } else {
         await apiAddEvent(eventData);
         toast.success('Event created successfully!');
@@ -306,7 +310,7 @@ export const EventsManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEvents.map((event, index) => (
           <motion.div
-            key={event.id}
+            key={event.id || event._id || `event-${index}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -380,7 +384,7 @@ export const EventsManagement: React.FC = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDeleteEvent(event.id)}
+                  onClick={() => handleDeleteEvent(event.id || event._id || '')}
                   className="flex-1 text-red-600 hover:text-red-900 text-sm font-medium py-2 px-3 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   <Trash2 className="w-4 h-4 inline mr-1" />

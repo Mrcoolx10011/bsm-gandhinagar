@@ -3,7 +3,8 @@ import { X, Save, Calendar, Clock, MapPin, Tag, Users, FileText } from 'lucide-r
 import { motion } from 'framer-motion';
 
 interface Event {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
   description: string;
   date: string;
@@ -63,7 +64,8 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
     
     if (event) {
       // Update existing event
-      onSave({ ...formData, id: event.id });
+      const eventId = event.id || event._id;
+      onSave({ ...formData, id: eventId, _id: event._id });
     } else {
       // Create new event
       onSave(formData);
