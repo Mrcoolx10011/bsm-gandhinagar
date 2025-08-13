@@ -2,11 +2,12 @@
   "name": "bsm-api",
   "version": "1.0.0",
   "type": "module",
-  "main": "hello.js",
+  "main": "consolidated.js",
   "dependencies": {
     "mongodb": "^6.17.0",
     "jsonwebtoken": "^9.0.1",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -456,7 +456,7 @@ export const DonationsManagement: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredDonations.map((donation, index) => (
                 <motion.tr
-                  key={donation.id}
+                  key={donation.id || `donation-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}

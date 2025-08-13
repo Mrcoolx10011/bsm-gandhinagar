@@ -457,8 +457,8 @@ export const Donations: React.FC = () => {
                     Loading recent donors...
                   </div>
                 ) : recentDonors.length > 0 ? (
-                  recentDonors.map((donor) => (
-                    <div key={donor.id} className="flex justify-between items-center">
+                  recentDonors.map((donor, index) => (
+                    <div key={donor.id || `donor-${index}`} className="flex justify-between items-center">
                       <div>
                         <div className="font-medium text-gray-900">{donor.donorName}</div>
                         <div className="text-sm text-gray-500">{getTimeAgo(donor.date)}</div>

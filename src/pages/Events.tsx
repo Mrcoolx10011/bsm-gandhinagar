@@ -183,7 +183,7 @@ export const Events: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredEvents.map((event) => (
-                <div>
+                <div key={event.id || `event-${event.title}-${event.date}`}>
                   <div className="relative h-48 bg-gray-200">
                     <img
                       src={event.image}

@@ -72,15 +72,16 @@ export const RecentActivities: React.FC = () => {
       setError(null);
       
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/admin?type=recent-activities', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await fetch('/api/consolidated?endpoint=recent-activities', {
+        headers
       });
 
       if (!response.ok) {
