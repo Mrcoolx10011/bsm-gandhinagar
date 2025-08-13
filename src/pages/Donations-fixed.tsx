@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, CreditCard, Smartphone, QrCode, DollarSign, Users, Target, TrendingUp, CheckCircle, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { Heart, DollarSign, CreditCard, Smartphone, QrCode, Users, Target } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
-const donationAmounts = [25, 50, 100, 250, 500, 1000];
+// Define interfaces
+interface RecentDonor {
+  id: string;
+  name: string;
+  amount: number;
+  date: string;
+  campaign: string;
+  isAnonymous: boolean;
+}
 
 interface Campaign {
-  _id?: string;
-  id?: string;
+  id: string;
   title: string;
   description: string;
-  target: number;
-  raised: number;
-  donors: number;
   image: string;
-  category?: string;
+  goalAmount: number;
+  raisedAmount: number;
+  donorCount: number;
+  endDate: string;
+  isActive: boolean;
 }
 
 interface DonationFormData {
@@ -28,13 +35,7 @@ interface DonationFormData {
   message: string;
 }
 
-interface RecentDonor {
-  id: string;
-  donorName: string;
-  amount: number;
-  date: string;
-  isAnonymous: boolean;
-}
+const donationAmounts = [25, 50, 100, 250, 500, 1000];
 
 export const Donations: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
@@ -66,7 +67,7 @@ export const Donations: React.FC = () => {
   const fetchRecentDonors = async () => {
     try {
       setLoadingDonors(true);
-      const response = await fetch('/api/donations?recent=true');
+      const response = await fetch('/api/consolidated?endpoint=donations&recent=true');
       
       if (response.ok) {
         const recentCompletedDonors = await response.json();
@@ -81,16 +82,11 @@ export const Donations: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchRecentDonors();
-    fetchCampaigns();
-  }, []);
-
   // Fetch active campaigns with real donation data
   const fetchCampaigns = async () => {
     try {
       setLoadingCampaigns(true);
-      const response = await fetch('/api/campaigns?active=true');
+      const response = await fetch('/api/consolidated?endpoint=campaigns&active=true');
       
       if (response.ok) {
         const campaignsData = await response.json();
@@ -98,7 +94,6 @@ export const Donations: React.FC = () => {
         console.log('Fetched campaigns:', campaignsData);
       } else {
         console.error('Failed to fetch campaigns:', response.status);
-        // Keep empty array as fallback
       }
     } catch (error) {
       console.error('Error fetching campaigns:', error);
@@ -106,6 +101,11 @@ export const Donations: React.FC = () => {
       setLoadingCampaigns(false);
     }
   };
+
+  useEffect(() => {
+    fetchRecentDonors();
+    fetchCampaigns();
+  }, []);
 
   // Helper function to format time ago
   const getTimeAgo = (dateString: string) => {
@@ -171,8 +171,7 @@ export const Donations: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Send donation data to backend API
-      const response = await fetch('/api/donations', {
+      const response = await fetch('/api/consolidated?endpoint=donations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -196,10 +195,8 @@ export const Donations: React.FC = () => {
         setShowSuccessModal(true);
         toast.success('Donation successful! Thank you for your contribution.');
         
-        // Refresh recent donors list
         fetchRecentDonors();
         
-        // Reset form
         setFormData({
           donorName: '',
           email: '',
@@ -226,7 +223,7 @@ export const Donations: React.FC = () => {
 
   const handleCampaignDonate = (campaignTitle: string) => {
     setSelectedCampaign(campaignTitle);
-    setSelectedAmount(100); // Default amount for campaign donation
+    setSelectedAmount(100);
     setFormData(prev => ({ ...prev, amount: 100, campaign: campaignTitle }));
     setShowDonationForm(true);
   };
@@ -236,7 +233,7 @@ export const Donations: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Make a Donation
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -262,12 +259,12 @@ export const Donations: React.FC = () => {
                   onChange={(e) => setSelectedCampaign(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  {campaigns.map((campaign, index) => (
-                    <option key={campaign._id || campaign.id || `campaign-${index}`} value={campaign.title}>
+                  {campaigns.map((campaign) => (
+                    <option key={campaign.id} value={campaign.title}>
                       {campaign.title}
                     </option>
                   ))}
-                  <option key="general-fund" value="General Fund">General Fund</option>
+                  <option value="General Fund">General Fund</option>
                 </select>
               </div>
 
@@ -354,11 +351,7 @@ export const Donations: React.FC = () => {
 
               {/* QR Code Display */}
               {paymentMethod === 'qr' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mb-6 text-center"
-                >
+                <div className="mb-6 text-center animate-fade-in">
                   <div className="bg-gray-100 p-6 rounded-lg">
                     <div className="w-48 h-48 bg-white mx-auto mb-4 flex items-center justify-center border-2 border-gray-300 rounded-lg">
                       <QrCode className="w-32 h-32 text-gray-400" />
@@ -367,7 +360,7 @@ export const Donations: React.FC = () => {
                       Scan this QR code with your payment app
                     </p>
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {/* Donation Summary */}
@@ -460,11 +453,15 @@ export const Donations: React.FC = () => {
                   recentDonors.map((donor) => (
                     <div key={donor.id} className="flex justify-between items-center">
                       <div>
-                        <div className="font-medium text-gray-900">{donor.donorName}</div>
-                        <div className="text-sm text-gray-500">{getTimeAgo(donor.date)}</div>
+                        <div className="font-medium text-gray-900">
+                          {donor.isAnonymous ? 'Anonymous' : donor.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {getTimeAgo(donor.date)}
+                        </div>
                       </div>
                       <div className="font-semibold text-orange-600">
-                        ₹{(donor.amount || 0).toLocaleString()}
+                        ₹{donor.amount.toLocaleString()}
                       </div>
                     </div>
                   ))
@@ -480,7 +477,7 @@ export const Donations: React.FC = () => {
 
         {/* Active Campaigns */}
         <div className="mt-16">
-          <h2 className="text-3xl font-heading font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             Active Campaigns
           </h2>
           
@@ -492,12 +489,9 @@ export const Donations: React.FC = () => {
           ) : campaigns.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {campaigns.map((campaign, index) => (
-                <motion.div
-                  key={campaign._id || campaign.id || `campaign-${index}`}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden"
+                <div
+                  key={campaign.id}
+                  className="bg-white rounded-lg shadow-lg overflow-hidden animate-fade-in"
                 >
                   <img
                     src={campaign.image}
@@ -515,37 +509,32 @@ export const Donations: React.FC = () => {
                     </p>
                     
                     <div className="mb-4">
-                      <div className="flex justify-between text-sm text-gray-600 mb-2">
-                        <span>Raised: ₹{(campaign.raised || 0).toLocaleString()}</span>
-                        <span>Goal: ₹{(campaign.target || 1).toLocaleString()}</span>
+                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Raised: ₹{campaign.raisedAmount?.toLocaleString() || 0}</span>
+                        <span>Goal: ₹{campaign.goalAmount?.toLocaleString() || 0}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-orange-600 h-2 rounded-full"
-                          style={{ width: `${Math.min(((campaign.raised || 0) / (campaign.target || 1)) * 100, 100)}%` }}
+                        <div 
+                          className="bg-orange-600 h-2 rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${Math.min((campaign.raisedAmount / campaign.goalAmount) * 100, 100)}%` 
+                          }}
                         ></div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1" />
-                        {campaign.donors} donors
-                      </div>
-                      <div className="flex items-center">
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                        {Math.round((campaign.raised / campaign.target) * 100)}% funded
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>{campaign.donorCount || 0} donors</span>
+                        <span>{Math.round((campaign.raisedAmount / campaign.goalAmount) * 100)}% funded</span>
                       </div>
                     </div>
                     
-                    <button 
+                    <button
                       onClick={() => handleCampaignDonate(campaign.title)}
-                      className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
+                      className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
                     >
-                      Donate to Campaign
+                      Donate Now
                     </button>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           ) : (
@@ -556,175 +545,134 @@ export const Donations: React.FC = () => {
         </div>
 
         {/* Donation Form Modal */}
-        <AnimatePresence>
-          {showDonationForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Complete Your Donation</h2>
-                    <button
-                      onClick={() => setShowDonationForm(false)}
-                      className="text-gray-400 hover:text-gray-500"
-                    >
-                      <X className="w-6 h-6" />
-                    </button>
+        {showDonationForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full max-h-screen overflow-y-auto">
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Complete Your Donation
+                </h3>
+                
+                <form onSubmit={handleSubmitDonation} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="donorName"
+                      value={formData.donorName}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
                   </div>
-
-                  <form onSubmit={handleSubmitDonation} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="donorName"
-                        required
-                        value={formData.donorName}
-                        onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        required
-                        value={formData.email}
-                        onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Enter your email"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Enter your phone number"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Message (Optional)
-                      </label>
-                      <textarea
-                        name="message"
-                        rows={3}
-                        value={formData.message}
-                        onChange={handleFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                        placeholder="Leave a message..."
-                      />
-                    </div>
-
-                    <div className="flex items-center">
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleFormChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         name="isAnonymous"
                         checked={formData.isAnonymous}
                         onChange={handleFormChange}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="text-orange-600 focus:ring-orange-500"
                       />
-                      <label className="ml-2 block text-sm text-gray-700">
-                        Make this donation anonymous
-                      </label>
+                      <span className="text-sm text-gray-700">Make this donation anonymous</span>
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Message (Optional)
+                    </label>
+                    <textarea
+                      name="message"
+                      value={formData.message}
+                      onChange={handleFormChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Total:</span>
+                      <span className="text-xl font-bold text-orange-600">₹{formData.amount}</span>
                     </div>
-
-                    <div className="bg-orange-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">Campaign:</span>
-                        <span className="text-sm text-gray-900">{formData.campaign}</span>
-                      </div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">Payment Method:</span>
-                        <span className="text-sm text-gray-900 capitalize">{formData.paymentMethod}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                        <span className="text-xl font-bold text-orange-600">₹{formData.amount}</span>
-                      </div>
-                    </div>
-
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowDonationForm(false)}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
                     <button
                       type="submit"
                       disabled={isProcessing}
-                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                        isProcessing
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-orange-600 hover:bg-orange-700'
-                      } text-white`}
+                      className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
                     >
-                      {isProcessing ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          Processing...
-                        </div>
-                      ) : (
-                        <>
-                          <Heart className="w-5 h-5 inline mr-2" />
-                          Complete Donation
-                        </>
-                      )}
+                      {isProcessing ? 'Processing...' : 'Donate Now'}
                     </button>
-                  </form>
-                </div>
-              </motion.div>
+                  </div>
+                </form>
+              </div>
             </div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
 
         {/* Success Modal */}
-        <AnimatePresence>
-          {showSuccessModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg max-w-md w-full p-6 text-center"
+        {showSuccessModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Thank You!
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Your donation has been processed successfully. You will receive a confirmation email shortly.
+              </p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-700"
               >
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  Thank You!
-                </h2>
-                
-                <p className="text-gray-600 mb-6">
-                  Your donation has been processed successfully. You will receive a confirmation email shortly.
-                </p>
-                
-                <button
-                  onClick={() => setShowSuccessModal(false)}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
-                >
-                  Close
-                </button>
-              </motion.div>
+                Close
+              </button>
             </div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-

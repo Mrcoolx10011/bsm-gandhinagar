@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, Filter, Search, Users, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface Event {
   id: string;
@@ -108,19 +107,14 @@ export const Events: React.FC = () => {
       <section className="relative bg-gradient-to-r from-orange-600 to-orange-800 text-white py-20">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
+          <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Our Events
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
               Join us in making a difference through community events and initiatives
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -135,8 +129,7 @@ export const Events: React.FC = () => {
                 type="text"
                 placeholder="Search events..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
 
@@ -146,8 +139,7 @@ export const Events: React.FC = () => {
                 <Filter className="w-5 h-5 text-gray-600" />
                 <select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  onChange={(e) => setSelectedCategory(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="all">All Categories</option>
                   {categories.map(category => (
@@ -160,8 +152,7 @@ export const Events: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={showUpcoming}
-                  onChange={(e) => setShowUpcoming(e.target.checked)}
-                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                  onChange={(e) => setShowUpcoming(e.target.checked)} className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                 />
                 <span className="text-sm text-gray-700">Upcoming Only</span>
               </label>
@@ -191,19 +182,12 @@ export const Events: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredEvents.map((event, index) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-                >
+              {filteredEvents.map((event) => (
+                <div>
                   <div className="relative h-48 bg-gray-200">
                     <img
                       src={event.image}
-                      alt={event.title}
-                      className="w-full h-full object-cover"
+                      alt={event.title} className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=600';
                       }}
@@ -263,7 +247,7 @@ export const Events: React.FC = () => {
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
@@ -272,4 +256,3 @@ export const Events: React.FC = () => {
     </div>
   );
 };
-

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Calendar, Eye, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -24,12 +24,13 @@ export const FeaturedPosts: React.FC = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('/api/admin?type=posts');
+        const response = await fetch('/api/posts');
         const data = await response.json();
         
         if (response.ok) {
-          // Get the latest 6 posts
-          const latestPosts = data.posts.slice(0, 6);
+          // Get the latest 6 posts with safety check
+          const postsArray = Array.isArray(data) ? data : [];
+          const latestPosts = postsArray.slice(0, 6);
           setPosts(latestPosts);
         }
       } catch (error) {
@@ -44,20 +45,20 @@ export const FeaturedPosts: React.FC = () => {
 
   // Auto-slide functionality
   useEffect(() => {
-    if (posts.length > 1) {
+    if ((posts || []).length > 1) {
       const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % Math.ceil(posts.length / 3));
+        setCurrentIndex((prev) => (prev + 1) % Math.ceil((posts || []).length / 3));
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [posts.length]);
+  }, [(posts || []).length]);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % Math.ceil(posts.length / 3));
+    setCurrentIndex((prev) => (prev + 1) % Math.ceil((posts || []).length / 3));
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + Math.ceil(posts.length / 3)) % Math.ceil(posts.length / 3));
+    setCurrentIndex((prev) => (prev - 1 + Math.ceil((posts || []).length / 3)) % Math.ceil((posts || []).length / 3));
   };
 
   if (loading) {
@@ -72,12 +73,12 @@ export const FeaturedPosts: React.FC = () => {
     );
   }
 
-  if (posts.length === 0) {
+  if ((posts || []).length === 0) {
     return null;
   }
 
   const postsPerSlide = 3;
-  const totalSlides = Math.ceil(posts.length / postsPerSlide);
+  const totalSlides = Math.ceil((posts || []).length / postsPerSlide);
 
   return (
     <section className="py-16 bg-gradient-to-br from-gray-50 to-orange-50">
@@ -109,7 +110,7 @@ export const FeaturedPosts: React.FC = () => {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                {posts
+                {(posts || [])
                   .slice(currentIndex * postsPerSlide, (currentIndex + 1) * postsPerSlide)
                   .map((post, index) => (
                     <motion.article

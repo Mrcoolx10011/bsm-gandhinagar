@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Users, Heart, Calendar, MessageSquare, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -115,7 +115,7 @@ export const RecentActivities: React.FC = () => {
         </div>
         <div className="space-y-4">
           {[...Array(4)].map((_, index) => (
-            <div key={index} className="flex items-center space-x-3 animate-pulse">
+            <div key={`skeleton-${index}`} className="flex items-center space-x-3 animate-pulse">
               <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
               <div className="flex-1">
                 <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
@@ -183,7 +183,7 @@ export const RecentActivities: React.FC = () => {
             
             return (
               <motion.div
-                key={activity.id}
+                key={activity.id || `activity-${index}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node start-dev.js",
-    "dev:api": "vercel dev --yes",
+    "dev:api": "node simple-dev-server.js",
+    "dev:vercel": "vercel dev --yes",
     "dev:vite": "vite",
     "dev:all": "node start-dev.js",
     "dev:full": "concurrently --kill-others \"npm run dev:api\" \"npm run client\"",

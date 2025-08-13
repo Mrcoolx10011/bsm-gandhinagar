@@ -50,13 +50,16 @@ export const PostsManagement: React.FC = () => {
       const data = await response.json();
       
       if (response.ok) {
-        setPosts(data.posts);
+        // API returns posts array directly, not wrapped in an object
+        setPosts(Array.isArray(data) ? data : []);
       } else {
         toast.error(data.error || 'Failed to fetch posts');
+        setPosts([]); // Set empty array on error
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to fetch posts');
+      setPosts([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -179,9 +182,10 @@ export const PostsManagement: React.FC = () => {
   };
 
   // Filter posts
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.content.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredPosts = (posts || []).filter(post => {
+    if (!post) return false;
+    const matchesSearch = (post.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (post.content || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || post.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -237,7 +241,7 @@ export const PostsManagement: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Featured Posts</p>
               <p className="text-2xl font-bold text-gray-900">
-                {posts.filter(p => p.featured).length}
+                {(posts || []).filter(p => p.featured).length}
               </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">

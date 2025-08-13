@@ -38,12 +38,12 @@ export const Posts: React.FC = () => {
   // Fetch posts from API
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/admin?type=posts');
+      const response = await fetch('/api/posts');
       const data = await response.json();
       
       if (response.ok) {
-        setPosts(data.posts);
-        setFeaturedPosts(data.posts.filter((post: Post) => post.featured));
+        setPosts(data);
+        setFeaturedPosts(data.filter((post: Post) => post.featured));
       } else {
         toast.error('Failed to fetch posts');
       }
