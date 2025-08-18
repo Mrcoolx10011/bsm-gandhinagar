@@ -105,12 +105,14 @@ const server = createServer(async (req, res) => {
       // Parse JSON body if present
       if (body && req.headers['content-type']?.includes('application/json')) {
         try {
-          req.body = JSON.parse(body);
+          mockReq.body = JSON.parse(body);
+          console.log('📝 Parsed request body:', mockReq.body);
         } catch (e) {
-          req.body = {};
+          console.error('❌ Failed to parse JSON body:', e.message);
+          mockReq.body = {};
         }
       } else {
-        req.body = {};
+        mockReq.body = {};
       }
 
       // Create mock Vercel response object

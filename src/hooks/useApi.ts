@@ -31,7 +31,7 @@ export const useApi = () => {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000/api' : '/api');
       const url = endpoint.startsWith('/') ? `${apiUrl}${endpoint}` : `${apiUrl}/${endpoint}`;
 
       const headers: Record<string, string> = {
@@ -109,9 +109,15 @@ export const useLogin = () => {
   const { apiCall } = useApi();
 
   const login = async (credentials: { username: string; password: string }) => {
-    return apiCall('/auth/login', {
+    // Add action parameter for admin login
+    const loginData = {
+      ...credentials,
+      action: 'login'
+    };
+    
+    return apiCall('/consolidated?endpoint=admin', {
       method: 'POST',
-      body: credentials,
+      body: loginData,
       requiresAuth: false,
       showToast: false // Handle toast manually for better UX
     });
