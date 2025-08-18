@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Eye, Heart, Tag, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Eye, Heart, Tag, Search, Filter, ChevronLeft, ChevronRight, Share2, Copy, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Post {
@@ -25,6 +25,8 @@ export const Posts: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharingPost, setSharingPost] = useState<Post | null>(null);
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -96,6 +98,54 @@ export const Posts: React.FC = () => {
     setCurrentFeaturedIndex((prev) => 
       prev === 0 ? featuredPosts.length - 1 : prev - 1
     );
+  };
+
+  // Handle share post
+  const handleShare = (post: Post, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation(); // Prevent opening the post modal
+    }
+    setSharingPost(post);
+    setShowShareModal(true);
+  };
+
+  // Copy post link to clipboard
+  const copyPostLink = async (post: Post) => {
+    const postUrl = `${window.location.origin}/posts/${post._id}`;
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      toast.success('Post link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  // Share on social media
+  const shareOnSocial = (platform: string, post: Post) => {
+    const postUrl = `${window.location.origin}/posts/${post._id}`;
+    const text = `Check out this post: ${post.title}`;
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(postUrl)}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(`${text} ${postUrl}`)}`;
+        break;
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(text)}`;
+        break;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
   };
 
   return (
@@ -306,9 +356,20 @@ export const Posts: React.FC = () => {
                         {post.likes}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      {new Date(post.createdAt).toLocaleDateString()}
+                    <div className="flex items-center gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => handleShare(post, e)}
+                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 transition-colors"
+                        title="Share post"
+                      >
+                        <Share2 size={16} />
+                      </motion.button>
+                      <div className="flex items-center gap-1">
+                        <Calendar size={14} />
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -384,13 +445,130 @@ export const Posts: React.FC = () => {
                   </p>
                 </div>
                 
-                <div className="flex justify-end mt-8">
+                <div className="flex justify-between items-center mt-8">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleShare(selectedPost)}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <Share2 size={16} />
+                    Share Post
+                  </motion.button>
                   <button
                     onClick={() => setSelectedPost(null)}
                     className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
                   >
                     Close
                   </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Share Modal */}
+      <AnimatePresence>
+        {showShareModal && sharingPost && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={() => setShowShareModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Share Post</h2>
+                <button
+                  onClick={() => {
+                    setShowShareModal(false);
+                    setSharingPost(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="flex items-center mb-4">
+                  {sharingPost.image && (
+                    <img
+                      src={sharingPost.image}
+                      alt={sharingPost.title}
+                      className="w-12 h-12 rounded-lg object-cover mr-4"
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-medium text-gray-900">{sharingPost.title}</h3>
+                    <p className="text-sm text-gray-500">
+                      {sharingPost.content.substring(0, 60)}...
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Copy Link */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => copyPostLink(sharingPost)}
+                  className="w-full flex items-center justify-center gap-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Copy size={20} className="text-gray-600" />
+                  <span className="font-medium text-gray-700">Copy Link</span>
+                </motion.button>
+
+                {/* Social Media Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => shareOnSocial('facebook', sharingPost)}
+                    className="flex items-center justify-center gap-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Facebook size={18} />
+                    <span className="font-medium">Facebook</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => shareOnSocial('twitter', sharingPost)}
+                    className="flex items-center justify-center gap-2 p-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
+                  >
+                    <Twitter size={18} />
+                    <span className="font-medium">Twitter</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => shareOnSocial('whatsapp', sharingPost)}
+                    className="flex items-center justify-center gap-2 p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    <MessageCircle size={18} />
+                    <span className="font-medium">WhatsApp</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => shareOnSocial('telegram', sharingPost)}
+                    className="flex items-center justify-center gap-2 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    <MessageCircle size={18} />
+                    <span className="font-medium">Telegram</span>
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
