@@ -8,7 +8,7 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Organization Info */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-0">
               <img 
                 src="/bihar-cultural-logo.png" 
                 alt="Bihar Sanskritik Mandal Logo" 

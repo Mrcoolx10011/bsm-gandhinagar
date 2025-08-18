@@ -46,7 +46,7 @@ export const PostsManagement: React.FC = () => {
   // Fetch posts from API
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/admin?type=posts');
+      const response = await fetch('/api/consolidated?endpoint=posts');
       const data = await response.json();
       
       if (response.ok) {
@@ -82,7 +82,7 @@ export const PostsManagement: React.FC = () => {
         return;
       }
       
-      const url = editingPost ? '/api/admin?type=posts' : '/api/admin?type=posts';
+      const url = editingPost ? '/api/consolidated?endpoint=posts' : '/api/consolidated?endpoint=posts';
       const method = editingPost ? 'PUT' : 'POST';
       
       const payload = editingPost 
@@ -128,7 +128,7 @@ export const PostsManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin?type=posts&id=${id}`, {
+      const response = await fetch(`/api/consolidated?endpoint=posts&id=${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
