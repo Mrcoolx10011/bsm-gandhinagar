@@ -6,11 +6,11 @@ import toast from 'react-hot-toast';
 interface Post {
   _id: string;
   title: string;
-  content: string;
-  image: string;
+  content?: string;
+  image?: string;
   category: string;
   featured: boolean;
-  author: string;
+  author?: string;
   createdAt: string;
   updatedAt: string;
   likes: number;
@@ -40,7 +40,7 @@ export const Posts: React.FC = () => {
   // Fetch posts from API
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/posts');
+      const response = await fetch('/api/consolidated?endpoint=posts');
       const data = await response.json();
       
       if (response.ok) {
@@ -75,8 +75,8 @@ export const Posts: React.FC = () => {
 
   // Filter posts
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (post.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (post.content || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || post.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -84,7 +84,84 @@ export const Posts: React.FC = () => {
   // Handle post click
   const handlePostClick = (post: Post) => {
     setSelectedPost(post);
-    // Update views (you might want to call an API endpoint for this)
+    // Increment view count when post is opened
+    handleView(post._id);
+  };
+
+  // Handle like post
+  const handleLike = async (postId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation(); // Prevent opening the post modal
+    }
+    
+    try {
+      const response = await fetch(`/api/consolidated?endpoint=posts&action=like&id=${postId}`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Update the local posts state
+        setPosts(prevPosts => 
+          prevPosts.map(post => 
+            post._id === postId 
+              ? { ...post, likes: data.likes }
+              : post
+          )
+        );
+        setFeaturedPosts(prevFeatured =>
+          prevFeatured.map(post =>
+            post._id === postId
+              ? { ...post, likes: data.likes }
+              : post
+          )
+        );
+        // Update selected post if it's currently open
+        if (selectedPost && selectedPost._id === postId) {
+          setSelectedPost(prev => prev ? { ...prev, likes: data.likes } : null);
+        }
+        toast.success('Post liked! ❤️');
+      } else {
+        toast.error('Failed to like post');
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+      toast.error('Failed to like post');
+    }
+  };
+
+  // Handle view post
+  const handleView = async (postId: string) => {
+    try {
+      const response = await fetch(`/api/consolidated?endpoint=posts&action=view&id=${postId}`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Update the local posts state
+        setPosts(prevPosts => 
+          prevPosts.map(post => 
+            post._id === postId 
+              ? { ...post, views: data.views }
+              : post
+          )
+        );
+        setFeaturedPosts(prevFeatured =>
+          prevFeatured.map(post =>
+            post._id === postId
+              ? { ...post, views: data.views }
+              : post
+          )
+        );
+        // Update selected post if it's currently open
+        if (selectedPost && selectedPost._id === postId) {
+          setSelectedPost(prev => prev ? { ...prev, views: data.views } : null);
+        }
+      }
+    } catch (error) {
+      console.error('Error tracking view:', error);
+    }
   };
 
   // Navigate featured posts
@@ -184,7 +261,7 @@ export const Posts: React.FC = () => {
                       {featuredPosts[currentFeaturedIndex]?.title}
                     </h1>
                     <p className="text-xl text-gray-200 mb-6 line-clamp-3">
-                      {featuredPosts[currentFeaturedIndex]?.content}
+                      {featuredPosts[currentFeaturedIndex]?.content || 'No content available'}
                     </p>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -342,19 +419,25 @@ export const Posts: React.FC = () => {
                   </h3>
                   
                   <p className="text-gray-600 mb-4 line-clamp-3">
-                    {post.content}
+                    {post.content || 'No content available'}
                   </p>
                   
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
                         <Eye size={14} />
-                        {post.views}
+                        {post.views || 0}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Heart size={14} />
-                        {post.likes}
-                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => handleLike(post._id, e)}
+                        className="flex items-center gap-1 text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-50"
+                        title="Like this post"
+                      >
+                        <Heart size={14} fill="currentColor" />
+                        {post.likes || 0}
+                      </motion.button>
                     </div>
                     <div className="flex items-center gap-3">
                       <motion.button
@@ -430,18 +513,24 @@ export const Posts: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Eye size={14} />
-                    {selectedPost.views} views
+                    {selectedPost.views || 0} views
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Heart size={14} />
-                    {selectedPost.likes} likes
-                  </div>
-                  <span>by {selectedPost.author}</span>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleLike(selectedPost._id)}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-50"
+                    title="Like this post"
+                  >
+                    <Heart size={14} fill="currentColor" />
+                    {selectedPost.likes || 0} likes
+                  </motion.button>
+                  <span>by {selectedPost.author || 'Unknown'}</span>
                 </div>
                 
                 <div className="prose max-w-none">
                   <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {selectedPost.content}
+                    {selectedPost.content || 'No content available'}
                   </p>
                 </div>
                 
@@ -510,7 +599,7 @@ export const Posts: React.FC = () => {
                   <div>
                     <h3 className="font-medium text-gray-900">{sharingPost.title}</h3>
                     <p className="text-sm text-gray-500">
-                      {sharingPost.content.substring(0, 60)}...
+                      {sharingPost.content ? sharingPost.content.substring(0, 60) + '...' : 'No content available'}
                     </p>
                   </div>
                 </div>

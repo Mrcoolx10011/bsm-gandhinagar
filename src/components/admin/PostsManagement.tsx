@@ -6,11 +6,11 @@ import toast from 'react-hot-toast';
 interface Post {
   _id: string;
   title: string;
-  content: string;
-  image: string;
+  content?: string;
+  image?: string;
   category: string;
   featured: boolean;
-  author: string;
+  author?: string;
   createdAt: string;
   updatedAt: string;
   likes: number;
@@ -168,12 +168,12 @@ export const PostsManagement: React.FC = () => {
     setEditingPost(post);
     setFormData({
       title: post.title,
-      content: post.content,
-      image: post.image,
+      content: post.content || '',
+      image: post.image || '',
       category: post.category,
       featured: post.featured
     });
-    setImagePreview(post.image);
+    setImagePreview(post.image || '');
     setShowForm(true);
   };
 
@@ -225,6 +225,37 @@ export const PostsManagement: React.FC = () => {
     
     if (shareUrl) {
       window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+  };
+
+  // Handle like post (admin can test functionality)
+  const handleLike = async (postId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    try {
+      const response = await fetch(`/api/consolidated?endpoint=posts&action=like&id=${postId}`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Update the local posts state
+        setPosts(prevPosts => 
+          prevPosts.map(post => 
+            post._id === postId 
+              ? { ...post, likes: data.likes }
+              : post
+          )
+        );
+        toast.success('Post liked! ❤️');
+      } else {
+        toast.error('Failed to like post');
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+      toast.error('Failed to like post');
     }
   };
 
@@ -307,7 +338,7 @@ export const PostsManagement: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Total Views</p>
               <p className="text-2xl font-bold text-gray-900">
-                {posts.reduce((sum, p) => sum + p.views, 0)}
+                {posts.reduce((sum, p) => sum + (p.views || 0), 0)}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -326,7 +357,7 @@ export const PostsManagement: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Total Likes</p>
               <p className="text-2xl font-bold text-gray-900">
-                {posts.reduce((sum, p) => sum + p.likes, 0)}
+                {posts.reduce((sum, p) => sum + (p.likes || 0), 0)}
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
@@ -427,7 +458,7 @@ export const PostsManagement: React.FC = () => {
                             )}
                           </div>
                           <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                            {post.content.substring(0, 100)}...
+                            {post.content ? post.content.substring(0, 100) + '...' : 'No content available'}
                           </p>
                         </div>
                       </div>
@@ -442,12 +473,18 @@ export const PostsManagement: React.FC = () => {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center text-sm text-gray-500">
                           <Eye size={14} className="mr-1" />
-                          {post.views} views
+                          {post.views || 0} views
                         </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Heart size={14} className="mr-1" />
-                          {post.likes} likes
-                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => handleLike(post._id, e)}
+                          className="flex items-center text-sm text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-50"
+                          title="Like this post"
+                        >
+                          <Heart size={14} className="mr-1" fill="currentColor" />
+                          {post.likes || 0} likes
+                        </motion.button>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -455,7 +492,7 @@ export const PostsManagement: React.FC = () => {
                         <Calendar size={14} className="mr-1" />
                         {new Date(post.createdAt).toLocaleDateString()}
                       </div>
-                      <p className="text-xs text-gray-400">by {post.author}</p>
+                      <p className="text-xs text-gray-400">by {post.author || 'Unknown'}</p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
@@ -684,7 +721,7 @@ export const PostsManagement: React.FC = () => {
                   <div>
                     <h3 className="font-medium text-gray-900">{sharingPost.title}</h3>
                     <p className="text-sm text-gray-500">
-                      {sharingPost.content.substring(0, 60)}...
+                      {sharingPost.content ? sharingPost.content.substring(0, 60) + '...' : 'No content available'}
                     </p>
                   </div>
                 </div>

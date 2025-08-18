@@ -264,10 +264,45 @@ async function handlePosts(req, res, db) {
       return res.status(200).json(posts);
 
     case 'POST':
+      // Check if this is a like/view action
+      if (req.query.action === 'like') {
+        const { id } = req.query;
+        const result = await collection.updateOne(
+          { _id: new ObjectId(id) },
+          { $inc: { likes: 1 } }
+        );
+        
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'Post not found' });
+        }
+        
+        const updatedPost = await collection.findOne({ _id: new ObjectId(id) });
+        return res.status(200).json({ likes: updatedPost.likes });
+      }
+      
+      if (req.query.action === 'view') {
+        const { id } = req.query;
+        const result = await collection.updateOne(
+          { _id: new ObjectId(id) },
+          { $inc: { views: 1 } }
+        );
+        
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'Post not found' });
+        }
+        
+        const updatedPost = await collection.findOne({ _id: new ObjectId(id) });
+        return res.status(200).json({ views: updatedPost.views });
+      }
+
+      // Regular post creation
       const newPost = {
         ...req.body,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        likes: 0,
+        views: 0,
+        author: req.body.author || 'Admin'
       };
       const result = await collection.insertOne(newPost);
       return res.status(201).json({ _id: result.insertedId, ...newPost });
