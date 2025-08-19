@@ -73,7 +73,7 @@ export default async function handler(req, res) {
   
   try {
     const client = await connectToDatabase();
-    const db = client.db('bsm-gandhinagar');
+    const db = client ? client.db('bsm-gandhinagar') : null;
 
     switch (endpoint) {
       case 'members':
@@ -97,8 +97,25 @@ export default async function handler(req, res) {
       case 'hello':
         return res.status(200).json({ message: 'Hello from BSM Gandhinagar API!' });
       case 'health':
-        const collections = await db.listCollections().toArray();
-        console.log('📋 Available collections:', collections.map(c => c.name));
+        if (db) {
+          const collections = await db.listCollections().toArray();
+          console.log('📋 Available collections:', collections.map(c => c.name));
+          return res.status(200).json({ 
+            status: 'healthy', 
+            message: 'BSM Gandhinagar API is running',
+            database: 'connected',
+            collections: collections.map(c => c.name),
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          return res.status(200).json({ 
+            status: 'healthy', 
+            message: 'BSM Gandhinagar API is running (development mode)',
+            database: 'development',
+            collections: ['mock-data'],
+            timestamp: new Date().toISOString()
+          });
+        }
         return res.status(200).json({ 
           status: 'healthy', 
           message: 'BSM Gandhinagar API is running',
@@ -210,10 +227,34 @@ async function handleEvents(req, res, db) {
 
 // Donations API Handler
 async function handleDonations(req, res, db) {
+  // Handle development mode when database is not available
+  if (!db || isDevelopmentMode) {
+    return handleDonationsDevelopmentMode(req, res);
+  }
+
   const collection = db.collection('donations');
 
   switch (req.method) {
     case 'GET':
+      const { recent, id: getDonationId } = req.query;
+      
+      if (getDonationId) {
+        // Get specific donation
+        const donation = await collection.findOne({ _id: new ObjectId(getDonationId) });
+        return res.status(200).json(donation);
+      }
+      
+      if (recent === 'true') {
+        // Get recent approved donations for public display (limit 10)
+        const recentDonations = await collection
+          .find({ approved: true, status: 'completed' })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .toArray();
+        return res.status(200).json(recentDonations);
+      }
+      
+      // Get all donations (admin view)
       const donations = await collection.find({}).sort({ createdAt: -1 }).toArray();
       return res.status(200).json(donations);
 
@@ -221,10 +262,146 @@ async function handleDonations(req, res, db) {
       const newDonation = {
         ...req.body,
         createdAt: new Date(),
-        status: 'pending'
+        status: 'pending',
+        approved: false
       };
       const result = await collection.insertOne(newDonation);
       return res.status(201).json({ _id: result.insertedId, ...newDonation });
+
+    case 'PUT':
+      const { id: updateId } = req.query;
+      const updateData = { ...req.body, updatedAt: new Date() };
+      
+      const updateResult = await collection.updateOne(
+        { _id: new ObjectId(updateId) },
+        { $set: updateData }
+      );
+      
+      if (updateResult.matchedCount === 0) {
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+      
+      const updatedDonation = await collection.findOne({ _id: new ObjectId(updateId) });
+      return res.status(200).json(updatedDonation);
+
+    case 'DELETE':
+      const { id: deleteId } = req.query;
+      
+      if (!deleteId) {
+        return res.status(400).json({ error: 'Donation ID is required' });
+      }
+      
+      const deleteResult = await collection.deleteOne({ _id: new ObjectId(deleteId) });
+      
+      if (deleteResult.deletedCount === 0) {
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+      
+      return res.status(200).json({ message: 'Donation deleted successfully' });
+
+    default:
+      return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+// Development mode handler for donations
+function handleDonationsDevelopmentMode(req, res) {
+  console.log('🔧 Running donations in development mode');
+  
+  // Mock data for development
+  const mockDonations = [
+    {
+      _id: '66c123456789012345678901',
+      id: '66c123456789012345678901',
+      donorName: 'Test Donor 1',
+      email: 'donor1@test.com',
+      phone: '+91-9876543210',
+      amount: 1000,
+      campaign: 'Education for All',
+      paymentMethod: 'upi',
+      status: 'completed',
+      approved: true,
+      isAnonymous: false,
+      message: 'Keep up the good work!',
+      createdAt: new Date('2024-08-15'),
+      updatedAt: new Date('2024-08-15')
+    },
+    {
+      _id: '66c123456789012345678902',
+      id: '66c123456789012345678902',
+      donorName: 'Anonymous',
+      email: '',
+      phone: '',
+      amount: 500,
+      campaign: 'Healthcare Support',
+      paymentMethod: 'card',
+      status: 'completed',
+      approved: true,
+      isAnonymous: true,
+      message: '',
+      createdAt: new Date('2024-08-14'),
+      updatedAt: new Date('2024-08-14')
+    }
+  ];
+
+  switch (req.method) {
+    case 'GET':
+      const { recent, id: getDonationId } = req.query;
+      
+      if (getDonationId) {
+        const donation = mockDonations.find(d => d._id === getDonationId || d.id === getDonationId);
+        return res.status(200).json(donation || null);
+      }
+      
+      if (recent === 'true') {
+        const recentDonations = mockDonations
+          .filter(d => d.approved && d.status === 'completed')
+          .slice(0, 10);
+        return res.status(200).json(recentDonations);
+      }
+      
+      return res.status(200).json(mockDonations);
+
+    case 'POST':
+      const newId = Date.now().toString();
+      const newDonation = {
+        _id: newId,
+        id: newId,
+        ...req.body,
+        createdAt: new Date(),
+        status: 'pending',
+        approved: false
+      };
+      console.log('🆕 Created mock donation:', newDonation);
+      return res.status(201).json(newDonation);
+
+    case 'PUT':
+      const { id: updateId } = req.query;
+      const donation = mockDonations.find(d => d._id === updateId || d.id === updateId);
+      
+      if (!donation) {
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+      
+      const updatedDonation = { ...donation, ...req.body, updatedAt: new Date() };
+      console.log('✏️  Updated mock donation:', updatedDonation);
+      return res.status(200).json(updatedDonation);
+
+    case 'DELETE':
+      const { id: deleteId } = req.query;
+      
+      if (!deleteId) {
+        return res.status(400).json({ error: 'Donation ID is required' });
+      }
+      
+      const donationExists = mockDonations.find(d => d._id === deleteId || d.id === deleteId);
+      
+      if (!donationExists) {
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+      
+      console.log('🗑️ Deleted mock donation:', deleteId);
+      return res.status(200).json({ message: 'Donation deleted successfully' });
 
     default:
       return res.status(405).json({ error: 'Method not allowed' });

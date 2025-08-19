@@ -67,14 +67,35 @@ export const DonationsManagement: React.FC = () => {
       setLoading(true);
       console.log('🚀 Fetching donations...');
       
-      const response = await makeAuthenticatedRequest('/api/donations');
+      const response = await makeAuthenticatedRequest('/api/consolidated?endpoint=donations');
       
       console.log('📡 Donations response status:', response.status);
       
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Donations data received:', data);
-        setDonations(data);
+        
+        // Transform data to ensure proper format
+        const transformedDonations = data.map((donation: any) => ({
+          id: donation._id || donation.id,
+          donorName: donation.donorName || donation.name || 'Unknown',
+          email: donation.email || '',
+          phone: donation.phone || '',
+          amount: donation.amount || 0,
+          campaign: donation.campaign || 'General',
+          paymentMethod: donation.paymentMethod || 'card',
+          transactionId: donation.transactionId || '',
+          status: donation.status || 'pending',
+          approved: donation.approved || false,
+          isAnonymous: donation.isAnonymous || false,
+          message: donation.message || '',
+          date: donation.date || donation.createdAt,
+          createdAt: donation.createdAt,
+          updatedAt: donation.updatedAt
+        }));
+        
+        setDonations(transformedDonations);
+        console.log('✅ Transformed donations:', transformedDonations);
       } else {
         const errorMessage = handleApiError(response);
         console.error('❌ Failed to fetch donations:', errorMessage);
@@ -96,24 +117,40 @@ export const DonationsManagement: React.FC = () => {
   const handleSaveDonation = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const url = editingDonation ? `/api/donations?id=${editingDonation.id}` : '/api/donations';
-      const method = editingDonation ? 'PUT' : 'POST';
+      console.log('💾 Saving donation:', formData);
+      
+      const donationData = {
+        ...formData,
+        amount: parseFloat(formData.amount)
+      };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          amount: parseFloat(formData.amount)
-        }),
-      });
+      let response;
+      if (editingDonation) {
+        // Update existing donation
+        response = await makeAuthenticatedRequest(`/api/consolidated?endpoint=donations&id=${editingDonation.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(donationData),
+        });
+      } else {
+        // Create new donation
+        response = await makeAuthenticatedRequest('/api/consolidated?endpoint=donations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(donationData),
+        });
+      }
+
+      console.log('💾 Save response status:', response.status);
 
       if (response.ok) {
         const savedDonation = await response.json();
+        console.log('✅ Donation saved:', savedDonation);
+        
         if (editingDonation) {
           setDonations(donations.map(d => d.id === editingDonation.id ? savedDonation : d));
           toast.success('Donation updated successfully');
@@ -125,89 +162,107 @@ export const DonationsManagement: React.FC = () => {
         setEditingDonation(null);
         resetForm();
       } else {
-        toast.error('Failed to save donation');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `Failed to save donation (Status: ${response.status})`;
+        console.error('❌ Failed to save donation:', errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Error saving donation:', error);
-      toast.error('Error saving donation');
+      console.error('❌ Error saving donation:', error);
+      toast.error(error instanceof Error ? error.message : 'Error saving donation');
     }
   };
 
   // Delete donation
   const handleDeleteDonation = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this donation?')) return;
+    if (!confirm('Are you sure you want to delete this donation? This action cannot be undone.')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/donations?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      console.log('🗑️ Deleting donation with ID:', id);
+      
+      const response = await makeAuthenticatedRequest(`/api/consolidated?endpoint=donations&id=${id}`, {
+        method: 'DELETE'
       });
+
+      console.log('🗑️ Delete response status:', response.status);
 
       if (response.ok) {
         setDonations(donations.filter(d => d.id !== id));
         toast.success('Donation deleted successfully');
+        console.log('✅ Donation deleted successfully');
       } else {
-        toast.error('Failed to delete donation');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `Failed to delete donation (Status: ${response.status})`;
+        console.error('❌ Failed to delete donation:', errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Error deleting donation:', error);
-      toast.error('Error deleting donation');
+      console.error('❌ Error deleting donation:', error);
+      toast.error(error instanceof Error ? error.message : 'Error deleting donation');
     }
   };
 
   // Update donation status
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/donations?id=${id}`, {
+      console.log('🔄 Updating donation status:', { id, status });
+      
+      const response = await makeAuthenticatedRequest(`/api/consolidated?endpoint=donations&id=${id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status }),
       });
 
+      console.log('🔄 Status update response status:', response.status);
+
       if (response.ok) {
         const updatedDonation = await response.json();
         setDonations(donations.map(d => d.id === id ? updatedDonation : d));
         toast.success('Donation status updated');
+        console.log('✅ Status updated successfully');
       } else {
-        toast.error('Failed to update status');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `Failed to update status (Status: ${response.status})`;
+        console.error('❌ Failed to update status:', errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Error updating status');
+      console.error('❌ Error updating status:', error);
+      toast.error(error instanceof Error ? error.message : 'Error updating status');
     }
   };
 
   // Update donation approval status
   const handleToggleApproval = async (id: string, currentApproval: boolean) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/donations?id=${id}`, {
+      console.log('🔄 Toggling approval status:', { id, currentApproval });
+      
+      const response = await makeAuthenticatedRequest(`/api/consolidated?endpoint=donations&id=${id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ approved: !currentApproval }),
       });
 
+      console.log('🔄 Approval toggle response status:', response.status);
+
       if (response.ok) {
         const updatedDonation = await response.json();
         setDonations(donations.map(d => d.id === id ? updatedDonation : d));
         toast.success(`Donation ${!currentApproval ? 'approved' : 'disapproved'} successfully`);
+        console.log('✅ Approval status updated successfully');
       } else {
-        toast.error('Failed to update approval status');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `Failed to update approval status (Status: ${response.status})`;
+        console.error('❌ Failed to update approval status:', errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Error updating approval:', error);
-      toast.error('Error updating approval status');
+      console.error('❌ Error updating approval:', error);
+      toast.error(error instanceof Error ? error.message : 'Error updating approval status');
     }
   };
 

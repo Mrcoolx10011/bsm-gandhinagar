@@ -444,30 +444,37 @@ export const Donations: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Recent Donors
               </h3>
-              <div className="space-y-3">
-                {loadingDonors ? (
-                  <div className="text-center text-gray-500 py-4">
-                    Loading recent donors...
-                  </div>
-                ) : recentDonors.length > 0 ? (
-                  recentDonors.map((donor) => (
-                    <div key={donor.id} className="flex justify-between items-center">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {donor.isAnonymous ? 'Anonymous' : donor.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {getTimeAgo(donor.date)}
-                        </div>
-                      </div>
-                      <div className="font-semibold text-orange-600">
-                        ₹{donor.amount.toLocaleString()}
-                      </div>
+              <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                <div className="space-y-3 pr-2">
+                  {loadingDonors ? (
+                    <div className="text-center text-gray-500 py-4">
+                      Loading recent donors...
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center text-gray-500 py-4">
-                    No recent donations yet
+                  ) : recentDonors.length > 0 ? (
+                    recentDonors.slice(0, 10).map((donor) => (
+                      <div key={donor.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {donor.isAnonymous ? 'Anonymous' : donor.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {getTimeAgo(donor.date)}
+                          </div>
+                        </div>
+                        <div className="font-semibold text-orange-600">
+                          ₹{donor.amount.toLocaleString()}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-gray-500 py-4">
+                      No recent donations yet
+                    </div>
+                  )}
+                </div>
+                {recentDonors.length > 10 && (
+                  <div className="text-center mt-3 text-sm text-gray-500">
+                    Showing 10 of {recentDonors.length} recent donations
                   </div>
                 )}
               </div>
@@ -488,7 +495,7 @@ export const Donations: React.FC = () => {
             </div>
           ) : campaigns.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {campaigns.map((campaign, index) => (
+              {campaigns.map((campaign) => (
                 <div
                   key={campaign.id}
                   className="bg-white rounded-lg shadow-lg overflow-hidden animate-fade-in"
