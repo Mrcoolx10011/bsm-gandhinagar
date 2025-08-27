@@ -59,7 +59,7 @@ export const CampaignsManagement: React.FC = () => {
       setLoading(true);
       console.log('🚀 Fetching campaigns...');
       
-      const response = await makeAuthenticatedRequest('/api/campaigns');
+      const response = await makeAuthenticatedRequest('/api/consolidated?endpoint=campaigns');
       
       console.log('📡 Campaigns response status:', response.status);
       
@@ -67,9 +67,10 @@ export const CampaignsManagement: React.FC = () => {
         const data = await response.json();
         console.log('✅ Campaigns data received:', data);
         
-        // Ensure all campaigns have required properties
+        // Ensure all campaigns have required properties and normalize id field
         const validatedCampaigns = data.map((campaign: any) => ({
           ...campaign,
+          id: campaign._id || campaign.id, // Use _id from MongoDB, fallback to id
           raised: campaign.raised || 0,
           target: campaign.target || 0,
           donors: campaign.donors || 0,
@@ -96,20 +97,22 @@ export const CampaignsManagement: React.FC = () => {
 
   const handleCreateCampaign = async () => {
     try {
-      const response = await makeAuthenticatedRequest('/api/campaigns', {
+      const response = await makeAuthenticatedRequest('/api/consolidated?endpoint=campaigns', {
         method: 'POST',
         body: JSON.stringify(formData)
       });
 
       if (response.ok) {
         const newCampaign = await response.json();
+        // Normalize the id field
+        newCampaign.id = newCampaign._id || newCampaign.id;
         setCampaigns(prev => [newCampaign, ...prev]);
         setShowForm(false);
         resetForm();
         toast.success('Campaign created successfully!');
       } else {
         const errorData = await response.json();
-        toast.error(`Failed to create campaign: ${errorData.message}`);
+        toast.error(`Failed to create campaign: ${errorData.error || errorData.message}`);
       }
     } catch (error) {
       console.error('Error creating campaign:', error);
@@ -121,13 +124,18 @@ export const CampaignsManagement: React.FC = () => {
     if (!editingCampaign) return;
 
     try {
-      const response = await makeAuthenticatedRequest(`/api/campaigns?id=${editingCampaign.id}`, {
+      const response = await makeAuthenticatedRequest(`/api/consolidated?endpoint=campaigns&id=${editingCampaign.id}`, {
         method: 'PUT',
         body: JSON.stringify(formData)
       });
 
       if (response.ok) {
-        const updatedCampaign = await response.json();
+        // Create updated campaign object with normalized id
+        const updatedCampaign = {
+          ...editingCampaign,
+          ...formData,
+          updatedAt: new Date().toISOString()
+        };
         setCampaigns(prev => prev.map(campaign => 
           campaign.id === editingCampaign.id ? updatedCampaign : campaign
         ));
@@ -137,7 +145,7 @@ export const CampaignsManagement: React.FC = () => {
         toast.success('Campaign updated successfully!');
       } else {
         const errorData = await response.json();
-        toast.error(`Failed to update campaign: ${errorData.message}`);
+        toast.error(`Failed to update campaign: ${errorData.error || errorData.message}`);
       }
     } catch (error) {
       console.error('Error updating campaign:', error);
@@ -148,7 +156,7 @@ export const CampaignsManagement: React.FC = () => {
   const handleDeleteCampaign = async (campaignId: string) => {
     if (window.confirm('Are you sure you want to delete this campaign?')) {
       try {
-        const response = await makeAuthenticatedRequest(`/api/campaigns?id=${campaignId}`, {
+        const response = await makeAuthenticatedRequest(`/api/consolidated?endpoint=campaigns&id=${campaignId}`, {
           method: 'DELETE'
         });
 
@@ -157,7 +165,7 @@ export const CampaignsManagement: React.FC = () => {
           toast.success('Campaign deleted successfully!');
         } else {
           const errorData = await response.json();
-          toast.error(`Failed to delete campaign: ${errorData.message}`);
+          toast.error(`Failed to delete campaign: ${errorData.error || errorData.message}`);
         }
       } catch (error) {
         console.error('Error deleting campaign:', error);

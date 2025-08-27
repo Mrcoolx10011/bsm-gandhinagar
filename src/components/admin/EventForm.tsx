@@ -43,17 +43,20 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
 
   useEffect(() => {
     if (event) {
+      // Ensure date is in the correct format for the date input (YYYY-MM-DD)
+      const eventDate = event.date ? new Date(event.date).toISOString().split('T')[0] : '';
+      
       setFormData({
         title: event.title,
         description: event.description,
-        date: event.date,
+        date: eventDate,
         time: event.time,
         location: event.location,
         category: event.category,
-        image: event.image,
+        image: event.image || '',
         gallery: event.gallery || [],
-        attendees: event.attendees,
-        maxAttendees: event.maxAttendees,
+        attendees: event.attendees || 0,
+        maxAttendees: event.maxAttendees || 50,
         status: event.status
       });
     }

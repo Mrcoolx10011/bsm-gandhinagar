@@ -43,7 +43,7 @@ export const EventsManagement: React.FC = () => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/events');
+      const response = await fetch('/api/consolidated?endpoint=events');
       if (response.ok) {
         const data = await response.json();
         setEvents(data);
@@ -61,7 +61,9 @@ export const EventsManagement: React.FC = () => {
   const apiAddEvent = async (eventData: Omit<Event, 'id'>) => {
     try {
       const token = getAuthToken();
-      const response = await fetch('/api/events', {
+      console.log('🆕 Creating event:', eventData);
+      
+      const response = await fetch('/api/consolidated?endpoint=events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,12 +72,16 @@ export const EventsManagement: React.FC = () => {
         body: JSON.stringify(eventData)
       });
 
+      console.log('📡 Create response status:', response.status);
+
       if (response.ok) {
         const newEvent = await response.json();
         setEvents(prev => [...prev, newEvent]);
         return newEvent;
       } else {
-        throw new Error('Failed to create event');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Create error:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to create event`);
       }
     } catch (error) {
       console.error('Error creating event:', error);
@@ -86,7 +92,9 @@ export const EventsManagement: React.FC = () => {
   const apiUpdateEvent = async (id: string, eventData: Partial<Event>) => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`/api/events/${id}`, {
+      console.log('🔄 Updating event:', { id, eventData });
+      
+      const response = await fetch(`/api/consolidated?endpoint=events&id=${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -95,12 +103,16 @@ export const EventsManagement: React.FC = () => {
         body: JSON.stringify(eventData)
       });
 
+      console.log('📡 Update response status:', response.status);
+      
       if (response.ok) {
-        const updatedEvent = await response.json();
-        setEvents(prev => prev.map(event => event.id === id ? updatedEvent : event));
-        return updatedEvent;
+        // Refetch events to get the updated data
+        await fetchEvents();
+        return eventData;
       } else {
-        throw new Error('Failed to update event');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Update error:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to update event`);
       }
     } catch (error) {
       console.error('Error updating event:', error);
@@ -111,7 +123,7 @@ export const EventsManagement: React.FC = () => {
   const apiDeleteEvent = async (id: string) => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`/api/events/${id}`, {
+      const response = await fetch(`/api/consolidated?endpoint=events&id=${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -119,7 +131,7 @@ export const EventsManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        setEvents(prev => prev.filter(event => event.id !== id));
+        setEvents(prev => prev.filter(event => (event.id !== id && event._id !== id)));
       } else {
         throw new Error('Failed to delete event');
       }
@@ -148,6 +160,8 @@ export const EventsManagement: React.FC = () => {
 
   const handleSaveEvent = async (eventData: Omit<Event, 'id'> | Event) => {
     try {
+      console.log('💾 Saving event data:', eventData);
+      
       if ('id' in eventData && (eventData.id || eventData._id)) {
         const eventId = eventData.id || eventData._id;
         if (eventId) {
@@ -161,7 +175,9 @@ export const EventsManagement: React.FC = () => {
       setShowForm(false);
       setEditingEvent(undefined);
     } catch (error) {
-      toast.error('Failed to save event');
+      console.error('❌ Save event error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save event';
+      toast.error(errorMessage);
     }
   };
 

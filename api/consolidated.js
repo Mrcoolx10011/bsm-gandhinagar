@@ -63,6 +63,14 @@ function setCorsHeaders(res) {
 }
 
 export default async function handler(req, res) {
+  console.log('🚀 API Request:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    endpoint: req.query.endpoint,
+    timestamp: new Date().toISOString()
+  });
+
   setCorsHeaders(res);
 
   if (req.method === 'OPTIONS') {
@@ -70,10 +78,17 @@ export default async function handler(req, res) {
   }
 
   const { endpoint } = req.query;
+  console.log('🎯 Processing endpoint:', endpoint);
   
   try {
     const client = await connectToDatabase();
     const db = client ? client.db('bsm-gandhinagar') : null;
+    
+    console.log('💾 Database status:', {
+      client: !!client,
+      db: !!db,
+      isDevelopmentMode
+    });
 
     switch (endpoint) {
       case 'members':
@@ -139,44 +154,179 @@ export default async function handler(req, res) {
 }
 
 // Members API Handler
+// Members API Handler
 async function handleMembers(req, res, db) {
-  const collection = db.collection('members');
+  console.log('👥 handleMembers called with:', {
+    method: req.method,
+    query: req.query,
+    hasDb: !!db,
+    isDevelopmentMode
+  });
+
+  // Handle development mode when database is not available
+  if (!db || isDevelopmentMode) {
+    console.log('🔄 Redirecting to development mode handler');
+    return handleMembersDevelopmentMode(req, res);
+  }
+
+  try {
+    const collection = db.collection('members');
+
+    switch (req.method) {
+      case 'GET':
+        console.log('🔍 Fetching members from database...');
+        const members = await collection.find({}).toArray();
+        console.log(`📊 Found ${members.length} members in database`);
+        if (members.length > 0) {
+          console.log('📋 Sample member:', JSON.stringify(members[0], null, 2));
+        }
+        return res.status(200).json(members);
+
+      case 'POST':
+        console.log('🆕 Creating new member:', req.body);
+        const newMember = {
+          ...req.body,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        const result = await collection.insertOne(newMember);
+        console.log('✅ Member created successfully:', result.insertedId);
+        return res.status(201).json({ _id: result.insertedId, ...newMember });
+
+      case 'PUT':
+        const { id } = req.query;
+        console.log('✏️  Updating member:', { id, data: req.body });
+        
+        if (!id) {
+          return res.status(400).json({ error: 'Member ID is required' });
+        }
+        
+        // Remove immutable fields that shouldn't be updated
+        const { _id, id: idField, createdAt, ...updateFields } = req.body;
+        const updateData = {
+          ...updateFields,
+          updatedAt: new Date()
+        };
+        
+        console.log('🔧 Cleaned update data:', updateData);
+        
+        const updateResult = await collection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateData }
+        );
+        
+        if (updateResult.matchedCount === 0) {
+          return res.status(404).json({ error: 'Member not found' });
+        }
+        
+        console.log('✅ Member updated successfully');
+        return res.status(200).json({ message: 'Member updated successfully' });
+
+      case 'DELETE':
+        const { id: deleteId } = req.query;
+        console.log('🗑️ Deleting member:', deleteId);
+        
+        if (!deleteId) {
+          return res.status(400).json({ error: 'Member ID is required' });
+        }
+        
+        const deleteResult = await collection.deleteOne({ _id: new ObjectId(deleteId) });
+        
+        if (deleteResult.deletedCount === 0) {
+          return res.status(404).json({ error: 'Member not found' });
+        }
+        
+        console.log('✅ Member deleted successfully');
+        return res.status(200).json({ message: 'Member deleted successfully' });
+
+      default:
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+  } catch (error) {
+    console.error('❌ Members API Error:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: error.message 
+    });
+  }
+}
+
+// Development mode handler for members
+function handleMembersDevelopmentMode(req, res) {
+  console.log('👥 Running members in development mode');
 
   switch (req.method) {
     case 'GET':
-      console.log('🔍 Fetching members from database...');
-      const members = await collection.find({}).toArray();
-      console.log(`📊 Found ${members.length} members in database`);
-      if (members.length > 0) {
-        console.log('📋 Sample member:', JSON.stringify(members[0], null, 2));
-      }
-      return res.status(200).json(members);
+      console.log('🔍 Returning mock members data');
+      const mockMembers = [
+        {
+          _id: 'member-1',
+          name: 'John Doe',
+          email: 'john@example.com',
+          phone: '+91-9876543210',
+          membershipType: 'Active',
+          joinDate: '2024-01-15',
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          _id: 'member-2',
+          name: 'Jane Smith',
+          email: 'jane@example.com',
+          phone: '+91-9876543211',
+          membershipType: 'Lifetime',
+          joinDate: '2023-05-20',
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+      return res.status(200).json(mockMembers);
 
     case 'POST':
       const newMember = {
+        _id: `member-${Date.now()}`,
         ...req.body,
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      const result = await collection.insertOne(newMember);
-      return res.status(201).json({ _id: result.insertedId, ...newMember });
+      console.log('🆕 Created mock member:', newMember);
+      return res.status(201).json(newMember);
 
     case 'PUT':
-      const { id } = req.query;
-      const updateData = {
-        ...req.body,
-        updatedAt: new Date()
-      };
-      await collection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updateData }
-      );
-      return res.status(200).json({ message: 'Member updated successfully' });
+      const { id: updateId } = req.query;
+      console.log('✏️  Attempting to update member with ID:', updateId);
+      
+      if (!updateId) {
+        console.log('❌ No ID provided for update');
+        return res.status(400).json({ error: 'Member ID is required' });
+      }
+      
+      console.log('✅ Accepting update for any ID in development mode');
+      console.log('📝 Update data:', req.body);
+      
+      return res.status(200).json({ 
+        message: 'Member updated successfully (development mode)',
+        id: updateId,
+        data: req.body
+      });
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      await collection.deleteOne({ _id: new ObjectId(deleteId) });
-      return res.status(200).json({ message: 'Member deleted successfully' });
+      console.log('🗑️ Attempting to delete member with ID:', deleteId);
+      
+      if (!deleteId) {
+        console.log('❌ No ID provided for deletion');
+        return res.status(400).json({ error: 'Member ID is required' });
+      }
+      
+      console.log('✅ Accepting deletion for any ID in development mode');
+      
+      return res.status(200).json({ 
+        message: 'Member deleted successfully (development mode)',
+        id: deleteId
+      });
 
     default:
       return res.status(405).json({ error: 'Method not allowed' });
@@ -185,42 +335,199 @@ async function handleMembers(req, res, db) {
 
 // Events API Handler
 async function handleEvents(req, res, db) {
-  const collection = db.collection('events');
+  console.log('🎯 handleEvents called with:', {
+    method: req.method,
+    query: req.query,
+    hasDb: !!db,
+    isDevelopmentMode
+  });
+
+  // Handle development mode when database is not available
+  if (!db || isDevelopmentMode) {
+    console.log('🔄 Redirecting to development mode handler');
+    return handleEventsDevelopmentMode(req, res);
+  }
+
+  try {
+    const collection = db.collection('events');
+
+    switch (req.method) {
+      case 'GET':
+        console.log('🔍 Fetching events from database...');
+        const events = await collection.find({}).sort({ date: -1 }).toArray();
+        console.log(`📊 Found ${events.length} events in database`);
+        return res.status(200).json(events);
+
+      case 'POST':
+        console.log('🆕 Creating new event:', req.body);
+        const newEvent = {
+          ...req.body,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        const result = await collection.insertOne(newEvent);
+        console.log('✅ Event created successfully:', result.insertedId);
+        return res.status(201).json({ _id: result.insertedId, ...newEvent });
+
+      case 'PUT':
+        const { id } = req.query;
+        console.log('✏️  Updating event:', { id, data: req.body });
+        
+        if (!id) {
+          return res.status(400).json({ error: 'Event ID is required' });
+        }
+        
+        // Remove immutable fields that shouldn't be updated
+        const { _id, id: idField, createdAt, ...updateFields } = req.body;
+        const updateData = {
+          ...updateFields,
+          updatedAt: new Date()
+        };
+        
+        console.log('🔧 Cleaned update data:', updateData);
+        
+        const updateResult = await collection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateData }
+        );
+        
+        if (updateResult.matchedCount === 0) {
+          return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        console.log('✅ Event updated successfully');
+        return res.status(200).json({ message: 'Event updated successfully' });
+
+      case 'DELETE':
+        const { id: deleteId } = req.query;
+        console.log('🗑️ Deleting event:', deleteId);
+        
+        if (!deleteId) {
+          return res.status(400).json({ error: 'Event ID is required' });
+        }
+        
+        const deleteResult = await collection.deleteOne({ _id: new ObjectId(deleteId) });
+        
+        if (deleteResult.deletedCount === 0) {
+          return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        console.log('✅ Event deleted successfully');
+        return res.status(200).json({ message: 'Event deleted successfully' });
+
+      default:
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+  } catch (error) {
+    console.error('❌ Events API Error:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: error.message 
+    });
+  }
+}
+
+// Development mode handler for events
+function handleEventsDevelopmentMode(req, res) {
+  console.log('🔧 Running events in development mode');
+  console.log('🔧 Request method:', req.method);
+  console.log('🔧 Request query:', req.query);
+  console.log('🔧 Request body:', req.body);
+  
+  // Mock data for development
+  const mockEvents = [
+    {
+      _id: '66c123456789012345678901',
+      id: '66c123456789012345678901',
+      title: 'Bihar Cultural Festival',
+      description: 'Annual cultural festival celebrating Bihar heritage',
+      date: '2024-09-15T00:00:00.000Z',
+      time: '10:00 AM',
+      location: 'Gandhinagar Community Center',
+      category: 'Cultural',
+      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500',
+      gallery: [],
+      attendees: 45,
+      maxAttendees: 100,
+      status: 'active',
+      createdAt: new Date('2024-08-01'),
+      updatedAt: new Date('2024-08-01')
+    },
+    {
+      _id: '66c123456789012345678902',
+      id: '66c123456789012345678902',
+      title: 'Educational Workshop',
+      description: 'Workshop on modern teaching methods',
+      date: '2024-09-20T00:00:00.000Z',
+      time: '2:00 PM',
+      location: 'BSM School Campus',
+      category: 'Education',
+      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=500',
+      gallery: [],
+      attendees: 25,
+      maxAttendees: 50,
+      status: 'active',
+      createdAt: new Date('2024-08-01'),
+      updatedAt: new Date('2024-08-01')
+    }
+  ];
 
   switch (req.method) {
     case 'GET':
-      console.log('🔍 Fetching events from database...');
-      const events = await collection.find({}).sort({ date: -1 }).toArray();
-      console.log(`📊 Found ${events.length} events in database`);
-      return res.status(200).json(events);
+      console.log('📋 Returning mock events:', mockEvents.length);
+      return res.status(200).json(mockEvents);
 
     case 'POST':
+      const newId = Date.now().toString();
       const newEvent = {
+        _id: newId,
+        id: newId,
         ...req.body,
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      const result = await collection.insertOne(newEvent);
-      return res.status(201).json({ _id: result.insertedId, ...newEvent });
+      console.log('🆕 Created mock event:', newEvent);
+      return res.status(201).json(newEvent);
 
     case 'PUT':
-      const { id } = req.query;
-      const updateData = {
-        ...req.body,
-        updatedAt: new Date()
+      const { id: updateId } = req.query;
+      console.log('✏️  Attempting to update event with ID:', updateId);
+      
+      if (!updateId) {
+        console.log('❌ No ID provided for update');
+        return res.status(400).json({ error: 'Event ID is required' });
+      }
+      
+      // In development mode, we'll accept any ID format and just return success
+      // This handles both mock IDs and real MongoDB ObjectIds
+      console.log('✅ Accepting update for any ID in development mode');
+      console.log('📝 Update data:', req.body);
+      
+      const updatedEvent = { 
+        _id: updateId,
+        id: updateId,
+        ...req.body, 
+        updatedAt: new Date() 
       };
-      await collection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updateData }
-      );
+      console.log('✅ Mock event updated successfully');
       return res.status(200).json({ message: 'Event updated successfully' });
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      await collection.deleteOne({ _id: new ObjectId(deleteId) });
+      console.log('🗑️  Attempting to delete event with ID:', deleteId);
+      
+      if (!deleteId) {
+        console.log('❌ No ID provided for delete');
+        return res.status(400).json({ error: 'Event ID is required' });
+      }
+      
+      // In development mode, we'll accept any ID format and just return success
+      console.log('✅ Accepting delete for any ID in development mode');
+      console.log('✅ Mock event deleted successfully');
       return res.status(200).json({ message: 'Event deleted successfully' });
 
     default:
+      console.log('❌ Method not allowed:', req.method);
       return res.status(405).json({ error: 'Method not allowed' });
   }
 }
@@ -486,8 +793,10 @@ async function handlePosts(req, res, db) {
 
     case 'PUT':
       const { id } = req.query;
+      // Remove immutable fields that shouldn't be updated
+      const { _id, id: idField, createdAt, ...updateFields } = req.body;
       const updateData = {
-        ...req.body,
+        ...updateFields,
         updatedAt: new Date()
       };
       await collection.updateOne(
@@ -508,6 +817,11 @@ async function handlePosts(req, res, db) {
 
 // Campaigns API Handler
 async function handleCampaigns(req, res, db) {
+  // Handle development mode when database is not available
+  if (!db || isDevelopmentMode) {
+    return handleCampaignsDevelopmentMode(req, res);
+  }
+
   const collection = db.collection('campaigns');
 
   switch (req.method) {
@@ -523,6 +837,114 @@ async function handleCampaigns(req, res, db) {
       };
       const result = await collection.insertOne(newCampaign);
       return res.status(201).json({ _id: result.insertedId, ...newCampaign });
+
+    case 'PUT':
+      const { id } = req.query;
+      // Remove immutable fields that shouldn't be updated
+      const { _id, id: idField, createdAt, ...updateFields } = req.body;
+      const updateData = {
+        ...updateFields,
+        updatedAt: new Date()
+      };
+      await collection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData }
+      );
+      return res.status(200).json({ message: 'Campaign updated successfully' });
+
+    case 'DELETE':
+      const { id: deleteId } = req.query;
+      await collection.deleteOne({ _id: new ObjectId(deleteId) });
+      return res.status(200).json({ message: 'Campaign deleted successfully' });
+
+    default:
+      return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+// Development mode handler for campaigns
+function handleCampaignsDevelopmentMode(req, res) {
+  console.log('🔧 Running campaigns in development mode');
+  
+  // Mock data for development
+  const mockCampaigns = [
+    {
+      _id: '66c123456789012345678901',
+      id: '66c123456789012345678901',
+      title: 'Education for All',
+      description: 'Supporting education initiatives in rural Bihar',
+      target: 100000,
+      raised: 45000,
+      donors: 25,
+      image: 'https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=500',
+      category: 'Education',
+      startDate: '2024-08-01T00:00:00.000Z',
+      endDate: '2024-12-31T00:00:00.000Z',
+      status: 'active',
+      createdAt: new Date('2024-08-01'),
+      updatedAt: new Date('2024-08-01')
+    },
+    {
+      _id: '66c123456789012345678902',
+      id: '66c123456789012345678902',
+      title: 'Healthcare Support',
+      description: 'Providing medical assistance to underprivileged communities',
+      target: 75000,
+      raised: 30000,
+      donors: 18,
+      image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500',
+      category: 'Healthcare',
+      startDate: '2024-07-15T00:00:00.000Z',
+      endDate: '2024-11-30T00:00:00.000Z',
+      status: 'active',
+      createdAt: new Date('2024-07-15'),
+      updatedAt: new Date('2024-07-15')
+    }
+  ];
+
+  switch (req.method) {
+    case 'GET':
+      return res.status(200).json(mockCampaigns);
+
+    case 'POST':
+      const newId = Date.now().toString();
+      const newCampaign = {
+        _id: newId,
+        id: newId,
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      console.log('🆕 Created mock campaign:', newCampaign);
+      return res.status(201).json(newCampaign);
+
+    case 'PUT':
+      const { id: updateId } = req.query;
+      const campaign = mockCampaigns.find(c => c._id === updateId || c.id === updateId);
+      
+      if (!campaign) {
+        return res.status(404).json({ error: 'Campaign not found' });
+      }
+      
+      const updatedCampaign = { ...campaign, ...req.body, updatedAt: new Date() };
+      console.log('✏️  Updated mock campaign:', updatedCampaign);
+      return res.status(200).json({ message: 'Campaign updated successfully' });
+
+    case 'DELETE':
+      const { id: deleteId } = req.query;
+      
+      if (!deleteId) {
+        return res.status(400).json({ error: 'Campaign ID is required' });
+      }
+      
+      const campaignExists = mockCampaigns.find(c => c._id === deleteId || c.id === deleteId);
+      
+      if (!campaignExists) {
+        return res.status(404).json({ error: 'Campaign not found' });
+      }
+      
+      console.log('🗑️ Deleted mock campaign:', deleteId);
+      return res.status(200).json({ message: 'Campaign deleted successfully' });
 
     default:
       return res.status(405).json({ error: 'Method not allowed' });

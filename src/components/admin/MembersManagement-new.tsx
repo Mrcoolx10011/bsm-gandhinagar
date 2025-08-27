@@ -55,7 +55,7 @@ export const MembersManagement: React.FC = () => {
       setLoading(true);
       console.log('🚀 Fetching members...');
       
-      const response = await makeAuthenticatedRequest('/api/members');
+      const response = await makeAuthenticatedRequest('/api/consolidated?endpoint=members');
       
       console.log('📡 Members response status:', response.status);
       
@@ -134,7 +134,7 @@ export const MembersManagement: React.FC = () => {
         console.log('Updating member ID:', memberId);
         console.log('Form data to send:', formData);
         
-        const response = await fetch(`/api/members/${memberId}`, {
+        const response = await fetch(`/api/consolidated?endpoint=members&id=${memberId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -158,7 +158,7 @@ export const MembersManagement: React.FC = () => {
         }
       } else {
         // Create new member
-        const response = await fetch('/api/members', {
+        const response = await fetch('/api/consolidated?endpoint=members', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -186,7 +186,7 @@ export const MembersManagement: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/members/${id}`, {
+        const response = await fetch(`/api/consolidated?endpoint=members&id=${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

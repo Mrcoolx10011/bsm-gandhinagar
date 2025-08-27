@@ -62,7 +62,7 @@ export const MembersManagement: React.FC = () => {
       
       console.log('Fetching members...');
       
-      const response = await fetch('/api/members', {
+      const response = await fetch('/api/consolidated?endpoint=members', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -73,7 +73,8 @@ export const MembersManagement: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched members:', data.length);
+        console.log('✅ Members fetched successfully:', data.length, 'members');
+        console.log('📊 Sample member structure:', data[0]);
         setMembers(data);
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Failed to fetch members' }));
@@ -153,7 +154,7 @@ export const MembersManagement: React.FC = () => {
         const memberId = editingMember.id || editingMember._id;
         console.log('Updating member:', memberId, formData);
         
-        const response = await fetch(`/api/members?id=${memberId}`, {
+        const response = await fetch(`/api/consolidated?endpoint=members&id=${memberId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -179,7 +180,7 @@ export const MembersManagement: React.FC = () => {
         // Create new member
         console.log('Creating new member:', formData);
         
-        const response = await fetch('/api/members', {
+        const response = await fetch('/api/consolidated?endpoint=members', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -210,6 +211,14 @@ export const MembersManagement: React.FC = () => {
   };
 
   const handleDeleteMember = async (id: string) => {
+    console.log('🗑️ handleDeleteMember called with ID:', id, 'Type:', typeof id);
+    
+    if (!id || id === '') {
+      console.error('❌ No valid ID provided for deletion');
+      toast.error('No member ID provided');
+      return;
+    }
+    
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
         const token = localStorage.getItem('token');
@@ -221,7 +230,10 @@ export const MembersManagement: React.FC = () => {
         
         console.log('Deleting member:', id);
         
-        const response = await fetch(`/api/members?id=${id}`, {
+        const deleteUrl = `/api/consolidated?endpoint=members&id=${encodeURIComponent(id)}`;
+        console.log('🌐 DELETE URL:', deleteUrl);
+        
+        const response = await fetch(deleteUrl, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

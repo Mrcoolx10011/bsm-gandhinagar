@@ -84,12 +84,10 @@ export const PostsManagement: React.FC = () => {
         return;
       }
       
-      const url = editingPost ? '/api/consolidated?endpoint=posts' : '/api/consolidated?endpoint=posts';
+      const url = editingPost ? `/api/consolidated?endpoint=posts&id=${editingPost._id}` : '/api/consolidated?endpoint=posts';
       const method = editingPost ? 'PUT' : 'POST';
       
-      const payload = editingPost 
-        ? { id: editingPost._id, ...formData }
-        : formData;
+      const payload = formData;
 
       console.log('Sending request:', { method, url, payload });
 
