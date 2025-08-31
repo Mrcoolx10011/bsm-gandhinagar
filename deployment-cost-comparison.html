@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment & Cloud Storage Cost Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .section {
+            background: white;
+            margin: 30px 0;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin: 20px 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .price-highlight {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .free-tier {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .pro-tier {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .feature-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .pros, .cons {
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .pros {
+            background: #d5f4e6;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .cons {
+            background: #fadbd8;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .pros h4 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        
+        .cons h4 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        .cost-calculator {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .calc-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .recommendation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-table {
+                font-size: 14px;
+            }
+            
+            .comparison-table th,
+            .comparison-table td {
+                padding: 8px;
+            }
+            
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Serverless Deployment & Cloud Storage Cost Comparison</h1>
+            <p class="subtitle">Complete analysis of serverless hosting platforms, function providers, cloud storage solutions, and deployment costs for modern serverless applications</p>
+        </header>
+
+        <!-- Vercel Deployment Costs -->
+        <section class="section">
+            <h2>📊 Vercel Deployment Pricing</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Price</th>
+                        <th>Build Time</th>
+                        <th>Bandwidth</th>
+                        <th>Function Execution</th>
+                        <th>Edge Functions</th>
+                        <th>Analytics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Hobby (Free)</strong></td>
+                        <td><span class="free-tier">$0/month</span></td>
+                        <td>100 hours/month</td>
+                        <td>100GB</td>
+                        <td>100GB-hours</td>
+                        <td>500,000 invocations</td>
+                        <td>Basic</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pro</strong></td>
+                        <td><span class="pro-tier">$20/month</span></td>
+                        <td>400 hours/month</td>
+                        <td>1TB</td>
+                        <td>1,000GB-hours</td>
+                        <td>1M invocations</td>
+                        <td>Advanced + Web Vitals</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Enterprise</strong></td>
+                        <td><span class="price-highlight">$400/month</span></td>
+                        <td>Unlimited</td>
+                        <td>Unlimited</td>
+                        <td>Unlimited</td>
+                        <td>Unlimited</td>
+                        <td>Enterprise Analytics</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros</h4>
+                    <ul>
+                        <li>Excellent developer experience</li>
+                        <li>Global CDN included</li>
+                        <li>Automatic HTTPS</li>
+                        <li>Git integration</li>
+                        <li>Preview deployments</li>
+                        <li>Zero-config deployments</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons</h4>
+                    <ul>
+                        <li>Can be expensive at scale</li>
+                        <li>Vendor lock-in</li>
+                        <li>Limited server-side control</li>
+                        <li>Build time limitations</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Indian Pricing Section -->
+        <section class="section">
+            <h2>🇮🇳 Indian Pricing & Implementation Guide</h2>
+            
+            <h3>💰 AWS S3 Pricing in India (Mumbai Region - ap-south-1)</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Price (INR)</th>
+                        <th>Price (USD)</th>
+                        <th>Description</th>
+                        <th>Free Tier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>S3 Standard Storage</strong></td>
+                        <td>₹1.91/GB/month</td>
+                        <td>$0.023/GB/month</td>
+                        <td>Frequently accessed data</td>
+                        <td>5GB for 12 months</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Transfer OUT</strong></td>
+                        <td>₹7.47/GB</td>
+                        <td>$0.09/GB</td>
+                        <td>Internet data transfer</td>
+                        <td>15GB/month for 12 months</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PUT Requests</strong></td>
+                        <td>₹0.033/1000 requests</td>
+                        <td>$0.0004/1000 requests</td>
+                        <td>Upload operations</td>
+                        <td>20,000 GET, 2,000 PUT</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CloudFront (CDN)</strong></td>
+                        <td>₹7.05/GB</td>
+                        <td>$0.085/GB</td>
+                        <td>Content delivery</td>
+                        <td>1TB transfer/month</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>💰 Google Cloud Storage Pricing in India (mumbai region)</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Price (INR)</th>
+                        <th>Price (USD)</th>
+                        <th>Description</th>
+                        <th>Free Tier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Standard Storage</strong></td>
+                        <td>₹1.66/GB/month</td>
+                        <td>$0.020/GB/month</td>
+                        <td>Multi-regional storage</td>
+                        <td>5GB/month always free</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Network Egress</strong></td>
+                        <td>₹9.96/GB</td>
+                        <td>$0.12/GB</td>
+                        <td>Data transfer out</td>
+                        <td>1GB/month always free</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Operations</strong></td>
+                        <td>₹4.15/10K operations</td>
+                        <td>$0.05/10K operations</td>
+                        <td>API calls</td>
+                        <td>50,000 operations/month</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloud CDN</strong></td>
+                        <td>₹6.64/GB</td>
+                        <td>$0.08/GB</td>
+                        <td>Content delivery</td>
+                        <td>1TB/month for first 12 months</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="feature-card" style="margin: 20px 0; background: linear-gradient(135deg, #ff9a56, #ff6b6b); color: white; padding: 20px;">
+                <h4>💡 Cost Example for Indian Startup (Monthly)</h4>
+                <p><strong>Small App (1000 users, 10GB storage, 50GB transfer):</strong></p>
+                <ul style="margin-top: 10px;">
+                    <li><strong>AWS S3:</strong> ₹19 storage + ₹374 transfer = <strong>₹393/month (~$4.70)</strong></li>
+                    <li><strong>Google Cloud:</strong> ₹17 storage + ₹498 transfer = <strong>₹515/month (~$6.20)</strong></li>
+                    <li><strong>Recommendation:</strong> Use CDN to reduce transfer costs by 60-80%</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- AWS Implementation Guide -->
+        <section class="section">
+            <h2>📱 AWS S3 Image Upload/Retrieve Implementation</h2>
+            
+            <h3>🔧 Step 1: AWS Setup</h3>
+            <div class="feature-card">
+                <h4>1. Create S3 Bucket (Mumbai Region)</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# AWS CLI Commands
+aws s3 mb s3://your-app-images --region ap-south-1
+
+# Set CORS policy for web uploads
+aws s3api put-bucket-cors --bucket your-app-images --cors-configuration '{
+  "CORSRules": [{
+    "AllowedOrigins": ["*"],
+    "AllowedMethods": ["GET", "POST", "PUT"],
+    "AllowedHeaders": ["*"]
+  }]
+}'</pre>
+            </div>
+
+            <div class="feature-card">
+                <h4>2. IAM User Setup</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::your-app-images/*"
+    }
+  ]
+}</pre>
+            </div>
+
+            <h3>� Step 2: Frontend Implementation (React/Next.js)</h3>
+            <div class="feature-card">
+                <h4>Install AWS SDK</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">
+npm install aws-sdk
+# or
+npm install @aws-sdk/client-s3</pre>
+            </div>
+
+            <div class="feature-card">
+                <h4>Image Upload Component</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px;">
+import AWS from 'aws-sdk';
+
+// Configure AWS
+AWS.config.update({
+  accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+  region: 'ap-south-1'
+});
+
+const s3 = new AWS.S3();
+
+const uploadImageToS3 = async (file) => {
+  const params = {
+    Bucket: 'your-app-images',
+    Key: `images/${Date.now()}-${file.name}`,
+    Body: file,
+    ContentType: file.type,
+    ACL: 'public-read'
+  };
+
+  try {
+    const result = await s3.upload(params).promise();
+    return result.Location; // Returns the public URL
+  } catch (error) {
+    console.error('Upload failed:', error);
+    throw error;
+  }
+};
+
+// React Component
+const ImageUpload = () => {
+  const [uploading, setUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+
+  const handleUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const url = await uploadImageToS3(file);
+      setImageUrl(url);
+      console.log('Image uploaded:', url);
+    } catch (error) {
+      alert('Upload failed: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;input type="file" accept="image/*" onChange={handleUpload} /&gt;
+      {uploading && &lt;p&gt;Uploading...&lt;/p&gt;}
+      {imageUrl && &lt;img src={imageUrl} alt="Uploaded" style={{maxWidth: '300px'}} /&gt;}
+    &lt;/div&gt;
+  );
+};</pre>
+            </div>
+
+            <h3>🔒 Step 3: Secure Backend Upload (Recommended)</h3>
+            <div class="feature-card">
+                <h4>Generate Signed URLs (API Route)</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px;">
+// pages/api/upload-url.js
+import AWS from 'aws-sdk';
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'ap-south-1'
+});
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { fileName, fileType } = req.body;
+
+  const params = {
+    Bucket: 'your-app-images',
+    Key: `images/${Date.now()}-${fileName}`,
+    Expires: 60, // URL expires in 60 seconds
+    ContentType: fileType,
+    ACL: 'public-read'
+  };
+
+  try {
+    const uploadURL = await s3.getSignedUrlPromise('putObject', params);
+    res.status(200).json({ uploadURL, key: params.Key });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}</pre>
+            </div>
+        </section>
+
+        <!-- Google Cloud Implementation Guide -->
+        <section class="section">
+            <h2>📱 Google Cloud Storage Implementation</h2>
+            
+            <h3>🔧 Step 1: Google Cloud Setup</h3>
+            <div class="feature-card">
+                <h4>1. Create Storage Bucket</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# Using gcloud CLI
+gcloud storage buckets create gs://your-app-images-gcp --location=asia-south1
+
+# Set public access
+gcloud storage buckets add-iam-policy-binding gs://your-app-images-gcp \
+  --member=allUsers --role=roles/storage.objectViewer</pre>
+            </div>
+
+            <div class="feature-card">
+                <h4>2. Service Account Setup</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# Create service account
+gcloud iam service-accounts create image-uploader \
+  --display-name="Image Uploader Service Account"
+
+# Grant permissions
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:image-uploader@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+
+# Download key file
+gcloud iam service-accounts keys create key.json \
+  --iam-account=image-uploader@YOUR_PROJECT_ID.iam.gserviceaccount.com</pre>
+            </div>
+
+            <h3>💻 Step 2: Frontend Implementation</h3>
+            <div class="feature-card">
+                <h4>Install Google Cloud SDK</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">
+npm install @google-cloud/storage</pre>
+            </div>
+
+            <div class="feature-card">
+                <h4>Image Upload Component (Google Cloud)</h4>
+                <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px;">
+// Backend API route (pages/api/upload-gcp.js)
+import { Storage } from '@google-cloud/storage';
+
+const storage = new Storage({
+  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  keyFilename: process.env.GOOGLE_CLOUD_KEY_FILE // path to key.json
+});
+
+const bucket = storage.bucket('your-app-images-gcp');
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Create a signed URL for upload
+    const fileName = `images/${Date.now()}-${req.body.fileName}`;
+    const file = bucket.file(fileName);
+
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      contentType: req.body.contentType,
+    });
+
+    res.status(200).json({ 
+      signedUrl, 
+      fileName,
+      publicUrl: `https://storage.googleapis.com/your-app-images-gcp/${fileName}`
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Frontend upload function
+const uploadToGoogleCloud = async (file) => {
+  // Get signed URL from your API
+  const response = await fetch('/api/upload-gcp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type
+    })
+  });
+
+  const { signedUrl, publicUrl } = await response.json();
+
+  // Upload file using signed URL
+  await fetch(signedUrl, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': file.type
+    }
+  });
+
+  return publicUrl;
+};</pre>
+            </div>
+        </section>
+
+        <!-- Cost Optimization Tips -->
+        <section class="section">
+            <h2>💡 Cost Optimization Tips for Indian Developers</h2>
+            
+            <div class="feature-list">
+                <div class="feature-card">
+                    <h4>🔥 Use CDN Always</h4>
+                    <ul>
+                        <li>CloudFront (AWS): Reduces data transfer costs by 70%</li>
+                        <li>Cloud CDN (GCP): ₹6.64/GB vs ₹9.96/GB direct</li>
+                        <li>Enable gzip compression</li>
+                        <li>Use WebP format for images</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>📱 Image Optimization</h4>
+                    <ul>
+                        <li>Compress images before upload (80% quality)</li>
+                        <li>Use responsive image sizes</li>
+                        <li>Implement lazy loading</li>
+                        <li>Convert to WebP/AVIF formats</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>💰 Mumbai Region Benefits</h4>
+                    <ul>
+                        <li>Lower latency for Indian users</li>
+                        <li>Data residency compliance</li>
+                        <li>Reduced data transfer costs</li>
+                        <li>Better performance</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🔒 Security Best Practices</h4>
+                    <ul>
+                        <li>Use signed URLs for uploads</li>
+                        <li>Implement file type validation</li>
+                        <li>Set file size limits</li>
+                        <li>Use environment variables for keys</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="cost-calculator" style="margin-top: 30px;">
+                <h3>🇮🇳 Monthly Cost Calculator for Indian Startups</h3>
+                <div class="calculator-grid">
+                    <div class="calc-item">
+                        <h4>Small Blog (1GB storage, 10GB transfer)</h4>
+                        <p><strong>AWS:</strong> ₹75/month</p>
+                        <p><strong>GCP:</strong> ₹67/month</p>
+                        <small>With CDN optimization</small>
+                    </div>
+                    <div class="calc-item">
+                        <h4>E-commerce (50GB storage, 500GB transfer)</h4>
+                        <p><strong>AWS:</strong> ₹2,635/month</p>
+                        <p><strong>GCP:</strong> ₹3,403/month</p>
+                        <small>CDN highly recommended</small>
+                    </div>
+                    <div class="calc-item">
+                        <h4>Social App (100GB storage, 1TB transfer)</h4>
+                        <p><strong>AWS:</strong> ₹5,273/month</p>
+                        <p><strong>GCP:</strong> ₹6,806/month</p>
+                        <small>Consider image optimization</small>
+                    </div>
+                    <div class="calc-item">
+                        <h4>With Cloudinary (1TB traffic)</h4>
+                        <p><strong>Free Tier:</strong> ₹0/month</p>
+                        <p><strong>Plus Plan:</strong> ₹7,400/month</p>
+                        <small>Includes transformations</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+            
+            <h3>AWS S3 + CloudFront</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Storage Cost</th>
+                        <th>Transfer Cost</th>
+                        <th>Requests</th>
+                        <th>Free Tier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S3 Standard</td>
+                        <td>$0.023/GB/month</td>
+                        <td>$0.09/GB (first 10TB)</td>
+                        <td>$0.0004/1K PUT, $0.0004/10K GET</td>
+                        <td>5GB storage, 20K GET, 2K PUT</td>
+                    </tr>
+                    <tr>
+                        <td>CloudFront CDN</td>
+                        <td>-</td>
+                        <td>$0.085/GB (first 10TB)</td>
+                        <td>$0.0075/10K requests</td>
+                        <td>1TB transfer, 10M requests</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Google Cloud Storage</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Storage Class</th>
+                        <th>Storage Cost</th>
+                        <th>Transfer Cost</th>
+                        <th>Operations</th>
+                        <th>Free Tier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Standard</td>
+                        <td>$0.020/GB/month</td>
+                        <td>$0.12/GB (first 1TB)</td>
+                        <td>$0.05/10K operations</td>
+                        <td>5GB storage</td>
+                    </tr>
+                    <tr>
+                        <td>Nearline</td>
+                        <td>$0.010/GB/month</td>
+                        <td>$0.12/GB</td>
+                        <td>$0.10/10K operations</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Cloudinary</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Price</th>
+                        <th>Storage</th>
+                        <th>Bandwidth</th>
+                        <th>Transformations</th>
+                        <th>Video Processing</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Free</strong></td>
+                        <td><span class="free-tier">$0/month</span></td>
+                        <td>25GB</td>
+                        <td>25GB</td>
+                        <td>25,000/month</td>
+                        <td>None</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Plus</strong></td>
+                        <td><span class="pro-tier">$89/month</span></td>
+                        <td>100GB</td>
+                        <td>100GB</td>
+                        <td>100,000/month</td>
+                        <td>10 hours</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Advanced</strong></td>
+                        <td><span class="price-highlight">$224/month</span></td>
+                        <td>250GB</td>
+                        <td>250GB</td>
+                        <td>250,000/month</td>
+                        <td>25 hours</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Uploadcare</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Price</th>
+                        <th>Storage</th>
+                        <th>CDN Traffic</th>
+                        <th>File Operations</th>
+                        <th>Features</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Free</strong></td>
+                        <td><span class="free-tier">$0/month</span></td>
+                        <td>3GB</td>
+                        <td>3GB</td>
+                        <td>3,000/month</td>
+                        <td>Basic transformations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Startup</strong></td>
+                        <td><span class="pro-tier">$25/month</span></td>
+                        <td>25GB</td>
+                        <td>50GB</td>
+                        <td>10,000/month</td>
+                        <td>Advanced transformations</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Serverless Function Providers -->
+        <section class="section">
+            <h2>⚡ Serverless Function Providers</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Free Tier</th>
+                        <th>Execution Time</th>
+                        <th>Memory Limit</th>
+                        <th>Cold Start</th>
+                        <th>Pricing Model</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Vercel Functions</strong></td>
+                        <td>100GB-hours/month</td>
+                        <td>10s (Hobby), 15s (Pro)</td>
+                        <td>1024MB</td>
+                        <td>~100-300ms</td>
+                        <td>$0.18/GB-hour</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AWS Lambda</strong></td>
+                        <td>1M requests + 400,000 GB-s</td>
+                        <td>15 minutes</td>
+                        <td>10,240MB</td>
+                        <td>~50-200ms</td>
+                        <td>$0.20/1M requests + $0.0000166667/GB-s</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Netlify Functions</strong></td>
+                        <td>125,000 requests + 100 hours</td>
+                        <td>10 seconds</td>
+                        <td>1024MB</td>
+                        <td>~200-500ms</td>
+                        <td>$25/2M requests</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloudflare Workers</strong></td>
+                        <td>100,000 requests/day</td>
+                        <td>30s (free), unlimited (paid)</td>
+                        <td>128MB</td>
+                        <td>~0-5ms (no cold start)</td>
+                        <td>$5/10M requests</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Google Cloud Functions</strong></td>
+                        <td>2M invocations + 400,000 GB-s</td>
+                        <td>9 minutes</td>
+                        <td>8192MB</td>
+                        <td>~100-300ms</td>
+                        <td>$0.40/1M requests + $0.0000025/GB-s</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Azure Functions</strong></td>
+                        <td>1M requests + 400,000 GB-s</td>
+                        <td>10 minutes</td>
+                        <td>1536MB</td>
+                        <td>~100-400ms</td>
+                        <td>$0.20/1M requests + $0.000016/GB-s</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deno Deploy</strong></td>
+                        <td>100,000 requests/month</td>
+                        <td>5 minutes</td>
+                        <td>512MB</td>
+                        <td>~10-50ms</td>
+                        <td>$20/1M requests</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Serverless Advantages</h4>
+                    <ul>
+                        <li>Pay only for actual usage</li>
+                        <li>Automatic scaling</li>
+                        <li>No server management</li>
+                        <li>Built-in load balancing</li>
+                        <li>Global distribution</li>
+                        <li>High availability</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Serverless Limitations</h4>
+                    <ul>
+                        <li>Cold start latency</li>
+                        <li>Execution time limits</li>
+                        <li>Memory constraints</li>
+                        <li>Vendor lock-in</li>
+                        <li>Limited local storage</li>
+                        <li>Complex debugging</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hosting Platforms Comparison -->
+        <section class="section">
+            <h2>🌐 Serverless-Friendly Hosting Platforms</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Free Tier</th>
+                        <th>Paid Plans</th>
+                        <th>Function Support</th>
+                        <th>Edge Locations</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Vercel</strong></td>
+                        <td>✅ 100GB-hours functions</td>
+                        <td>$20/month</td>
+                        <td>Native (API Routes)</td>
+                        <td>Global CDN</td>
+                        <td>Next.js, React serverless apps</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Netlify</strong></td>
+                        <td>✅ 125K function calls</td>
+                        <td>$19/month</td>
+                        <td>Netlify Functions</td>
+                        <td>Global edge network</td>
+                        <td>JAMstack + serverless APIs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloudflare Pages</strong></td>
+                        <td>✅ 100K Workers requests</td>
+                        <td>$20/month</td>
+                        <td>Workers integration</td>
+                        <td>200+ locations</td>
+                        <td>Static + edge computing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AWS Amplify</strong></td>
+                        <td>✅ 1000 build minutes</td>
+                        <td>$0.01/minute</td>
+                        <td>Lambda integration</td>
+                        <td>Global CDN</td>
+                        <td>Full-stack serverless apps</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Firebase Hosting</strong></td>
+                        <td>✅ 10GB storage/month</td>
+                        <td>Pay-as-you-go</td>
+                        <td>Cloud Functions</td>
+                        <td>Global CDN</td>
+                        <td>Real-time web apps</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Supabase</strong></td>
+                        <td>✅ 2 projects</td>
+                        <td>$25/month</td>
+                        <td>Edge Functions</td>
+                        <td>Multiple regions</td>
+                        <td>Backend-as-a-Service</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Railway</strong></td>
+                        <td>✅ $5 credit</td>
+                        <td>Usage-based</td>
+                        <td>Container-based</td>
+                        <td>US/EU regions</td>
+                        <td>Hybrid serverless/container</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deno Deploy</strong></td>
+                        <td>✅ 100K requests</td>
+                        <td>$20/month</td>
+                        <td>Native TypeScript</td>
+                        <td>Global edge</td>
+                        <td>TypeScript-first serverless</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="feature-list">
+                <div class="feature-card">
+                    <h4>🚀 Best for Startups</h4>
+                    <ul>
+                        <li><strong>Vercel:</strong> Zero-config deployment</li>
+                        <li><strong>Netlify:</strong> Great free tier</li>
+                        <li><strong>Supabase:</strong> Backend included</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>⚡ Best Performance</h4>
+                    <ul>
+                        <li><strong>Cloudflare:</strong> Fastest edge network</li>
+                        <li><strong>Deno Deploy:</strong> Minimal cold starts</li>
+                        <li><strong>AWS Lambda:</strong> Most mature</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>💰 Most Cost-Effective</h4>
+                    <ul>
+                        <li><strong>Cloudflare Workers:</strong> $5/10M requests</li>
+                        <li><strong>AWS Lambda:</strong> Generous free tier</li>
+                        <li><strong>Firebase:</strong> Pay-as-you-go</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🛠️ Best Developer Experience</h4>
+                    <ul>
+                        <li><strong>Vercel:</strong> Git integration</li>
+                        <li><strong>Deno Deploy:</strong> TypeScript native</li>
+                        <li><strong>Supabase:</strong> All-in-one platform</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost Calculator -->
+        <section class="cost-calculator">
+            <h2>💰 Serverless Application Cost Estimation</h2>
+            <p>Estimated monthly costs for different serverless application scenarios</p>
+            
+            <div class="calculator-grid">
+                <div class="calc-item">
+                    <h4>Small App (10K requests/month)</h4>
+                    <p><strong>$0-5/month</strong></p>
+                    <small>Most providers: Free tier covers usage</small>
+                </div>
+                <div class="calc-item">
+                    <h4>Medium App (1M requests/month)</h4>
+                    <p><strong>$5-25/month</strong></p>
+                    <small>Cloudflare: $5, Vercel: $20, AWS: $10-15</small>
+                </div>
+                <div class="calc-item">
+                    <h4>Large App (10M requests/month)</h4>
+                    <p><strong>$50-200/month</strong></p>
+                    <small>Cloudflare: $50, AWS: $100-150, Vercel: $200+</small>
+                </div>
+                <div class="calc-item">
+                    <h4>Enterprise (100M requests/month)</h4>
+                    <p><strong>$500-2000/month</strong></p>
+                    <small>AWS/GCP: $500-800, Vercel Enterprise: $1500+</small>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">Function Execution Cost Breakdown</h3>
+            <div class="calculator-grid">
+                <div class="calc-item">
+                    <h4>AWS Lambda</h4>
+                    <p>1M requests @ 512MB, 1s each</p>
+                    <small><strong>$8.35/month</strong><br>
+                    Requests: $0.20<br>
+                    Compute: $8.15</small>
+                </div>
+                <div class="calc-item">
+                    <h4>Vercel Functions</h4>
+                    <p>1M requests @ 512MB, 1s each</p>
+                    <small><strong>$90/month</strong><br>
+                    (Beyond free tier)<br>
+                    $0.18/GB-hour</small>
+                </div>
+                <div class="calc-item">
+                    <h4>Cloudflare Workers</h4>
+                    <p>1M requests @ 128MB, 50ms each</p>
+                    <small><strong>$0.50/month</strong><br>
+                    CPU time based<br>
+                    No memory charges</small>
+                </div>
+                <div class="calc-item">
+                    <h4>Netlify Functions</h4>
+                    <p>1M requests @ 512MB, 1s each</p>
+                    <small><strong>$12.50/month</strong><br>
+                    (Beyond free tier)<br>
+                    $25/2M requests</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Comparison -->
+        <section class="section">
+            <h2>🔧 Feature Comparison</h2>
+            
+            <div class="feature-list">
+                <div class="feature-card">
+                    <h4>🚀 Deployment Speed</h4>
+                    <ul>
+                        <li><strong>Fastest:</strong> Vercel, Netlify</li>
+                        <li><strong>Fast:</strong> Cloudflare Pages</li>
+                        <li><strong>Moderate:</strong> Railway, Render</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>📈 Scalability</h4>
+                    <ul>
+                        <li><strong>Excellent:</strong> AWS, Google Cloud</li>
+                        <li><strong>Good:</strong> Vercel, Cloudflare</li>
+                        <li><strong>Limited:</strong> GitHub Pages</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>💡 Ease of Use</h4>
+                    <ul>
+                        <li><strong>Beginner-friendly:</strong> Vercel, Netlify</li>
+                        <li><strong>Moderate:</strong> Railway, Render</li>
+                        <li><strong>Technical:</strong> AWS, Google Cloud</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🎨 Image Processing</h4>
+                    <ul>
+                        <li><strong>Best:</strong> Cloudinary</li>
+                        <li><strong>Good:</strong> Uploadcare</li>
+                        <li><strong>Basic:</strong> AWS, Vercel</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendations -->
+        <section class="recommendation">
+            <h2>🎯 Serverless Application Recommendations</h2>
+            
+            <div style="text-align: left; margin-top: 20px;">
+                <h3>🚀 For Small Serverless Projects (< 50K requests/month):</h3>
+                <p><strong>Cloudflare Pages + Workers</strong> - Excellent free tier, minimal cold starts</p>
+                <p><strong>Alternative:</strong> Vercel Free + Functions - Great DX for React/Next.js apps</p>
+                
+                <h3>📈 For Growing Serverless Apps (50K - 1M requests/month):</h3>
+                <p><strong>AWS Lambda + API Gateway</strong> - Most cost-effective at scale</p>
+                <p><strong>Alternative:</strong> Netlify Functions - Easier setup, good for JAMstack</p>
+                
+                <h3>🏢 For Enterprise Serverless Applications:</h3>
+                <p><strong>AWS Lambda + CloudFront</strong> - Maximum control and global performance</p>
+                <p><strong>Alternative:</strong> Google Cloud Functions - Strong ML/AI integration</p>
+                
+                <h3>💡 For TypeScript-First Serverless:</h3>
+                <p><strong>Deno Deploy</strong> - Native TypeScript, fast cold starts</p>
+                <p><strong>Alternative:</strong> Vercel with TypeScript API routes</p>
+
+                <h3>🔥 Best Value for High-Traffic Serverless:</h3>
+                <p><strong>Cloudflare Workers</strong> - $5 for 10M requests, no cold starts</p>
+                <p><strong>Alternative:</strong> AWS Lambda with Reserved Concurrency</p>
+
+                <h3>🛠️ Full-Stack Serverless Platform:</h3>
+                <p><strong>Supabase</strong> - Database + Auth + Functions in one platform</p>
+                <p><strong>Alternative:</strong> Firebase - Google's all-in-one solution</p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #7f8c8d;">
+            <p>📊 Cost comparison as of August 2025. Prices may vary. Always check official websites for current pricing.</p>
+            <p>💡 Consider your specific needs: traffic volume, storage requirements, and technical expertise when choosing.</p>
+        </footer>
+    </div>
+</body>
+</html>

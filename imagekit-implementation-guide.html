@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageKit.io Implementation Guide - BSM Gandhinagar Posts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c3e50;
+            padding: 40px 20px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.8;
+            color: #34495e;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.9);
+            margin: 30px 0;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+        }
+        
+        h4 {
+            color: #34495e;
+            margin: 20px 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 4px solid #667eea;
+        }
+        
+        .step-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .step-number {
+            background: #28a745;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .feature-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .tab-container {
+            margin: 20px 0;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-content {
+            background: white;
+            padding: 20px;
+            border-radius: 0 0 10px 10px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .feature-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ ImageKit.io Implementation Guide</h1>
+            <p class="subtitle">Complete Image Management for BSM Gandhinagar Posts</p>
+        </header>
+
+        <!-- Overview -->
+        <section class="section">
+            <h2>📋 Implementation Overview</h2>
+            
+            <div class="info-box">
+                <h4>🎯 What We'll Build</h4>
+                <p>A complete image management system where:</p>
+                <ul>
+                    <li><strong>Admin Panel:</strong> Upload post images with drag & drop</li>
+                    <li><strong>ImageKit Storage:</strong> Images stored in organized folders</li>
+                    <li><strong>Automatic Optimization:</strong> WebP/AVIF conversion, compression</li>
+                    <li><strong>Frontend Display:</strong> Fast loading with responsive images</li>
+                    <li><strong>Post Management:</strong> Easy image selection and management</li>
+                </ul>
+            </div>
+
+            <div class="feature-comparison">
+                <div class="feature-card">
+                    <h4>📂 ImageKit Folder Structure</h4>
+                    <ul>
+                        <li><strong>bsm-gandhinagar/posts/</strong> - All post images</li>
+                        <li><strong>bsm-gandhinagar/posts/thumbnails/</strong> - Post thumbnails</li>
+                        <li><strong>bsm-gandhinagar/events/</strong> - Event images</li>
+                        <li><strong>bsm-gandhinagar/members/</strong> - Member photos</li>
+                        <li><strong>bsm-gandhinagar/gallery/</strong> - Gallery images</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🔧 Required Setup</h4>
+                    <ul>
+                        <li>ImageKit.io account (Free tier)</li>
+                        <li>API keys configuration</li>
+                        <li>Upload widget integration</li>
+                        <li>Database schema update</li>
+                        <li>Admin panel components</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🚀 Benefits</h4>
+                    <ul>
+                        <li>Fast CDN delivery</li>
+                        <li>Automatic optimization</li>
+                        <li>Real-time transformations</li>
+                        <li>Mobile-optimized images</li>
+                        <li>Reduced server load</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ImageKit Setup -->
+        <section class="section">
+            <h2>🔧 ImageKit.io Setup</h2>
+            
+            <h3>Step 1: Create ImageKit Account</h3>
+            <div class="step-container">
+                <span class="step-number">1</span>
+                <strong>Sign up at ImageKit.io</strong>
+                <ol>
+                    <li>Go to <a href="https://imagekit.io" target="_blank">imagekit.io</a></li>
+                    <li>Create free account (20GB storage, 20GB bandwidth)</li>
+                    <li>Verify email and complete setup</li>
+                    <li>Note your URL endpoint: <code>https://ik.imagekit.io/your_id/</code></li>
+                </ol>
+            </div>
+
+            <h3>Step 2: Get API Credentials</h3>
+            <div class="step-container">
+                <span class="step-number">2</span>
+                <strong>Obtain API Keys</strong>
+                <ol>
+                    <li>Go to Developer section in ImageKit dashboard</li>
+                    <li>Copy <strong>URL Endpoint</strong></li>
+                    <li>Copy <strong>Public Key</strong></li>
+                    <li>Copy <strong>Private Key</strong></li>
+                </ol>
+            </div>
+
+            <h3>Step 3: Environment Configuration</h3>
+            <div class="code-block">
+# Add to your .env.local file
+NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=public_your_public_key_here
+IMAGEKIT_PRIVATE_KEY=private_your_private_key_here
+NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_id/
+IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_id/</div>
+        </section>
+
+        <!-- Installation -->
+        <section class="section">
+            <h2>📦 Installation & Dependencies</h2>
+            
+            <h3>Install ImageKit SDK</h3>
+            <div class="code-block">
+# Install ImageKit packages
+npm install imagekit imagekitio-react
+
+# Install additional dependencies for upload
+npm install multer formidable</div>
+
+            <h3>ImageKit Configuration</h3>
+            <div class="code-block">
+// Create: src/lib/imagekit.js
+import ImageKit from 'imagekit';
+
+// Server-side ImageKit instance
+export const imagekit = new ImageKit({
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
+
+// Client-side configuration
+export const imagekitConfig = {
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+};</div>
+        </section>
+
+        <!-- Upload API -->
+        <section class="section">
+            <h2>🔄 Upload API Implementation</h2>
+            
+            <h3>Create Upload API Route</h3>
+            <div class="code-block">
+// Create: api/upload-post-image.js
+import { imagekit } from '../../src/lib/imagekit';
+import formidable from 'formidable';
+import fs from 'fs';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Parse form data
+    const form = formidable({
+      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+    });
+
+    const [fields, files] = await form.parse(req);
+    const uploadedFile = files.image[0];
+
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Read file as buffer
+    const fileBuffer = fs.readFileSync(uploadedFile.filepath);
+
+    // Upload to ImageKit
+    const result = await imagekit.upload({
+      file: fileBuffer,
+      fileName: `post-${Date.now()}-${uploadedFile.originalFilename}`,
+      folder: '/bsm-gandhinagar/posts/',
+      useUniqueFileName: true,
+      transformation: {
+        pre: 'l-text,i-BSM Gandhinagar,fs-20,co-white,pa-10', // Watermark
+        post: [
+          {
+            type: 'transformation',
+            value: 'w-1200,h-800,c-at_max,q-80'
+          }
+        ]
+      },
+      tags: ['post', 'bsm-gandhinagar']
+    });
+
+    // Generate thumbnail
+    const thumbnailResult = await imagekit.upload({
+      file: fileBuffer,
+      fileName: `thumb-${Date.now()}-${uploadedFile.originalFilename}`,
+      folder: '/bsm-gandhinagar/posts/thumbnails/',
+      useUniqueFileName: true,
+      transformation: {
+        post: [
+          {
+            type: 'transformation',
+            value: 'w-400,h-250,c-maintain_ratio,q-70'
+          }
+        ]
+      },
+      tags: ['thumbnail', 'bsm-gandhinagar']
+    });
+
+    // Clean up temp file
+    fs.unlinkSync(uploadedFile.filepath);
+
+    res.status(200).json({
+      success: true,
+      imageUrl: result.url,
+      thumbnailUrl: thumbnailResult.url,
+      fileId: result.fileId,
+      thumbnailId: thumbnailResult.fileId,
+      imageName: result.name,
+      size: result.size
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ 
+      error: 'Upload failed', 
+      details: error.message 
+    });
+  }
+}</div>
+
+            <h3>Get Authentication Token API</h3>
+            <div class="code-block">
+// Create: api/imagekit-auth.js
+import { imagekit } from '../../src/lib/imagekit';
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const authenticationParameters = imagekit.getAuthenticationParameters();
+    res.status(200).json(authenticationParameters);
+  } catch (error) {
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+}</div>
+        </section>
+
+        <!-- Upload Component -->
+        <section class="section">
+            <h2>📤 Upload Component for Admin</h2>
+            
+            <h3>Create Image Upload Component</h3>
+            <div class="code-block">
+// Create: src/components/admin/ImageUploader.tsx
+import React, { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Upload, X, Image, CheckCircle, AlertCircle } from 'lucide-react';
+
+interface ImageUploaderProps {
+  onImageUpload: (imageData: any) => void;
+  currentImage?: string;
+  folder?: string;
+  maxSize?: number; // in MB
+}
+
+export const ImageUploader: React.FC<ImageUploaderProps> = ({
+  onImageUpload,
+  currentImage,
+  folder = 'posts',
+  maxSize = 10
+}) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(currentImage || null);
+  const [error, setError] = useState<string | null>(null);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > maxSize * 1024 * 1024) {
+      setError(`File size should be less than ${maxSize}MB`);
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload only image files');
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('folder', folder);
+
+      const response = await fetch('/api/upload-post-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setUploadedImage(result.imageUrl);
+        onImageUpload({
+          url: result.imageUrl,
+          thumbnailUrl: result.thumbnailUrl,
+          fileId: result.fileId,
+          thumbnailId: result.thumbnailId,
+          name: result.imageName,
+          size: result.size
+        });
+      } else {
+        setError(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      setError('Upload failed. Please try again.');
+      console.error('Upload error:', error);
+    } finally {
+      setUploading(false);
+    }
+  }, [onImageUpload, folder, maxSize]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+    },
+    multiple: false,
+    maxSize: maxSize * 1024 * 1024
+  });
+
+  const removeImage = () => {
+    setUploadedImage(null);
+    onImageUpload(null);
+  };
+
+  if (uploadedImage) {
+    return (
+      <div className="relative">
+        <img
+          src={uploadedImage}
+          alt="Uploaded"
+          className="w-full h-48 object-cover rounded-lg"
+        />
+        <button
+          onClick={removeImage}
+          className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+        >
+          <X size={16} />
+        </button>
+        <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded flex items-center text-sm">
+          <CheckCircle size={16} className="mr-1" />
+          Uploaded
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+          isDragActive
+            ? 'border-blue-400 bg-blue-50'
+            : 'border-gray-300 hover:border-gray-400'
+        } ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+      >
+        <input {...getInputProps()} />
+        
+        <div className="flex flex-col items-center">
+          {uploading ? (
+            <>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+              <p className="text-gray-600">Uploading image...</p>
+            </>
+          ) : (
+            <>
+              <Upload className="h-12 w-12 text-gray-400 mb-4" />
+              <p className="text-lg font-medium text-gray-700 mb-2">
+                {isDragActive ? 'Drop image here' : 'Upload Post Image'}
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Drag & drop an image or click to select
+              </p>
+              <p className="text-xs text-gray-400">
+                Max size: {maxSize}MB • Supports: JPG, PNG, GIF, WebP
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
+          <AlertCircle size={20} className="mr-2" />
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};</div>
+
+            <h3>Install Dropzone Dependency</h3>
+            <div class="code-block">
+# Install react-dropzone for drag & drop uploads
+npm install react-dropzone</div>
+        </section>
+
+        <!-- Admin Integration -->
+        <section class="section">
+            <h2>🔧 Admin Panel Integration</h2>
+            
+            <h3>Update Post Form Component</h3>
+            <div class="code-block">
+// Update: src/components/admin/PostForm.tsx
+import React, { useState } from 'react';
+import { ImageUploader } from './ImageUploader';
+
+interface PostFormData {
+  title: string;
+  content: string;
+  excerpt: string;
+  image?: {
+    url: string;
+    thumbnailUrl: string;
+    fileId: string;
+    thumbnailId: string;
+  };
+  status: 'draft' | 'published';
+}
+
+export const PostForm: React.FC = () => {
+  const [formData, setFormData] = useState<PostFormData>({
+    title: '',
+    content: '',
+    excerpt: '',
+    status: 'draft'
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleImageUpload = (imageData: any) => {
+    if (imageData) {
+      setFormData(prev => ({
+        ...prev,
+        image: {
+          url: imageData.url,
+          thumbnailUrl: imageData.thumbnailUrl,
+          fileId: imageData.fileId,
+          thumbnailId: imageData.thumbnailId
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        image: undefined
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/consolidated?endpoint=posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Post created successfully!');
+        // Reset form or redirect
+        setFormData({
+          title: '',
+          content: '',
+          excerpt: '',
+          status: 'draft'
+        });
+      } else {
+        alert('Failed to create post');
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      alert('Failed to create post');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-6">Create New Post</h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Title */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Post Title
+          </label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        {/* Image Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Featured Image
+          </label>
+          <ImageUploader
+            onImageUpload={handleImageUpload}
+            currentImage={formData.image?.url}
+            folder="posts"
+            maxSize={10}
+          />
+        </div>
+
+        {/* Excerpt */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Excerpt
+          </label>
+          <textarea
+            value={formData.excerpt}
+            onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Content */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Content
+          </label>
+          <textarea
+            value={formData.content}
+            onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+            rows={10}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Status
+          </label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'draft' | 'published' }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Creating...' : 'Create Post'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};</div>
+
+            <h3>Update Database Schema</h3>
+            <div class="code-block">
+// Update your posts collection schema to include image fields
+{
+  title: String,
+  content: String,
+  excerpt: String,
+  image: {
+    url: String,          // Full size image URL
+    thumbnailUrl: String, // Thumbnail URL
+    fileId: String,       // ImageKit file ID
+    thumbnailId: String   // Thumbnail file ID
+  },
+  status: String,
+  createdAt: Date,
+  updatedAt: Date
+}</div>
+        </section>
+
+        <!-- Display Component -->
+        <section class="section">
+            <h2>🖼️ Display Components</h2>
+            
+            <h3>Enhanced ImageKit Display Component</h3>
+            <div class="code-block">
+// Update: src/components/ui/ImageKitImage.tsx
+import React, { useState } from 'react';
+
+interface ImageKitImageProps {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  className?: string;
+  priority?: boolean;
+  quality?: number;
+  transformation?: string[];
+  fallback?: string;
+}
+
+export const ImageKitImage: React.FC<ImageKitImageProps> = ({
+  src,
+  alt,
+  width = 400,
+  height = 250,
+  className = '',
+  priority = false,
+  quality = 80,
+  transformation = [],
+  fallback = 'https://via.placeholder.com/400x250?text=No+Image'
+}) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [imageSrc, setImageSrc] = useState(src);
+
+  // Generate ImageKit URL with transformations
+  const generateImageKitUrl = (originalUrl: string) => {
+    if (!originalUrl || !originalUrl.includes('imagekit.io')) {
+      return fallback;
+    }
+
+    // Build transformation parameters
+    const transforms = [
+      `w-${width}`,
+      `h-${height}`,
+      `q-${quality}`,
+      'f-auto', // Auto format
+      'c-maintain_ratio',
+      ...transformation
+    ];
+    
+    // Add transformation to ImageKit URL
+    const transformString = transforms.join(',');
+    return originalUrl.replace(/\/([^\/]+)$/, `/tr:${transformString}/$1`);
+  };
+
+  // Generate responsive srcset
+  const generateSrcSet = () => {
+    const sizes = [width * 0.5, width, width * 1.5, width * 2];
+    return sizes.map(size => {
+      const url = generateImageKitUrl(src).replace(`w-${width}`, `w-${Math.round(size)}`);
+      return `${url} ${Math.round(size)}w`;
+    }).join(', ');
+  };
+
+  const handleError = () => {
+    if (imageSrc !== fallback) {
+      setImageSrc(fallback);
+      setError(false);
+    } else {
+      setError(true);
+    }
+    setIsLoading(false);
+  };
+
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      {isLoading && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+          <div className="text-gray-400 text-sm">Loading...</div>
+        </div>
+      )}
+      
+      <img
+        src={generateImageKitUrl(imageSrc)}
+        srcSet={src.includes('imagekit.io') ? generateSrcSet() : undefined}
+        sizes={`(max-width: 768px) ${width * 0.8}px, ${width}px`}
+        alt={alt}
+        width={width}
+        height={height}
+        loading={priority ? 'eager' : 'lazy'}
+        onLoad={() => setIsLoading(false)}
+        onError={handleError}
+        className={`transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        } ${error ? 'hidden' : ''} w-full h-auto object-cover`}
+      />
+      
+      {error && (
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+          <div className="text-gray-500 text-center">
+            <div className="text-2xl mb-2">📷</div>
+            <div className="text-sm">Image not available</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};</div>
+
+            <h3>Update Posts Display</h3>
+            <div class="code-block">
+// Update: src/components/home/FeaturedPosts.tsx
+import React from 'react';
+import { ImageKitImage } from '../ui/ImageKitImage';
+
+interface Post {
+  _id: string;
+  title: string;
+  excerpt: string;
+  image?: {
+    url: string;
+    thumbnailUrl: string;
+  };
+  createdAt: string;
+}
+
+interface FeaturedPostsProps {
+  posts: Post[];
+}
+
+export const FeaturedPosts: React.FC<FeaturedPostsProps> = ({ posts }) => {
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Latest Posts
+          </h2>
+          <p className="text-lg text-gray-600">
+            Stay updated with our recent activities and announcements
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {posts.map((post) => (
+            <article 
+              key={post._id} 
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+            >
+              {/* Post Image */}
+              <div className="aspect-w-16 aspect-h-9">
+                <ImageKitImage
+                  src={post.image?.thumbnailUrl || post.image?.url || ''}
+                  alt={post.title}
+                  width={400}
+                  height={250}
+                  className="w-full h-48 object-cover"
+                  transformation={['c-maintain_ratio']}
+                  fallback="https://via.placeholder.com/400x250?text=BSM+Post"
+                />
+              </div>
+
+              {/* Post Content */}
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                  {post.title}
+                </h3>
+                
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  {post.excerpt}
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">
+                    {new Date(post.createdAt).toLocaleDateString('en-IN')}
+                  </span>
+                  
+                  <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                    Read More →
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};</div>
+        </section>
+
+        <!-- API Integration -->
+        <section class="section">
+            <h2>🔗 API Integration</h2>
+            
+            <h3>Update Consolidated API for Posts</h3>
+            <div class="code-block">
+// Update: api/consolidated.js - Add posts handling
+const handlePosts = async (req, res, method) => {
+  switch (method) {
+    case 'GET':
+      try {
+        const posts = await db.collection('posts')
+          .find({ status: 'published' })
+          .sort({ createdAt: -1 })
+          .toArray();
+        
+        res.status(200).json({ success: true, data: posts });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+      break;
+
+    case 'POST':
+      try {
+        const postData = {
+          ...req.body,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        const result = await db.collection('posts').insertOne(postData);
+        res.status(201).json({ 
+          success: true, 
+          data: { _id: result.insertedId, ...postData } 
+        });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+      break;
+
+    case 'PUT':
+      try {
+        const { id } = req.query;
+        const updateData = {
+          ...req.body,
+          updatedAt: new Date()
+        };
+
+        // Remove _id from update data to avoid MongoDB error
+        delete updateData._id;
+
+        const result = await db.collection('posts').updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateData }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+
+        res.status(200).json({ success: true, data: updateData });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+      break;
+
+    case 'DELETE':
+      try {
+        const { id } = req.query;
+        
+        // Get post data before deletion to clean up images
+        const post = await db.collection('posts').findOne({ _id: new ObjectId(id) });
+        
+        if (post && post.image) {
+          // Delete images from ImageKit
+          try {
+            await imagekit.deleteFile(post.image.fileId);
+            if (post.image.thumbnailId) {
+              await imagekit.deleteFile(post.image.thumbnailId);
+            }
+          } catch (imagekitError) {
+            console.log('ImageKit cleanup error:', imagekitError);
+          }
+        }
+
+        const result = await db.collection('posts').deleteOne({ _id: new ObjectId(id) });
+        
+        if (result.deletedCount === 0) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+
+        res.status(200).json({ success: true, message: 'Post deleted' });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+      break;
+
+    default:
+      res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
+};</div>
+
+            <h3>Fetch Posts Hook</h3>
+            <div class="code-block">
+// Create: src/hooks/usePosts.ts
+import { useState, useEffect } from 'react';
+
+interface Post {
+  _id: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  image?: {
+    url: string;
+    thumbnailUrl: string;
+    fileId: string;
+    thumbnailId: string;
+  };
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const usePosts = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/consolidated?endpoint=posts');
+      const result = await response.json();
+
+      if (result.success) {
+        setPosts(result.data);
+      } else {
+        setError(result.error || 'Failed to fetch posts');
+      }
+    } catch (err) {
+      setError('Network error');
+      console.error('Fetch posts error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  return { posts, loading, error, refetch: fetchPosts };
+};</div>
+        </section>
+
+        <!-- Implementation Steps -->
+        <section class="section">
+            <h2>🚀 Implementation Steps</h2>
+            
+            <div class="step-container">
+                <span class="step-number">1</span>
+                <strong>Setup ImageKit Account</strong>
+                <ul>
+                    <li>Create account at imagekit.io</li>
+                    <li>Get API credentials</li>
+                    <li>Add environment variables</li>
+                </ul>
+            </div>
+            
+            <div class="step-container">
+                <span class="step-number">2</span>
+                <strong>Install Dependencies</strong>
+                <div class="code-block">npm install imagekit imagekitio-react react-dropzone multer formidable</div>
+            </div>
+            
+            <div class="step-container">
+                <span class="step-number">3</span>
+                <strong>Create API Routes</strong>
+                <ul>
+                    <li>Upload API: <code>/api/upload-post-image.js</code></li>
+                    <li>Auth API: <code>/api/imagekit-auth.js</code></li>
+                    <li>Update consolidated API for posts</li>
+                </ul>
+            </div>
+            
+            <div class="step-container">
+                <span class="step-number">4</span>
+                <strong>Create Components</strong>
+                <ul>
+                    <li>ImageUploader component</li>
+                    <li>Enhanced ImageKitImage component</li>
+                    <li>Update PostForm component</li>
+                </ul>
+            </div>
+            
+            <div class="step-container">
+                <span class="step-number">5</span>
+                <strong>Update Database Schema</strong>
+                <ul>
+                    <li>Add image fields to posts collection</li>
+                    <li>Include thumbnail URLs</li>
+                    <li>Store ImageKit file IDs</li>
+                </ul>
+            </div>
+            
+            <div class="step-container">
+                <span class="step-number">6</span>
+                <strong>Test Implementation</strong>
+                <ul>
+                    <li>Upload test images from admin</li>
+                    <li>Verify image display on frontend</li>
+                    <li>Test responsive images</li>
+                    <li>Check mobile optimization</li>
+                </ul>
+            </div>
+
+            <div class="success-box">
+                <h4>🎉 Expected Results</h4>
+                <ul>
+                    <li><strong>Fast Uploads:</strong> Drag & drop interface with progress</li>
+                    <li><strong>Optimized Images:</strong> Automatic WebP/AVIF conversion</li>
+                    <li><strong>Responsive Display:</strong> Perfect images on all devices</li>
+                    <li><strong>Professional Admin:</strong> Easy image management</li>
+                    <li><strong>Better SEO:</strong> Optimized images improve page speed</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Cost & Benefits -->
+        <section class="section">
+            <h2>💰 Cost & Benefits</h2>
+            
+            <div class="feature-comparison">
+                <div class="feature-card">
+                    <h4>💸 ImageKit Pricing</h4>
+                    <ul>
+                        <li><strong>Free Tier:</strong> 20GB storage, 20GB bandwidth</li>
+                        <li><strong>Starter:</strong> ₹750/month - 100GB storage</li>
+                        <li><strong>Growth:</strong> ₹1,500/month - 500GB storage</li>
+                        <li><strong>Perfect for BSM:</strong> Free tier sufficient initially</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🚀 Performance Benefits</h4>
+                    <ul>
+                        <li>50% faster page loading</li>
+                        <li>60% bandwidth savings</li>
+                        <li>Global CDN delivery</li>
+                        <li>Automatic mobile optimization</li>
+                        <li>Real-time transformations</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🛠️ Technical Features</h4>
+                    <ul>
+                        <li>On-the-fly transformations</li>
+                        <li>Format auto-detection</li>
+                        <li>Quality optimization</li>
+                        <li>Watermark support</li>
+                        <li>Analytics & monitoring</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Important Notes</h4>
+                <ul>
+                    <li><strong>Backup Strategy:</strong> Keep original images backed up</li>
+                    <li><strong>Bandwidth Monitoring:</strong> Track usage to avoid overages</li>
+                    <li><strong>Image Naming:</strong> Use consistent naming conventions</li>
+                    <li><strong>SEO Optimization:</strong> Always use descriptive alt tags</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="text-align: center; margin-top: 50px; padding: 30px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; color: white;">
+            <h3>🎯 Ready to Implement ImageKit?</h3>
+            <p>This complete guide covers everything needed to add professional image management to your BSM Gandhinagar project.</p>
+            <p style="margin-top: 15px; opacity: 0.8;">Start with the free tier and scale as your organization grows!</p>
+        </footer>
+    </div>
+</body>
+</html>

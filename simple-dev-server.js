@@ -18,7 +18,9 @@ function createMockVercelRequest(req) {
   return {
     ...req,
     query: parsedUrl.query,
-    body: req.body || {}
+    body: req.body || {},
+    headers: req.headers,
+    method: req.method
   };
 }
 
@@ -88,14 +90,45 @@ const server = createServer(async (req, res) => {
       ...req,
       url: `/api/consolidated?${new URLSearchParams(consolidatedQuery).toString()}`,
       query: consolidatedQuery,
-      body: req.body || {}
+      body: req.body || {},
+      headers: req.headers, // Explicitly preserve headers
+      method: req.method
     };
     
     mockReq = consolidatedReq;
   }
 
   try {
-    // Parse request body for POST/PUT requests
+    // For file uploads (multipart/form-data), capture raw body as binary data
+    if (req.headers['content-type']?.includes('multipart/form-data')) {
+      let rawBody = Buffer.alloc(0);
+      
+      req.on('data', chunk => {
+        rawBody = Buffer.concat([rawBody, chunk]);
+      });
+
+      req.on('end', async () => {
+        // Add raw body to request object
+        mockReq.rawBody = rawBody;
+        mockReq.body = {}; // Initialize empty body
+        
+        const mockRes = createMockVercelResponse(res);
+        
+        try {
+          await consolidatedHandler(mockReq, mockRes);
+          console.log(`✅ API Response sent for ${req.method} ${req.url}`);
+        } catch (apiError) {
+          console.error(`❌ API Error for ${req.method} ${req.url}:`, apiError.message);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'API handler error', details: apiError.message }));
+        }
+      });
+      
+      return;
+    }
+
+    // Parse request body for POST/PUT requests (non-file uploads)
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Users, Calendar, Phone, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ImageKitImage } from '../ui/ImageKitImage';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,10 +27,15 @@ export const Header: React.FC = () => {
         <div className="flex justify-between items-center h-20">
           {/* Logo and Brand */}
           <Link to="/" className="flex items-center space-x-0">
-            <img 
-              src="/bihar-cultural-logo.png" 
+            <ImageKitImage
+              src="https://ik.imagekit.io/4gkmfjy57/one.png?updatedAt=1756640366344"
               alt="Bihar Sanskritik Mandal Logo" 
-              className="w-20 h-20 rounded-xl object-contain"
+              width={48}
+              height={48}
+              className="w-12 h-12 rounded-lg object-contain"
+              priority={true}
+              quality={90}
+              transformation={['c-maintain_ratio']}
             />
             <div className="flex flex-col">
               <span className="text-xl font-bold text-orange-600">

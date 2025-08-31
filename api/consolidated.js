@@ -3,20 +3,104 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import ImageKit from 'imagekit';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Load environment variables from the root directory
-dotenv.config({ path: join(__dirname, '..', '.env') });
+dotenv.config({ path: join(__dirname, '..', '.env.local') });
 
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
+// Initialize ImageKit
+console.log('🔑 ImageKit Environment Variables:', {
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ? 'SET' : 'MISSING',
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY ? 'SET' : 'MISSING',
+  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ? 'SET' : 'MISSING'
+});
+
+const imagekit = new ImageKit({
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+});
+
 let cachedClient = null;
 let isDevelopmentMode = false;
+
+// Simple multipart form data parser
+function parseMultipartFormData(body, boundary) {
+  const fields = {};
+  const files = {};
+
+  // Split by boundary - include the boundary markers
+  const fullBoundary = `--${boundary}`;
+  const parts = body.split(fullBoundary);
+  
+  console.log('📊 Total boundary splits:', parts.length);
+
+  for (let i = 1; i < parts.length - 1; i++) { // Skip first empty part and last closing part
+    const part = parts[i];
+    
+    // Skip if part doesn't contain form data
+    if (!part.includes('Content-Disposition: form-data')) continue;
+    
+    console.log(`📊 Processing part ${i}:`, part.substring(0, 300));
+    
+    // Find the double CRLF that separates headers from data
+    const headerEndIndex = part.indexOf('\r\n\r\n');
+    if (headerEndIndex === -1) {
+      console.log('📊 No header separator found');
+      continue;
+    }
+    
+    const headerSection = part.substring(0, headerEndIndex);
+    const dataSection = part.substring(headerEndIndex + 4);
+    
+    // Remove trailing CRLF and boundary markers
+    const cleanDataSection = dataSection.replace(/\r\n.*$/, '');
+    
+    console.log('📊 Headers section:', headerSection);
+    console.log('📊 Data section length:', cleanDataSection.length);
+    
+    // Parse Content-Disposition header
+    const dispositionMatch = headerSection.match(/Content-Disposition:\s*form-data;\s*name="([^"]+)"(?:;\s*filename="([^"]+)")?/i);
+    if (!dispositionMatch) {
+      console.log('📊 No valid Content-Disposition found');
+      continue;
+    }
+    
+    const name = dispositionMatch[1];
+    const filename = dispositionMatch[2];
+    
+    // Parse Content-Type header
+    const contentTypeMatch = headerSection.match(/Content-Type:\s*([^\r\n]+)/i);
+    const contentType = contentTypeMatch ? contentTypeMatch[1].trim() : '';
+    
+    console.log('📊 Parsed:', { name, filename, contentType });
+    
+    if (filename) {
+      // It's a file - use binary encoding for file data
+      files[name] = {
+        filename: filename,
+        contentType: contentType,
+        data: Buffer.from(cleanDataSection, 'binary')
+      };
+      console.log('📊 Added file:', name, 'size:', files[name].data.length);
+    } else {
+      // It's a regular field
+      fields[name] = cleanDataSection.trim();
+      console.log('📊 Added field:', name, '=', fields[name]);
+    }
+  }
+
+  return { fields, files };
+}
 
 async function connectToDatabase() {
   if (cachedClient) {
@@ -91,6 +175,14 @@ export default async function handler(req, res) {
     });
 
     switch (endpoint) {
+      case 'upload-image':
+        return await handleImageUpload(req, res);
+      case 'imagekit-auth':
+        return await handleImageKitAuth(req, res);
+      case 'imagekit-list':
+        return await handleImageKitList(req, res);
+      case 'imagekit-delete':
+        return await handleImageKitDelete(req, res);
       case 'members':
         return await handleMembers(req, res, db);
       case 'events':
@@ -1237,5 +1329,220 @@ async function handleContent(req, res, db) {
 
     default:
       return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+// ImageKit Upload Handler
+async function handleImageUpload(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    console.log('📊 Upload request headers:', JSON.stringify(req.headers, null, 2));
+    console.log('📊 Content-Type:', req.headers['content-type']);
+    console.log('📊 Content-Length:', req.headers['content-length']);
+    
+    // Extract boundary from content-type header
+    const contentType = req.headers['content-type'];
+    const boundaryMatch = contentType.match(/boundary=(.+)$/);
+    if (!boundaryMatch) {
+      return res.status(400).json({ error: 'Invalid multipart boundary' });
+    }
+    const boundary = boundaryMatch[1];
+
+    console.log('📊 Boundary:', boundary);
+    console.log('📊 Raw body length:', req.rawBody.length);
+    console.log('📊 Raw body start:', req.rawBody.toString('binary', 0, 200));
+
+    // Parse multipart form data
+    const rawBodyString = req.rawBody.toString('binary');
+    const { fields, files } = parseMultipartFormData(rawBodyString, boundary);
+    
+    console.log('📊 Parsed fields:', Object.keys(fields));
+    console.log('📊 Parsed files:', Object.keys(files));
+
+    const imageFile = files.image;
+    if (!imageFile) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Validate file type
+    if (!imageFile.contentType?.startsWith('image/')) {
+      return res.status(400).json({ error: 'Please upload only image files' });
+    }
+
+    // Get folder from form data or use default
+    const folder = fields.folder || 'posts';
+
+    console.log('📊 Uploading to ImageKit:', {
+      filename: imageFile.filename,
+      contentType: imageFile.contentType,
+      size: imageFile.data.length,
+      folder: folder
+    });
+
+    // Upload to ImageKit
+    const result = await imagekit.upload({
+      file: imageFile.data,
+      fileName: `${folder}-${Date.now()}-${imageFile.filename}`,
+      folder: `/bsm-gandhinagar/${folder}/`,
+      useUniqueFileName: true,
+      transformation: {
+        post: [
+          {
+            type: 'transformation',
+            value: 'w-1200,h-800,c-at_max,q-80'
+          }
+        ]
+      },
+      tags: [folder, 'bsm-gandhinagar']
+    });
+
+    // Generate thumbnail for posts
+    let thumbnailResult = null;
+    if (folder === 'posts') {
+      thumbnailResult = await imagekit.upload({
+        file: imageFile.data,
+        fileName: `thumb-${Date.now()}-${imageFile.filename}`,
+        folder: `/bsm-gandhinagar/${folder}/thumbnails/`,
+        useUniqueFileName: true,
+        transformation: {
+          post: [
+            {
+              type: 'transformation',
+              value: 'w-400,h-250,c-maintain_ratio,q-70'
+            }
+          ]
+        },
+        tags: ['thumbnail', 'bsm-gandhinagar']
+      });
+    }
+
+    const response = {
+      success: true,
+      imageUrl: result.url,
+      fileId: result.fileId,
+      imageName: result.name,
+      size: result.size,
+      width: result.width,
+      height: result.height
+    };
+
+    // Add thumbnail data if created
+    if (thumbnailResult) {
+      response.thumbnailUrl = thumbnailResult.url;
+      response.thumbnailId = thumbnailResult.fileId;
+    }
+
+    console.log('✅ Upload successful:', response);
+    return res.status(200).json(response);
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    return res.status(500).json({ 
+      error: 'Upload failed', 
+      details: error.message 
+    });
+  }
+}
+
+// ImageKit Auth Handler
+async function handleImageKitAuth(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const authenticationParameters = imagekit.getAuthenticationParameters();
+    return res.status(200).json(authenticationParameters);
+  } catch (error) {
+    console.error('ImageKit auth error:', error);
+    return res.status(500).json({ error: 'Authentication failed' });
+  }
+}
+
+// ImageKit List Files Handler
+async function handleImageKitList(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { folder = 'posts' } = req.query;
+    
+    console.log('📊 Listing ImageKit files for folder:', folder);
+    
+    // List files from ImageKit - remove the invalid search query
+    const result = await imagekit.listFiles({
+      path: `/bsm-gandhinagar/${folder}/`,
+      limit: 100,
+      sort: 'DESC_CREATED' // Most recent first
+    });
+
+    console.log('📊 ImageKit list result:', result.length, 'files found');
+
+    // Filter out thumbnail files manually and transform the results
+    const files = result
+      .filter(file => !file.name.startsWith('thumb-')) // Filter out thumbnails
+      .map(file => ({
+        fileId: file.fileId,
+        name: file.name,
+        url: file.url,
+        thumbnailUrl: file.url + '?tr=w-300,h-300,c-at_max,q-70', // Generate thumbnail on the fly
+        size: file.size,
+        width: file.width,
+        height: file.height,
+        filePath: file.filePath,
+        tags: file.tags || [],
+        createdAt: file.createdAt
+      }));
+
+    return res.status(200).json({
+      success: true,
+      files: files,
+      total: files.length
+    });
+
+  } catch (error) {
+    console.error('ImageKit list error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to list images', 
+      details: error.message 
+    });
+  }
+}
+
+// ImageKit Delete File Handler
+async function handleImageKitDelete(req, res) {
+  if (req.method !== 'DELETE') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { fileId } = req.body;
+    
+    if (!fileId) {
+      return res.status(400).json({ error: 'File ID is required' });
+    }
+
+    console.log('📊 Deleting ImageKit file:', fileId);
+    
+    // Delete file from ImageKit
+    const result = await imagekit.deleteFile(fileId);
+    
+    console.log('📊 ImageKit delete result:', result);
+
+    return res.status(200).json({
+      success: true,
+      message: 'File deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('ImageKit delete error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to delete image', 
+      details: error.message 
+    });
   }
 }
