@@ -10,7 +10,7 @@ const imagekit = new ImageKit({
 module.exports = async function handler(req, res) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
@@ -18,15 +18,22 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  if (req.method !== 'GET') {
+  if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const authenticationParameters = imagekit.getAuthenticationParameters();
-    res.status(200).json(authenticationParameters);
+    const { fileId } = req.body;
+    
+    if (!fileId) {
+      return res.status(400).json({ error: 'File ID is required' });
+    }
+    
+    await imagekit.deleteFile(fileId);
+    
+    res.status(200).json({ success: true, message: 'Image deleted successfully' });
   } catch (error) {
-    console.error('ImageKit auth error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    console.error('ImageKit delete error:', error);
+    res.status(500).json({ error: 'Failed to delete image' });
   }
 }

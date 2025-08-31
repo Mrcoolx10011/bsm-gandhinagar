@@ -23,10 +23,16 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const authenticationParameters = imagekit.getAuthenticationParameters();
-    res.status(200).json(authenticationParameters);
+    const { folder = '' } = req.query;
+    
+    const images = await imagekit.listFiles({
+      path: folder,
+      limit: 100
+    });
+    
+    res.status(200).json(images);
   } catch (error) {
-    console.error('ImageKit auth error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    console.error('ImageKit list error:', error);
+    res.status(500).json({ error: 'Failed to fetch images' });
   }
 }

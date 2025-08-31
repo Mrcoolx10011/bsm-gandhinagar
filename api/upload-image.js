@@ -1,6 +1,6 @@
-import ImageKit from 'imagekit';
-import formidable from 'formidable';
-import fs from 'fs';
+const ImageKit = require('imagekit');
+const formidable = require('formidable');
+const fs = require('fs');
 
 // Initialize ImageKit
 const imagekit = new ImageKit({
@@ -9,13 +9,13 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
 
-export const config = {
+module.exports.config = {
   api: {
     bodyParser: false,
   },
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
