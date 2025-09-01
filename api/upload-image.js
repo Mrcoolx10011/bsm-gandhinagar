@@ -15,11 +15,18 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Simple test response for now
+  // Test response that matches what frontend expects
   return res.status(200).json({
     success: true,
-    message: 'Upload endpoint working - test mode',
-    method: req.method,
+    message: 'Upload test successful',
+    imageUrl: 'https://ik.imagekit.io/4gkmfjy57/one.png',
+    thumbnailUrl: 'https://ik.imagekit.io/4gkmfjy57/one.png?tr=w-200,h-150',
+    fileId: 'test-upload-' + Date.now(),
+    thumbnailId: 'test-thumb-' + Date.now(),
+    imageName: 'test-uploaded-image.jpg',
+    size: 123456,
+    width: 1200,
+    height: 800,
     timestamp: new Date().toISOString(),
     environment: {
       hasImageKitPublic: !!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,

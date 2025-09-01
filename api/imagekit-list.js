@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
 
     const { folder = '' } = req.query;
     
-    // Return test images for now to test frontend
+    // Return test images in the format the frontend expects
     const testImages = [
       {
         fileId: 'test-1',
@@ -42,6 +42,8 @@ module.exports = async function handler(req, res) {
         width: 1200,
         height: 800,
         size: 156789,
+        filePath: '/bsm-gandhinagar/posts/test-image-1.jpg',
+        tags: ['test', 'bsm-gandhinagar'],
         createdAt: '2025-09-01T10:00:00Z'
       },
       {
@@ -52,12 +54,20 @@ module.exports = async function handler(req, res) {
         width: 800,
         height: 600,
         size: 98765,
+        filePath: '/bsm-gandhinagar/posts/test-image-2.jpg',
+        tags: ['test', 'bsm-gandhinagar'],
         createdAt: '2025-09-01T11:00:00Z'
       }
     ];
     
     console.log(`Found ${testImages.length} test images`);
-    res.status(200).json(testImages);
+    
+    // Frontend expects { success: true, files: [...] } format
+    res.status(200).json({
+      success: true,
+      files: testImages,
+      message: `Found ${testImages.length} test images`
+    });
 
   } catch (error) {
     console.error('ImageKit list error:', error);
