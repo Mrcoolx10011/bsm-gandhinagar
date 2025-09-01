@@ -1368,8 +1368,8 @@ async function handleImageUpload(req, res) {
       return res.status(400).json({ error: 'Please upload only image files' });
     }
 
-    // Get folder from form data or use default
-    const folder = fields.folder || 'posts';
+    // Get folder from form data - allow empty folder for root directory
+    const folder = fields.folder !== undefined ? fields.folder : '';
 
     console.log('📊 Uploading to ImageKit:', {
       filename: imageFile.filename,
@@ -1378,11 +1378,14 @@ async function handleImageUpload(req, res) {
       folder: folder
     });
 
+    // Build the folder path - handle empty folder for root directory
+    const folderPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/` : '/bsm-gandhinagar/';
+    
     // Upload to ImageKit
     const result = await imagekit.upload({
       file: imageFile.data,
-      fileName: `${folder}-${Date.now()}-${imageFile.filename}`,
-      folder: `/bsm-gandhinagar/${folder}/`,
+      fileName: `${folder || 'image'}-${Date.now()}-${imageFile.filename}`,
+      folder: folderPath,
       useUniqueFileName: true,
       transformation: {
         post: [
@@ -1392,16 +1395,18 @@ async function handleImageUpload(req, res) {
           }
         ]
       },
-      tags: [folder, 'bsm-gandhinagar']
+      tags: [folder || 'general', 'bsm-gandhinagar']
     });
 
     // Generate thumbnail for posts
     let thumbnailResult = null;
-    if (folder === 'posts') {
+    if (folder === 'posts' || folder === '') {
+      const thumbnailPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/thumbnails/` : '/bsm-gandhinagar/thumbnails/';
+      
       thumbnailResult = await imagekit.upload({
         file: imageFile.data,
         fileName: `thumb-${Date.now()}-${imageFile.filename}`,
-        folder: `/bsm-gandhinagar/${folder}/thumbnails/`,
+        folder: thumbnailPath,
         useUniqueFileName: true,
         transformation: {
           post: [
