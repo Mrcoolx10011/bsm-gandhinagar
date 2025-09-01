@@ -1,24 +1,20 @@
 module.exports = async function handler(req, res) {
-  console.log('Upload endpoint called:', req.method, req.url);
+  console.log('Test endpoint called:', req.method, req.url);
   
-  // Add CORS headers
+  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Simple test response for now
+  // Simple test response
   return res.status(200).json({
     success: true,
-    message: 'Upload endpoint working - test mode',
+    message: 'API endpoint working',
     method: req.method,
     timestamp: new Date().toISOString(),
     environment: {
