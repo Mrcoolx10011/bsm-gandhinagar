@@ -8,6 +8,8 @@ const imagekit = new ImageKit({
 });
 
 module.exports = async function handler(req, res) {
+  console.log('ImageKit List called:', req.method);
+  
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -23,6 +25,12 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Check if environment variables are available
+    if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || !process.env.IMAGEKIT_PRIVATE_KEY) {
+      console.error('Missing ImageKit environment variables');
+      return res.status(500).json({ error: 'ImageKit not configured' });
+    }
+
     const { folder = '' } = req.query;
     
     const images = await imagekit.listFiles({
@@ -30,9 +38,10 @@ module.exports = async function handler(req, res) {
       limit: 100
     });
     
+    console.log(`Found ${images.length} images`);
     res.status(200).json(images);
   } catch (error) {
     console.error('ImageKit list error:', error);
-    res.status(500).json({ error: 'Failed to fetch images' });
+    res.status(500).json({ error: 'Failed to fetch images', details: error.message });
   }
 }

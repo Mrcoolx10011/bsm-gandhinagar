@@ -8,6 +8,8 @@ const imagekit = new ImageKit({
 });
 
 module.exports = async function handler(req, res) {
+  console.log('ImageKit Auth called:', req.method);
+  
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -23,10 +25,17 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Check if environment variables are available
+    if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || !process.env.IMAGEKIT_PRIVATE_KEY) {
+      console.error('Missing ImageKit environment variables');
+      return res.status(500).json({ error: 'ImageKit not configured' });
+    }
+
     const authenticationParameters = imagekit.getAuthenticationParameters();
+    console.log('Auth successful');
     res.status(200).json(authenticationParameters);
   } catch (error) {
     console.error('ImageKit auth error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    res.status(500).json({ error: 'Authentication failed', details: error.message });
   }
 }

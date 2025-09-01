@@ -1,7 +1,6 @@
 {
   "name": "bsm-api",
   "version": "1.0.0",
-  "type": "module",
   "main": "consolidated.js",
   "dependencies": {
     "bcryptjs": "^2.4.3",
