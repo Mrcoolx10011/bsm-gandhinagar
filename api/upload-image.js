@@ -60,14 +60,17 @@ module.exports = async function handler(req, res) {
     // Read file as buffer
     const fileBuffer = fs.readFileSync(uploadedFile.filepath);
 
-    // Get folder from form data or use default
-    const folder = fields.folder?.[0] || 'posts';
+    // Get folder from form data - allow empty folder for root directory
+    const folder = fields.folder?.[0] !== undefined ? fields.folder[0] : '';
+
+    // Build the folder path - handle empty folder for root directory  
+    const folderPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/` : '/bsm-gandhinagar/';
 
     // Upload to ImageKit
     const result = await imagekit.upload({
       file: fileBuffer,
-      fileName: `${folder}-${Date.now()}-${uploadedFile.originalFilename}`,
-      folder: `/bsm-gandhinagar/${folder}/`,
+      fileName: `${folder || 'image'}-${Date.now()}-${uploadedFile.originalFilename}`,
+      folder: folderPath,
       useUniqueFileName: true,
       transformation: {
         post: [
@@ -77,16 +80,18 @@ module.exports = async function handler(req, res) {
           }
         ]
       },
-      tags: [folder, 'bsm-gandhinagar']
+      tags: [folder || 'general', 'bsm-gandhinagar']
     });
 
-    // Generate thumbnail for posts
+    // Generate thumbnail for posts and root uploads
     let thumbnailResult = null;
-    if (folder === 'posts') {
+    if (folder === 'posts' || folder === '') {
+      const thumbnailPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/thumbnails/` : '/bsm-gandhinagar/thumbnails/';
+      
       thumbnailResult = await imagekit.upload({
         file: fileBuffer,
         fileName: `thumb-${Date.now()}-${uploadedFile.originalFilename}`,
-        folder: `/bsm-gandhinagar/${folder}/thumbnails/`,
+        folder: thumbnailPath,
         useUniqueFileName: true,
         transformation: {
           post: [

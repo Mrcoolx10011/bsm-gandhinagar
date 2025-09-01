@@ -5,11 +5,18 @@
   "functions": {
     "api/consolidated.js": {
       "maxDuration": 30
+    },
+    "api/upload-image.js": {
+      "maxDuration": 30
     }
   },
   "routes": [
     {
       "handle": "filesystem"
+    },
+    {
+      "src": "/api/upload-image",
+      "dest": "/api/upload-image.js"
     },
     {
       "src": "/api/(.*)",
