@@ -158,6 +158,37 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // Parse JSON body for POST/PUT requests
+  if ((req.method === 'POST' || req.method === 'PUT') && req.headers['content-type']?.includes('application/json')) {
+    try {
+      let body = '';
+      req.setEncoding('utf8');
+      req.on('data', chunk => {
+        body += chunk;
+      });
+      
+      await new Promise(resolve => {
+        req.on('end', () => {
+          try {
+            if (body) {
+              req.body = JSON.parse(body);
+              console.log('📥 Parsed JSON body:', req.body);
+            } else {
+              req.body = {};
+            }
+          } catch (parseError) {
+            console.error('❌ JSON parsing error:', parseError);
+            req.body = {};
+          }
+          resolve();
+        });
+      });
+    } catch (error) {
+      console.error('❌ Body parsing error:', error);
+      req.body = {};
+    }
+  }
+
   const { endpoint } = req.query;
   console.log('🎯 Processing endpoint:', endpoint);
   
