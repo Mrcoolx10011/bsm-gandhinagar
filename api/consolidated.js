@@ -14,6 +14,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
+// Debug environment variables
+console.log('🔍 Environment Debug:', {
+  NODE_ENV: process.env.NODE_ENV,
+  ADMIN_USERNAME: process.env.ADMIN_USERNAME ? 'SET' : 'MISSING',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'SET' : 'MISSING',
+  actualValues: {
+    ADMIN_USERNAME: ADMIN_USERNAME,
+    ADMIN_PASSWORD: ADMIN_PASSWORD
+  }
+});
+
 // Initialize ImageKit
 console.log('🔑 ImageKit Environment Variables:', {
   publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ? 'SET' : 'MISSING',
@@ -1122,14 +1133,34 @@ async function handleAuth(req, res, db) {
 
 // Admin API Handler
 async function handleAdmin(req, res, db) {
+  console.log('🔐 handleAdmin called:', {
+    method: req.method,
+    query: req.query,
+    body: req.body,
+    hasAction: req.body?.action === 'login' || req.query.action === 'login'
+  });
+
   // Handle admin login - check for login in the endpoint or body
   if (req.method === 'POST' && (req.query.action === 'login' || req.body?.action === 'login' || req.url?.includes('/login'))) {
     const { username, password } = req.body;
     
+    console.log('🔑 Credential comparison:', {
+      received: { username, password },
+      expected: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
+      usernameMatch: username === ADMIN_USERNAME,
+      passwordMatch: password === ADMIN_PASSWORD,
+      envVars: {
+        ADMIN_USERNAME: process.env.ADMIN_USERNAME,
+        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD
+      }
+    });
+    
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
+      console.log('✅ Admin login successful');
       return res.status(200).json({ token, user: { username, role: 'admin' } });
     } else {
+      console.log('❌ Admin login failed - credential mismatch');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
   }
