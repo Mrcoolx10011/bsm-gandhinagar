@@ -143,6 +143,18 @@ function setCorsHeaders(res) {
 }
 
 module.exports = async function handler(req, res) {
+  // Handle raw body for file uploads (Vercel specific)
+  if (req.method === 'POST' && req.headers['content-type']?.includes('multipart/form-data')) {
+    if (!req.rawBody) {
+      // Read the raw body for Vercel serverless functions
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      req.rawBody = Buffer.concat(chunks);
+    }
+  }
+
   console.log('🚀 API Request:', {
     method: req.method,
     url: req.url,
