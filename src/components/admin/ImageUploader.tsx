@@ -13,7 +13,7 @@ interface ImageUploaderProps {
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImageUpload,
   currentImage,
-  folder = 'posts',
+  folder = '',
   maxSize = 10,
   className = ''
 }) => {

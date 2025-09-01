@@ -41,11 +41,20 @@ module.exports = async function handler(req, res) {
     const { folder = '' } = req.query;
     
     // Get real images from ImageKit
-    const images = await imagekit.listFiles({
-      path: folder,
+    // If folder is empty, search all images without path restriction
+    const searchOptions = {
       limit: 100,
       sort: 'DESC_CREATED'
-    });
+    };
+    
+    // Only add path if folder is specified and not empty
+    if (folder && folder.trim() !== '') {
+      searchOptions.path = folder;
+    }
+    
+    console.log('Searching ImageKit with options:', searchOptions);
+    
+    const images = await imagekit.listFiles(searchOptions);
     
     console.log(`Found ${images.length} real images from ImageKit`);
     

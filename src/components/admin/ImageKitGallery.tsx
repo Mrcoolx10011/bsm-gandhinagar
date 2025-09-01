@@ -22,7 +22,7 @@ interface ImageKitGalleryProps {
 }
 
 export const ImageKitGallery: React.FC<ImageKitGalleryProps> = ({
-  folder = 'posts',
+  folder = '',
   className = '',
   onImageSelect,
   selectable = false

@@ -1,16 +1,12 @@
-import { MongoClient, ObjectId } from 'mongodb';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import ImageKit from 'imagekit';
-import fs from 'fs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const { MongoClient, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const path = require('path');
+const ImageKit = require('imagekit');
+const fs = require('fs');
 
 // Load environment variables from the root directory
-dotenv.config({ path: join(__dirname, '..', '.env.local') });
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -146,7 +142,7 @@ function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   console.log('🚀 API Request:', {
     method: req.method,
     url: req.url,
@@ -1469,16 +1465,25 @@ async function handleImageKitList(req, res) {
   }
 
   try {
-    const { folder = 'posts' } = req.query;
+    const { folder = '' } = req.query;
     
     console.log('📊 Listing ImageKit files for folder:', folder);
     
-    // List files from ImageKit - remove the invalid search query
-    const result = await imagekit.listFiles({
-      path: `/bsm-gandhinagar/${folder}/`,
+    // List files from ImageKit
+    const searchOptions = {
       limit: 100,
       sort: 'DESC_CREATED' // Most recent first
-    });
+    };
+    
+    // Only add path if folder is specified and not empty
+    if (folder && folder.trim() !== '') {
+      searchOptions.path = `/bsm-gandhinagar/${folder}/`;
+    }
+    // If folder is empty, search all images without path restriction
+    
+    console.log('📊 Searching ImageKit with options:', searchOptions);
+    
+    const result = await imagekit.listFiles(searchOptions);
 
     console.log('📊 ImageKit list result:', result.length, 'files found');
 

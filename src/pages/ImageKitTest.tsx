@@ -33,7 +33,7 @@ const ImageKitTest: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Upload New Image</h2>
             <ImageUploader
               onImageUpload={handleImageUpload}
-              folder="posts"
+              folder=""
               className="max-w-md"
             />
           </div>
@@ -74,7 +74,7 @@ const ImageKitTest: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <ImageKitGallery
             key={refreshKey} // Force refresh when new image uploaded
-            folder="posts"
+            folder=""
             selectable={true}
             onImageSelect={handleImageSelect}
           />
