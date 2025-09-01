@@ -1,4 +1,12 @@
-// Test version without ImageKit import to isolate the issue
+// Real ImageKit authentication
+const ImageKit = require('imagekit');
+
+// Initialize ImageKit
+const imagekit = new ImageKit({
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
 
 module.exports = async function handler(req, res) {
   try {
@@ -19,32 +27,21 @@ module.exports = async function handler(req, res) {
     }
 
     // Check environment variables
-    const envCheck = {
-      hasImageKitPublic: !!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
-      hasImageKitPrivate: !!process.env.IMAGEKIT_PRIVATE_KEY,
-      hasImageKitEndpoint: !!process.env.IMAGEKIT_URL_ENDPOINT,
-      publicKeyLength: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY?.length || 0,
-      privateKeyLength: process.env.IMAGEKIT_PRIVATE_KEY?.length || 0
-    };
-
     if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || !process.env.IMAGEKIT_PRIVATE_KEY) {
       console.error('Missing ImageKit environment variables');
       return res.status(500).json({ 
         error: 'ImageKit not configured',
-        envCheck 
+        envCheck: {
+          hasImageKitPublic: !!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+          hasImageKitPrivate: !!process.env.IMAGEKIT_PRIVATE_KEY
+        }
       });
     }
 
-    // Return test auth data instead of real ImageKit auth
-    res.status(200).json({
-      message: 'Auth endpoint working',
-      envCheck,
-      testAuth: {
-        token: 'test-token',
-        expire: Date.now() + 3600000,
-        signature: 'test-signature'
-      }
-    });
+    // Get real authentication parameters from ImageKit
+    const authenticationParameters = imagekit.getAuthenticationParameters();
+    console.log('Auth successful');
+    res.status(200).json(authenticationParameters);
 
   } catch (error) {
     console.error('ImageKit auth error:', error);

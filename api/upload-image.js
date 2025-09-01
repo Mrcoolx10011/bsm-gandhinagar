@@ -1,37 +1,139 @@
+// Real ImageKit upload functionality
+const ImageKit = require('imagekit');
+const formidable = require('formidable');
+const fs = require('fs');
+
+// Initialize ImageKit
+const imagekit = new ImageKit({
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
+
 module.exports = async function handler(req, res) {
-  console.log('Upload endpoint called:', req.method, req.url);
-  
-  // Add CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  try {
+    console.log('Upload endpoint called:', req.method, req.url);
+    
+    // Add CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Test response that matches what frontend expects
-  return res.status(200).json({
-    success: true,
-    message: 'Upload test successful',
-    imageUrl: 'https://ik.imagekit.io/4gkmfjy57/one.png',
-    thumbnailUrl: 'https://ik.imagekit.io/4gkmfjy57/one.png?tr=w-200,h-150',
-    fileId: 'test-upload-' + Date.now(),
-    thumbnailId: 'test-thumb-' + Date.now(),
-    imageName: 'test-uploaded-image.jpg',
-    size: 123456,
-    width: 1200,
-    height: 800,
-    timestamp: new Date().toISOString(),
-    environment: {
-      hasImageKitPublic: !!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
-      hasImageKitPrivate: !!process.env.IMAGEKIT_PRIVATE_KEY,
-      hasImageKitEndpoint: !!process.env.IMAGEKIT_URL_ENDPOINT
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
     }
-  });
+
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Check environment variables
+    if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || !process.env.IMAGEKIT_PRIVATE_KEY) {
+      console.error('Missing ImageKit environment variables');
+      return res.status(500).json({ 
+        error: 'ImageKit not configured',
+        envCheck: {
+          hasImageKitPublic: !!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+          hasImageKitPrivate: !!process.env.IMAGEKIT_PRIVATE_KEY
+        }
+      });
+    }
+
+    // Parse form data
+    const form = formidable({
+      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+    });
+
+    const [fields, files] = await form.parse(req);
+    const uploadedFile = files.image?.[0];
+
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Validate file type
+    if (!uploadedFile.mimetype?.startsWith('image/')) {
+      return res.status(400).json({ error: 'Please upload only image files' });
+    }
+
+    // Read file as buffer
+    const fileBuffer = fs.readFileSync(uploadedFile.filepath);
+
+    // Get folder from form data or use default
+    const folder = fields.folder?.[0] || 'posts';
+
+    // Upload to ImageKit
+    const result = await imagekit.upload({
+      file: fileBuffer,
+      fileName: `${folder}-${Date.now()}-${uploadedFile.originalFilename}`,
+      folder: `/bsm-gandhinagar/${folder}/`,
+      useUniqueFileName: true,
+      transformation: {
+        post: [
+          {
+            type: 'transformation',
+            value: 'w-1200,h-800,c-at_max,q-80'
+          }
+        ]
+      },
+      tags: [folder, 'bsm-gandhinagar']
+    });
+
+    // Generate thumbnail for posts
+    let thumbnailResult = null;
+    if (folder === 'posts') {
+      thumbnailResult = await imagekit.upload({
+        file: fileBuffer,
+        fileName: `thumb-${Date.now()}-${uploadedFile.originalFilename}`,
+        folder: `/bsm-gandhinagar/${folder}/thumbnails/`,
+        useUniqueFileName: true,
+        transformation: {
+          post: [
+            {
+              type: 'transformation',
+              value: 'w-400,h-250,c-maintain_ratio,q-70'
+            }
+          ]
+        },
+        tags: ['thumbnail', 'bsm-gandhinagar']
+      });
+    }
+
+    // Clean up temp file
+    fs.unlinkSync(uploadedFile.filepath);
+
+    const response = {
+      success: true,
+      imageUrl: result.url,
+      fileId: result.fileId,
+      imageName: result.name,
+      size: result.size,
+      width: result.width,
+      height: result.height
+    };
+
+    // Add thumbnail data if created
+    if (thumbnailResult) {
+      response.thumbnailUrl = thumbnailResult.url;
+      response.thumbnailId = thumbnailResult.fileId;
+    }
+
+    console.log('Upload successful:', result.name);
+    res.status(200).json(response);
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ 
+      error: 'Upload failed', 
+      details: error.message 
+    });
+  }
 }
+
+// Export config for formidable
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
+};

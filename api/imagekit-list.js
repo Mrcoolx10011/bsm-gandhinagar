@@ -1,4 +1,12 @@
-// Test version without ImageKit import to match working endpoints
+// Real ImageKit integration now that API structure works
+const ImageKit = require('imagekit');
+
+// Initialize ImageKit
+const imagekit = new ImageKit({
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
 
 module.exports = async function handler(req, res) {
   try {
@@ -32,41 +40,34 @@ module.exports = async function handler(req, res) {
 
     const { folder = '' } = req.query;
     
-    // Return test images in the format the frontend expects
-    const testImages = [
-      {
-        fileId: 'test-1',
-        name: 'test-image-1.jpg',
-        url: 'https://ik.imagekit.io/4gkmfjy57/one.png',
-        thumbnailUrl: 'https://ik.imagekit.io/4gkmfjy57/one.png?tr=w-200,h-150',
-        width: 1200,
-        height: 800,
-        size: 156789,
-        filePath: '/bsm-gandhinagar/posts/test-image-1.jpg',
-        tags: ['test', 'bsm-gandhinagar'],
-        createdAt: '2025-09-01T10:00:00Z'
-      },
-      {
-        fileId: 'test-2', 
-        name: 'test-image-2.jpg',
-        url: 'https://ik.imagekit.io/4gkmfjy57/one.png',
-        thumbnailUrl: 'https://ik.imagekit.io/4gkmfjy57/one.png?tr=w-200,h-150',
-        width: 800,
-        height: 600,
-        size: 98765,
-        filePath: '/bsm-gandhinagar/posts/test-image-2.jpg',
-        tags: ['test', 'bsm-gandhinagar'],
-        createdAt: '2025-09-01T11:00:00Z'
-      }
-    ];
+    // Get real images from ImageKit
+    const images = await imagekit.listFiles({
+      path: folder,
+      limit: 100,
+      sort: 'DESC_CREATED'
+    });
     
-    console.log(`Found ${testImages.length} test images`);
+    console.log(`Found ${images.length} real images from ImageKit`);
+    
+    // Transform ImageKit response to match frontend expectations
+    const transformedImages = images.map(img => ({
+      fileId: img.fileId,
+      name: img.name,
+      url: img.url,
+      thumbnailUrl: img.thumbnailUrl || img.url + '?tr=w-200,h-150',
+      width: img.width || 0,
+      height: img.height || 0,
+      size: img.size || 0,
+      filePath: img.filePath,
+      tags: img.tags || [],
+      createdAt: img.createdAt
+    }));
     
     // Frontend expects { success: true, files: [...] } format
     res.status(200).json({
       success: true,
-      files: testImages,
-      message: `Found ${testImages.length} test images`
+      files: transformedImages,
+      message: `Found ${transformedImages.length} images from ImageKit`
     });
 
   } catch (error) {
