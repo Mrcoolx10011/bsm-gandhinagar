@@ -5,9 +5,6 @@
   "functions": {
     "api/consolidated.js": {
       "maxDuration": 30
-    },
-    "api/upload-image.js": {
-      "maxDuration": 30
     }
   },
   "routes": [
@@ -16,11 +13,63 @@
     },
     {
       "src": "/api/upload-image",
-      "dest": "/api/upload-image.js"
+      "dest": "/api/consolidated.js?endpoint=upload-image"
+    },
+    {
+      "src": "/api/imagekit-auth",
+      "dest": "/api/consolidated.js?endpoint=imagekit-auth"
+    },
+    {
+      "src": "/api/imagekit-list",
+      "dest": "/api/consolidated.js?endpoint=imagekit-list"
+    },
+    {
+      "src": "/api/imagekit-delete",
+      "dest": "/api/consolidated.js?endpoint=imagekit-delete"
+    },
+    {
+      "src": "/api/auth/login",
+      "dest": "/api/consolidated.js?endpoint=auth"
+    },
+    {
+      "src": "/api/members",
+      "dest": "/api/consolidated.js?endpoint=members"
+    },
+    {
+      "src": "/api/events",
+      "dest": "/api/consolidated.js?endpoint=events"
+    },
+    {
+      "src": "/api/donations",
+      "dest": "/api/consolidated.js?endpoint=donations"
+    },
+    {
+      "src": "/api/inquiries",
+      "dest": "/api/consolidated.js?endpoint=inquiries"
+    },
+    {
+      "src": "/api/posts",
+      "dest": "/api/consolidated.js?endpoint=posts"
+    },
+    {
+      "src": "/api/campaigns",
+      "dest": "/api/consolidated.js?endpoint=campaigns"
+    },
+    {
+      "src": "/api/admin",
+      "dest": "/api/consolidated.js?endpoint=admin"
+    },
+    {
+      "src": "/api/recent-activities",
+      "dest": "/api/consolidated.js?endpoint=recent-activities"
+    },
+    {
+      "src": "/api/content",
+      "dest": "/api/consolidated.js?endpoint=content"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/api/consolidated.js?endpoint=$1"
     },
     {
       "src": "/(.*)",

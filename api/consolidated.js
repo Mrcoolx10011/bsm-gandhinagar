@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const path = require('path');
 const ImageKit = require('imagekit');
+const formidable = require('formidable');
 const fs = require('fs');
 
 // Load environment variables from the root directory
@@ -143,18 +144,6 @@ function setCorsHeaders(res) {
 }
 
 module.exports = async function handler(req, res) {
-  // Handle raw body for file uploads (Vercel specific)
-  if (req.method === 'POST' && req.headers['content-type']?.includes('multipart/form-data')) {
-    if (!req.rawBody) {
-      // Read the raw body for Vercel serverless functions
-      const chunks = [];
-      for await (const chunk of req) {
-        chunks.push(chunk);
-      }
-      req.rawBody = Buffer.concat(chunks);
-    }
-  }
-
   console.log('🚀 API Request:', {
     method: req.method,
     url: req.url,
@@ -191,6 +180,9 @@ module.exports = async function handler(req, res) {
         return await handleImageKitList(req, res);
       case 'imagekit-delete':
         return await handleImageKitDelete(req, res);
+      case 'auth':
+      case 'login':
+        return await handleAuth(req, res, db);
       case 'members':
         return await handleMembers(req, res, db);
       case 'events':
@@ -231,13 +223,6 @@ module.exports = async function handler(req, res) {
             timestamp: new Date().toISOString()
           });
         }
-        return res.status(200).json({ 
-          status: 'healthy', 
-          message: 'BSM Gandhinagar API is running',
-          database: cachedClient ? 'connected' : 'disconnected',
-          collections: collections.map(c => c.name),
-          timestamp: new Date().toISOString()
-        });
       case 'env-check':
         return res.status(200).json({ 
           mongodb: !!MONGODB_URI,
@@ -1051,6 +1036,59 @@ function handleCampaignsDevelopmentMode(req, res) {
   }
 }
 
+// Auth API Handler (dedicated authentication endpoint)
+async function handleAuth(req, res, db) {
+  console.log('🔐 Auth request:', {
+    method: req.method,
+    endpoint: req.query.endpoint,
+    action: req.query.action,
+    body: req.body
+  });
+
+  // Handle admin login
+  if (req.method === 'POST') {
+    const { username, password } = req.body;
+    
+    console.log('🔑 Login attempt:', { username, hasPassword: !!password });
+    
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
+      console.log('✅ Login successful for:', username);
+      return res.status(200).json({ 
+        token, 
+        user: { 
+          username, 
+          role: 'admin',
+          email: 'admin@bsmgandhinagar.org'
+        } 
+      });
+    } else {
+      console.log('❌ Invalid credentials');
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+  }
+
+  // Handle token verification
+  if (req.method === 'GET') {
+    const token = req.headers?.authorization?.replace('Bearer ', '');
+    const decoded = verifyToken(token);
+    
+    if (decoded) {
+      return res.status(200).json({ 
+        user: { 
+          username: decoded.username, 
+          role: decoded.role,
+          email: 'admin@bsmgandhinagar.org'
+        } 
+      });
+    } else {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
 // Admin API Handler
 async function handleAdmin(req, res, db) {
   // Handle admin login - check for login in the endpoint or body
@@ -1340,63 +1378,64 @@ async function handleContent(req, res, db) {
   }
 }
 
-// ImageKit Upload Handler
+// ImageKit Upload Handler (Enhanced with Formidable)
 async function handleImageUpload(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log('📊 Upload request headers:', JSON.stringify(req.headers, null, 2));
-    console.log('📊 Content-Type:', req.headers['content-type']);
-    console.log('📊 Content-Length:', req.headers['content-length']);
+    console.log('📊 Upload request received');
     
-    // Extract boundary from content-type header
-    const contentType = req.headers['content-type'];
-    const boundaryMatch = contentType.match(/boundary=(.+)$/);
-    if (!boundaryMatch) {
-      return res.status(400).json({ error: 'Invalid multipart boundary' });
+    // Check environment variables
+    if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || !process.env.IMAGEKIT_PRIVATE_KEY) {
+      console.error('Missing ImageKit environment variables');
+      return res.status(500).json({ 
+        error: 'ImageKit not configured',
+        envCheck: {
+          hasImageKitPublic: !!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+          hasImageKitPrivate: !!process.env.IMAGEKIT_PRIVATE_KEY
+        }
+      });
     }
-    const boundary = boundaryMatch[1];
 
-    console.log('📊 Boundary:', boundary);
-    console.log('📊 Raw body length:', req.rawBody.length);
-    console.log('📊 Raw body start:', req.rawBody.toString('binary', 0, 200));
+    // Parse form data using formidable (more reliable)
+    const form = formidable({
+      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+    });
 
-    // Parse multipart form data
-    const rawBodyString = req.rawBody.toString('binary');
-    const { fields, files } = parseMultipartFormData(rawBodyString, boundary);
-    
-    console.log('📊 Parsed fields:', Object.keys(fields));
-    console.log('📊 Parsed files:', Object.keys(files));
+    const [fields, files] = await form.parse(req);
+    const uploadedFile = files.image?.[0];
 
-    const imageFile = files.image;
-    if (!imageFile) {
+    if (!uploadedFile) {
       return res.status(400).json({ error: 'No image file provided' });
     }
 
     // Validate file type
-    if (!imageFile.contentType?.startsWith('image/')) {
+    if (!uploadedFile.mimetype?.startsWith('image/')) {
       return res.status(400).json({ error: 'Please upload only image files' });
     }
 
+    // Read file as buffer
+    const fileBuffer = fs.readFileSync(uploadedFile.filepath);
+
     // Get folder from form data - allow empty folder for root directory
-    const folder = fields.folder !== undefined ? fields.folder : '';
+    const folder = fields.folder?.[0] !== undefined ? fields.folder[0] : '';
+
+    // Build the folder path - handle empty folder for root directory  
+    const folderPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/` : '/bsm-gandhinagar/';
 
     console.log('📊 Uploading to ImageKit:', {
-      filename: imageFile.filename,
-      contentType: imageFile.contentType,
-      size: imageFile.data.length,
-      folder: folder
+      filename: uploadedFile.originalFilename,
+      mimetype: uploadedFile.mimetype,
+      size: uploadedFile.size,
+      folderPath: folderPath
     });
 
-    // Build the folder path - handle empty folder for root directory
-    const folderPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/` : '/bsm-gandhinagar/';
-    
     // Upload to ImageKit
     const result = await imagekit.upload({
-      file: imageFile.data,
-      fileName: `${folder || 'image'}-${Date.now()}-${imageFile.filename}`,
+      file: fileBuffer,
+      fileName: `${folder || 'image'}-${Date.now()}-${uploadedFile.originalFilename}`,
       folder: folderPath,
       useUniqueFileName: true,
       transformation: {
@@ -1410,14 +1449,14 @@ async function handleImageUpload(req, res) {
       tags: [folder || 'general', 'bsm-gandhinagar']
     });
 
-    // Generate thumbnail for posts
+    // Generate thumbnail for posts and root uploads
     let thumbnailResult = null;
     if (folder === 'posts' || folder === '') {
       const thumbnailPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/thumbnails/` : '/bsm-gandhinagar/thumbnails/';
       
       thumbnailResult = await imagekit.upload({
-        file: imageFile.data,
-        fileName: `thumb-${Date.now()}-${imageFile.filename}`,
+        file: fileBuffer,
+        fileName: `thumb-${Date.now()}-${uploadedFile.originalFilename}`,
         folder: thumbnailPath,
         useUniqueFileName: true,
         transformation: {
@@ -1431,6 +1470,9 @@ async function handleImageUpload(req, res) {
         tags: ['thumbnail', 'bsm-gandhinagar']
       });
     }
+
+    // Clean up temp file
+    fs.unlinkSync(uploadedFile.filepath);
 
     const response = {
       success: true,
@@ -1568,3 +1610,10 @@ async function handleImageKitDelete(req, res) {
     });
   }
 }
+
+// Export config for formidable to work with file uploads
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
+};

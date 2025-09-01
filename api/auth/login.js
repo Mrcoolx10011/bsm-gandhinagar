@@ -1,7 +1,6 @@
-import handler from '../consolidated.js';
+const handler = require('../consolidated.js');
 
-export default async function(req, res) {
-  req.query.endpoint = 'admin';
-  req.query.action = 'login';
+module.exports = async function(req, res) {
+  req.query.endpoint = 'auth';
   return handler(req, res);
-}
+};
