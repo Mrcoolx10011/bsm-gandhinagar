@@ -176,33 +176,39 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Parse JSON body for POST/PUT requests
+  // Parse JSON body for POST/PUT requests (if not already parsed by dev server)
   if ((req.method === 'POST' || req.method === 'PUT') && req.headers['content-type']?.includes('application/json')) {
     try {
-      let body = '';
-      if (req.setEncoding && typeof req.setEncoding === 'function') {
-        req.setEncoding('utf8');
-      }
-      req.on('data', chunk => {
-        body += chunk;
-      });
-      
-      await new Promise(resolve => {
-        req.on('end', () => {
-          try {
-            if (body) {
-              req.body = JSON.parse(body);
-              console.log('📥 Parsed JSON body:', req.body);
-            } else {
+      // Check if body is already parsed by development server
+      if (req.body && Object.keys(req.body).length > 0) {
+        console.log('📥 Body already parsed by dev server:', req.body);
+      } else {
+        console.log('📥 Parsing JSON body manually...');
+        let body = '';
+        if (req.setEncoding && typeof req.setEncoding === 'function') {
+          req.setEncoding('utf8');
+        }
+        req.on('data', chunk => {
+          body += chunk;
+        });
+        
+        await new Promise(resolve => {
+          req.on('end', () => {
+            try {
+              if (body) {
+                req.body = JSON.parse(body);
+                console.log('📥 Parsed JSON body:', req.body);
+              } else {
+                req.body = {};
+              }
+            } catch (parseError) {
+              console.error('❌ JSON parsing error:', parseError);
               req.body = {};
             }
-          } catch (parseError) {
-            console.error('❌ JSON parsing error:', parseError);
-            req.body = {};
-          }
-          resolve();
+            resolve();
+          });
         });
-      });
+      }
     } catch (error) {
       console.error('❌ Body parsing error:', error);
       req.body = {};
@@ -211,6 +217,7 @@ module.exports = async function handler(req, res) {
 
   const { endpoint } = req.query;
   console.log('🎯 Processing endpoint:', endpoint);
+  console.log('🔍 About to enter switch statement for endpoint:', endpoint);
   
   try {
     const client = await connectToDatabase();
@@ -247,7 +254,16 @@ module.exports = async function handler(req, res) {
       case 'campaigns':
         return await handleCampaigns(req, res, db);
       case 'admin':
-        return await handleAdmin(req, res, db);
+        console.log('🎯 Processing endpoint: admin (entering case)');
+        console.log('🔍 Admin handler debug:', { method: req.method, hasBody: !!req.body, bodyKeys: Object.keys(req.body || {}) });
+        try {
+          const result = await handleAdmin(req, res, db);
+          console.log('✅ Admin handler completed successfully');
+          return result;
+        } catch (adminError) {
+          console.error('❌ Admin handler error:', adminError);
+          return res.status(500).json({ error: 'Admin handler failed', details: adminError.message });
+        }
       case 'recent-activities':
         return await handleRecentActivities(req, res, db);
       case 'content':
