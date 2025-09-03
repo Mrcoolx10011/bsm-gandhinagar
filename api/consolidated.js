@@ -3,8 +3,15 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const path = require('path');
 const ImageKit = require('imagekit');
-const formidable = require('formidable');
 const fs = require('fs');
+
+// Try to import formidable, but handle if it's not available
+let formidable;
+try {
+  formidable = require('formidable');
+} catch (error) {
+  console.log('⚠️ Formidable not available, using custom parser');
+}
 
 // Load environment variables from the root directory
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
@@ -173,7 +180,9 @@ module.exports = async function handler(req, res) {
   if ((req.method === 'POST' || req.method === 'PUT') && req.headers['content-type']?.includes('application/json')) {
     try {
       let body = '';
-      req.setEncoding('utf8');
+      if (req.setEncoding && typeof req.setEncoding === 'function') {
+        req.setEncoding('utf8');
+      }
       req.on('data', chunk => {
         body += chunk;
       });
@@ -1440,7 +1449,7 @@ async function handleContent(req, res, db) {
   }
 }
 
-// ImageKit Upload Handler (Enhanced with Formidable)
+// ImageKit Upload Handler (Works in both Local and Vercel)
 async function handleImageUpload(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -1448,10 +1457,15 @@ async function handleImageUpload(req, res) {
 
   try {
     console.log('📊 Upload request received');
+    console.log('📊 Environment:', { 
+      isVercel: !!process.env.VERCEL,
+      hasFormidable: !!formidable,
+      nodeEnv: process.env.NODE_ENV 
+    });
     
     // Check environment variables
     if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || !process.env.IMAGEKIT_PRIVATE_KEY) {
-      console.error('Missing ImageKit environment variables');
+      console.error('❌ Missing ImageKit environment variables');
       return res.status(500).json({ 
         error: 'ImageKit not configured',
         envCheck: {
@@ -1461,43 +1475,125 @@ async function handleImageUpload(req, res) {
       });
     }
 
-    // Parse form data using formidable (more reliable)
-    const form = formidable({
-      maxFileSize: 10 * 1024 * 1024, // 10MB limit
-    });
+    let uploadedFile = null;
+    let folder = '';
 
-    const [fields, files] = await form.parse(req);
-    const uploadedFile = files.image?.[0];
+    // Try formidable first (for local development), but only if not pre-parsed
+    if (formidable && !process.env.VERCEL && !req.rawBody) {
+      console.log('📊 Using formidable for local development');
+      try {
+        const form = formidable({
+          maxFileSize: 10 * 1024 * 1024, // 10MB limit
+        });
 
+        const [fields, files] = await form.parse(req);
+        const file = files.image?.[0];
+        folder = fields.folder?.[0] || '';
+
+        if (!file) {
+          return res.status(400).json({ error: 'No image file provided' });
+        }
+
+        // Validate file type
+        if (!file.mimetype?.startsWith('image/')) {
+          return res.status(400).json({ error: 'Please upload only image files' });
+        }
+
+        // Read file as buffer
+        const fileBuffer = fs.readFileSync(file.filepath);
+        
+        // Convert to our standard format
+        uploadedFile = {
+          filename: file.originalFilename,
+          contentType: file.mimetype,
+          data: fileBuffer,
+          size: file.size
+        };
+
+        // Clean up temp file
+        fs.unlinkSync(file.filepath);
+
+      } catch (formidableError) {
+        console.log('⚠️ Formidable failed, falling back to custom parser:', formidableError.message);
+        uploadedFile = null;
+      }
+    }
+
+    // If formidable failed or we're on Vercel, use custom parser
     if (!uploadedFile) {
-      return res.status(400).json({ error: 'No image file provided' });
+      console.log('📊 Using custom multipart parser');
+      
+      const contentType = req.headers['content-type'] || '';
+      
+      if (!contentType.includes('multipart/form-data')) {
+        return res.status(400).json({ error: 'Expected multipart/form-data' });
+      }
+
+      // Extract boundary from content-type
+      const boundary = contentType.split('boundary=')[1];
+      if (!boundary) {
+        return res.status(400).json({ error: 'Missing boundary in multipart data' });
+      }
+
+      // Read raw body data
+      let rawBody = '';
+      
+      // Handle different ways to read the body
+      if (req.rawBody && Buffer.isBuffer(req.rawBody)) {
+        // Our development server provides rawBody for multipart uploads
+        rawBody = req.rawBody.toString('binary');
+        console.log('📊 Using rawBody from development server');
+      } else if (req.body && typeof req.body === 'string') {
+        rawBody = req.body;
+      } else if (req.body && Buffer.isBuffer(req.body)) {
+        rawBody = req.body.toString('binary');
+      } else {
+        // Fallback for other environments that support streaming
+        const chunks = [];
+        try {
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          rawBody = Buffer.concat(chunks).toString('binary');
+        } catch (streamError) {
+          console.log('⚠️ Stream reading failed:', streamError.message);
+          return res.status(400).json({ error: 'Could not read request body' });
+        }
+      }
+
+      console.log('📊 Raw body length:', rawBody.length);
+
+      // Parse multipart form data
+      const { fields, files } = parseMultipartFormData(rawBody, boundary);
+      
+      uploadedFile = files.image;
+      folder = fields.folder || '';
+
+      if (!uploadedFile) {
+        console.log('❌ No image file found in:', Object.keys(files));
+        return res.status(400).json({ error: 'No image file provided' });
+      }
+
+      // Validate file type
+      if (!uploadedFile.contentType?.startsWith('image/')) {
+        return res.status(400).json({ error: 'Please upload only image files' });
+      }
     }
 
-    // Validate file type
-    if (!uploadedFile.mimetype?.startsWith('image/')) {
-      return res.status(400).json({ error: 'Please upload only image files' });
-    }
-
-    // Read file as buffer
-    const fileBuffer = fs.readFileSync(uploadedFile.filepath);
-
-    // Get folder from form data - allow empty folder for root directory
-    const folder = fields.folder?.[0] !== undefined ? fields.folder[0] : '';
-
-    // Build the folder path - handle empty folder for root directory  
+    // Build the folder path
     const folderPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/` : '/bsm-gandhinagar/';
 
     console.log('📊 Uploading to ImageKit:', {
-      filename: uploadedFile.originalFilename,
-      mimetype: uploadedFile.mimetype,
-      size: uploadedFile.size,
+      filename: uploadedFile.filename,
+      contentType: uploadedFile.contentType,
+      size: uploadedFile.data.length,
       folderPath: folderPath
     });
 
     // Upload to ImageKit
     const result = await imagekit.upload({
-      file: fileBuffer,
-      fileName: `${folder || 'image'}-${Date.now()}-${uploadedFile.originalFilename}`,
+      file: uploadedFile.data,
+      fileName: `${folder || 'image'}-${Date.now()}-${uploadedFile.filename}`,
       folder: folderPath,
       useUniqueFileName: true,
       transformation: {
@@ -1511,30 +1607,40 @@ async function handleImageUpload(req, res) {
       tags: [folder || 'general', 'bsm-gandhinagar']
     });
 
+    console.log('✅ ImageKit upload result:', {
+      fileId: result.fileId,
+      url: result.url,
+      name: result.name,
+      size: result.size
+    });
+
     // Generate thumbnail for posts and root uploads
     let thumbnailResult = null;
     if (folder === 'posts' || folder === '') {
       const thumbnailPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/thumbnails/` : '/bsm-gandhinagar/thumbnails/';
       
-      thumbnailResult = await imagekit.upload({
-        file: fileBuffer,
-        fileName: `thumb-${Date.now()}-${uploadedFile.originalFilename}`,
-        folder: thumbnailPath,
-        useUniqueFileName: true,
-        transformation: {
-          post: [
-            {
-              type: 'transformation',
-              value: 'w-400,h-250,c-maintain_ratio,q-70'
-            }
-          ]
-        },
-        tags: ['thumbnail', 'bsm-gandhinagar']
-      });
+      try {
+        thumbnailResult = await imagekit.upload({
+          file: uploadedFile.data,
+          fileName: `thumb-${Date.now()}-${uploadedFile.filename}`,
+          folder: thumbnailPath,
+          useUniqueFileName: true,
+          transformation: {
+            post: [
+              {
+                type: 'transformation',
+                value: 'w-400,h-250,c-maintain_ratio,q-70'
+              }
+            ]
+          },
+          tags: ['thumbnail', 'bsm-gandhinagar']
+        });
+        console.log('✅ Thumbnail created:', thumbnailResult.url);
+      } catch (thumbError) {
+        console.log('⚠️ Thumbnail creation failed:', thumbError.message);
+        // Continue without thumbnail
+      }
     }
-
-    // Clean up temp file
-    fs.unlinkSync(uploadedFile.filepath);
 
     const response = {
       success: true,
@@ -1556,12 +1662,89 @@ async function handleImageUpload(req, res) {
     return res.status(200).json(response);
 
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('❌ Upload error:', error);
     return res.status(500).json({ 
       error: 'Upload failed', 
-      details: error.message 
+      details: error.message,
+      stack: error.stack
     });
   }
+}
+
+// Parse multipart form data manually (Vercel and custom dev server compatible)
+function parseMultipartFormData(body, boundary) {
+  const fields = {};
+  const files = {};
+
+  // Split by boundary
+  const boundaryMarker = `--${boundary}`;
+  const parts = body.split(boundaryMarker);
+
+  for (const part of parts) {
+    if (!part.trim() || part === '--\r\n' || part === '--') continue;
+
+    // Find the double newline that separates headers from content
+    const headerEndIndex = part.indexOf('\r\n\r\n');
+    if (headerEndIndex === -1) continue;
+
+    const headerSection = part.substring(0, headerEndIndex);
+    const contentSection = part.substring(headerEndIndex + 4);
+
+    // Parse headers
+    const headers = {};
+    const headerLines = headerSection.split('\r\n');
+    
+    for (const line of headerLines) {
+      if (line.includes(':')) {
+        const [key, value] = line.split(':').map(s => s.trim());
+        headers[key.toLowerCase()] = value;
+      }
+    }
+
+    // Parse Content-Disposition header
+    const contentDisposition = headers['content-disposition'];
+    if (!contentDisposition) continue;
+
+    // Extract field name
+    const nameMatch = contentDisposition.match(/name="([^"]+)"/);
+    if (!nameMatch) continue;
+    
+    const fieldName = nameMatch[1];
+    
+    // Check if it's a file upload
+    const filenameMatch = contentDisposition.match(/filename="([^"]*)"/);
+    
+    if (filenameMatch) {
+      // This is a file field
+      const filename = filenameMatch[1];
+      const contentType = headers['content-type'] || 'application/octet-stream';
+      
+      // Remove the final \r\n from content
+      let fileContent = contentSection;
+      if (fileContent.endsWith('\r\n')) {
+        fileContent = fileContent.slice(0, -2);
+      }
+      
+      // Convert binary string to Buffer
+      const buffer = Buffer.from(fileContent, 'binary');
+      
+      files[fieldName] = {
+        filename: filename,
+        contentType: contentType,
+        data: buffer,
+        size: buffer.length
+      };
+    } else {
+      // This is a regular form field
+      let fieldValue = contentSection;
+      if (fieldValue.endsWith('\r\n')) {
+        fieldValue = fieldValue.slice(0, -2);
+      }
+      fields[fieldName] = fieldValue;
+    }
+  }
+
+  return { fields, files };
 }
 
 // ImageKit Auth Handler
@@ -1673,9 +1856,3 @@ async function handleImageKitDelete(req, res) {
   }
 }
 
-// Export config for formidable to work with file uploads
-module.exports.config = {
-  api: {
-    bodyParser: false,
-  },
-};
