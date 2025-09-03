@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Users, Phone, Mail } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Users, Phone, Mail, Upload, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { makeAuthenticatedRequest, handleApiError } from '../../utils/auth';
@@ -37,6 +37,7 @@ export const MembersManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -204,6 +205,64 @@ export const MembersManagement: React.FC = () => {
         toast.error('Error deleting member');
       }
     }
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload only image files');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size should be less than 10MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', file);
+      uploadFormData.append('folder', 'members'); // Upload to members folder
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: uploadFormData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        const imageUrl = result.imageUrl;
+        setFormData({ ...formData, profileImage: imageUrl });
+        toast.success('Profile image uploaded successfully!');
+      } else {
+        toast.error(result.error || 'Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Handle file input change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
+  // Remove uploaded image
+  const removeImage = () => {
+    setFormData({ ...formData, profileImage: '' });
   };
 
   if (loading) {
@@ -463,36 +522,92 @@ export const MembersManagement: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Profile Image URL</label>
-                <input
-                  type="url"
-                  value={formData.profileImage}
-                  onChange={(e) => setFormData({...formData, profileImage: e.target.value})}
-                  placeholder="https://example.com/image.jpg"
-                  className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    formData.profileImage && !isValidImageUrl(formData.profileImage) 
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                      : 'border-gray-300'
-                  }`}
-                />
-                {formData.profileImage && isValidImageUrl(formData.profileImage) && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.profileImage}
-                      alt="Profile preview"
-                      className="w-16 h-16 rounded-full object-cover border border-gray-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Profile Image
+                </label>
+                
+                {/* Image Upload Area */}
+                <div className="space-y-4">
+                  {!formData.profileImage ? (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="profile-image-upload"
+                        disabled={uploadingImage}
+                      />
+                      <label
+                        htmlFor="profile-image-upload"
+                        className="cursor-pointer flex flex-col items-center justify-center"
+                      >
+                        {uploadingImage ? (
+                          <div className="flex flex-col items-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mb-2"></div>
+                            <p className="text-sm text-gray-600">Uploading image...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="w-12 h-12 text-gray-400 mb-4" />
+                            <p className="text-sm font-medium text-gray-700 mb-1">
+                              Click to upload profile image
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              PNG, JPG, GIF up to 10MB
+                            </p>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <img
+                        src={formData.profileImage}
+                        alt="Profile preview"
+                        className="w-full h-48 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                        title="Remove image"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* OR divider */}
+                  <div className="flex items-center">
+                    <div className="flex-1 border-t border-gray-300"></div>
+                    <span className="px-3 text-sm text-gray-500">OR</span>
+                    <div className="flex-1 border-t border-gray-300"></div>
                   </div>
-                )}
-                {formData.profileImage && !isValidImageUrl(formData.profileImage) && (
-                  <p className="mt-2 text-sm text-red-600">
-                    Invalid URL. Please enter a valid image URL.
-                  </p>
-                )}
+                  
+                  {/* URL input as backup option */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Profile Image URL (optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.profileImage}
+                      onChange={(e) => setFormData({...formData, profileImage: e.target.value})}
+                      placeholder="https://example.com/image.jpg"
+                      className={`w-full border rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        formData.profileImage && !isValidImageUrl(formData.profileImage) 
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300'
+                      }`}
+                    />
+                    {formData.profileImage && !isValidImageUrl(formData.profileImage) && (
+                      <p className="mt-2 text-sm text-red-600">
+                        Invalid URL. Please enter a valid image URL.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
               
               <div>

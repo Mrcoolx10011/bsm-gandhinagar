@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Eye, Download, TrendingUp, Users, DollarSign, Target } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, Download, TrendingUp, Users, DollarSign, Target, Upload, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { makeAuthenticatedRequest, handleApiError } from '../../utils/auth';
@@ -39,6 +39,7 @@ export const CampaignsManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | undefined>();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
     description: '',
@@ -211,6 +212,69 @@ export const CampaignsManagement: React.FC = () => {
       endDate: '',
       status: 'active'
     });
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload only image files');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size should be less than 10MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', file);
+      uploadFormData.append('folder', 'campaigns'); // Upload to campaigns folder
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: uploadFormData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        const imageUrl = result.imageUrl;
+        setFormData(prev => ({ ...prev, image: imageUrl }));
+        toast.success('Image uploaded successfully!');
+      } else {
+        toast.error(result.error || 'Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Handle file input change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
+  // Handle image URL change
+  const handleImageChange = (url: string) => {
+    setFormData(prev => ({ ...prev, image: url }));
+  };
+
+  // Remove uploaded image
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, image: '' }));
   };
 
   const handleEdit = (campaign: Campaign) => {
@@ -568,16 +632,83 @@ export const CampaignsManagement: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Image URL
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Campaign Image
                     </label>
-                    <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="https://example.com/image.jpg"
-                    />
+                    
+                    {/* Image Upload Area */}
+                    <div className="space-y-4">
+                      {!formData.image ? (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            id="campaign-image-upload"
+                            disabled={uploadingImage}
+                          />
+                          <label
+                            htmlFor="campaign-image-upload"
+                            className="cursor-pointer flex flex-col items-center justify-center"
+                          >
+                            {uploadingImage ? (
+                              <div className="flex flex-col items-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mb-2"></div>
+                                <p className="text-sm text-gray-600">Uploading image...</p>
+                              </div>
+                            ) : (
+                              <>
+                                <Upload className="w-12 h-12 text-gray-400 mb-4" />
+                                <p className="text-sm font-medium text-gray-700 mb-1">
+                                  Click to upload campaign image
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  PNG, JPG, GIF up to 10MB
+                                </p>
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <img
+                            src={formData.image}
+                            alt="Campaign preview"
+                            className="w-full h-48 object-cover rounded-lg border"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeImage}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                            title="Remove image"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* OR divider */}
+                      <div className="flex items-center">
+                        <div className="flex-1 border-t border-gray-300"></div>
+                        <span className="px-3 text-sm text-gray-500">OR</span>
+                        <div className="flex-1 border-t border-gray-300"></div>
+                      </div>
+                      
+                      {/* URL input as backup option */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Image URL (optional)
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.image}
+                          onChange={(e) => handleImageChange(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="https://example.com/image.jpg"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
