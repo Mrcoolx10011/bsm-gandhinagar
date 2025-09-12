@@ -869,6 +869,11 @@ function handleDonationsDevelopmentMode(req, res) {
 
 // Inquiries API Handler
 async function handleInquiries(req, res, db) {
+  // Handle development mode when database is not available
+  if (!db || isDevelopmentMode) {
+    return handleInquiriesDevelopmentMode(req, res);
+  }
+
   const collection = db.collection('inquiries');
 
   switch (req.method) {
@@ -880,10 +885,135 @@ async function handleInquiries(req, res, db) {
       const newInquiry = {
         ...req.body,
         createdAt: new Date(),
-        status: 'new'
+        status: 'new',
+        priority: req.body.priority || 'medium'
       };
       const result = await collection.insertOne(newInquiry);
       return res.status(201).json({ _id: result.insertedId, ...newInquiry });
+
+    case 'PUT':
+      const { id } = req.query;
+      if (!id) {
+        return res.status(400).json({ error: 'Inquiry ID is required' });
+      }
+      
+      // Remove immutable fields that shouldn't be updated
+      const { _id, id: idField, createdAt, ...updateFields } = req.body;
+      const updateData = {
+        ...updateFields,
+        updatedAt: new Date()
+      };
+      
+      const updateResult = await collection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData }
+      );
+      
+      if (updateResult.matchedCount === 0) {
+        return res.status(404).json({ error: 'Inquiry not found' });
+      }
+      
+      return res.status(200).json({ message: 'Inquiry updated successfully' });
+
+    case 'DELETE':
+      const { id: deleteId } = req.query;
+      if (!deleteId) {
+        return res.status(400).json({ error: 'Inquiry ID is required' });
+      }
+      
+      const deleteResult = await collection.deleteOne({ _id: new ObjectId(deleteId) });
+      
+      if (deleteResult.deletedCount === 0) {
+        return res.status(404).json({ error: 'Inquiry not found' });
+      }
+      
+      return res.status(200).json({ message: 'Inquiry deleted successfully' });
+
+    default:
+      return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+// Development mode handler for inquiries
+function handleInquiriesDevelopmentMode(req, res) {
+  console.log('🔧 Running inquiries in development mode');
+  
+  // Mock data for development
+  const mockInquiries = [
+    {
+      _id: '66c123456789012345678901',
+      name: 'John Doe',
+      email: 'john@example.com',
+      phone: '+91-9876543210',
+      subject: 'General Inquiry',
+      message: 'I would like to know more about your organization.',
+      status: 'new',
+      priority: 'medium',
+      createdAt: new Date('2024-08-15'),
+      updatedAt: new Date('2024-08-15')
+    },
+    {
+      _id: '66c123456789012345678902',
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      phone: '+91-9876543211',
+      subject: 'Volunteer Opportunities',
+      message: 'I am interested in volunteering for your events.',
+      status: 'responded',
+      priority: 'high',
+      createdAt: new Date('2024-08-14'),
+      updatedAt: new Date('2024-08-16')
+    }
+  ];
+
+  switch (req.method) {
+    case 'GET':
+      console.log('📋 Returning mock inquiries:', mockInquiries.length);
+      return res.status(200).json(mockInquiries);
+
+    case 'POST':
+      const newId = Date.now().toString();
+      const newInquiry = {
+        _id: newId,
+        ...req.body,
+        createdAt: new Date(),
+        status: 'new',
+        priority: req.body.priority || 'medium'
+      };
+      console.log('🆕 Created mock inquiry:', newInquiry);
+      return res.status(201).json(newInquiry);
+
+    case 'PUT':
+      const { id: updateId } = req.query;
+      console.log('✏️  Attempting to update inquiry with ID:', updateId);
+      
+      if (!updateId) {
+        return res.status(400).json({ error: 'Inquiry ID is required' });
+      }
+      
+      console.log('✅ Accepting update for any ID in development mode');
+      console.log('📝 Update data:', req.body);
+      
+      return res.status(200).json({ 
+        message: 'Inquiry updated successfully (development mode)',
+        id: updateId,
+        data: req.body
+      });
+
+    case 'DELETE':
+      const { id: deleteId } = req.query;
+      console.log('🗑️ Attempting to delete inquiry with ID:', deleteId);
+      
+      if (!deleteId) {
+        return res.status(400).json({ error: 'Inquiry ID is required' });
+      }
+      
+      console.log('✅ Accepting deletion for any ID in development mode');
+      
+      return res.status(200).json({ 
+        message: 'Inquiry deleted successfully (development mode)',
+        id: deleteId
+      });
 
     default:
       return res.status(405).json({ error: 'Method not allowed' });
