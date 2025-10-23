@@ -45,6 +45,24 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
 });
 
+// Initialize Razorpay
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+console.log('💳 Razorpay Environment Variables:', {
+  keyId: RAZORPAY_KEY_ID ? 'SET' : 'MISSING',
+  keySecret: RAZORPAY_KEY_SECRET ? 'SET' : 'MISSING'
+});
+
+// Try to import Razorpay SDK
+let Razorpay;
+try {
+  Razorpay = require('razorpay');
+  console.log('✅ Razorpay SDK loaded successfully');
+} catch (error) {
+  console.log('⚠️ Razorpay SDK not available:', error.message);
+}
+
 let cachedClient = null;
 let isDevelopmentMode = false;
 
@@ -238,6 +256,12 @@ module.exports = async function handler(req, res) {
         return await handleImageKitList(req, res);
       case 'imagekit-delete':
         return await handleImageKitDelete(req, res);
+      case 'razorpay-order':
+        return await handleRazorpayCreateOrder(req, res);
+      case 'razorpay-verify':
+        return await handleRazorpayVerifyPayment(req, res, db);
+      case 'razorpay-qrcode':
+        return await handleRazorpayQRCode(req, res);
       case 'auth':
       case 'login':
         return await handleAuth(req, res, db);
@@ -268,6 +292,10 @@ module.exports = async function handler(req, res) {
         return await handleRecentActivities(req, res, db);
       case 'content':
         return await handleContent(req, res, db);
+      case 'send-email-with-pdf':
+        return await handleSendEmailWithPDF(req, res);
+      case 'upload-pdf-to-imagekit':
+        return await handleUploadPDFToImageKit(req, res);
       case 'hello':
         return res.status(200).json({ message: 'Hello from BSM Gandhinagar API!' });
       case 'health':
@@ -729,18 +757,39 @@ async function handleDonations(req, res, db) {
 
     case 'PUT':
       const { id: updateId } = req.query;
+      
+      if (!updateId) {
+        console.error('❌ No ID provided for update');
+        return res.status(400).json({ error: 'Donation ID is required' });
+      }
+      
+      console.log('📝 Updating donation:', updateId);
+      
+      let objectId;
+      try {
+        objectId = new ObjectId(updateId);
+      } catch (error) {
+        console.error('❌ Invalid ObjectId format:', updateId);
+        return res.status(400).json({ error: 'Invalid donation ID format' });
+      }
+      
       const updateData = { ...req.body, updatedAt: new Date() };
+      console.log('📝 Update data:', updateData);
       
       const updateResult = await collection.updateOne(
-        { _id: new ObjectId(updateId) },
+        { _id: objectId },
         { $set: updateData }
       );
       
+      console.log('📝 Update result:', { matchedCount: updateResult.matchedCount, modifiedCount: updateResult.modifiedCount });
+      
       if (updateResult.matchedCount === 0) {
+        console.error('❌ Donation not found:', updateId);
         return res.status(404).json({ error: 'Donation not found' });
       }
       
-      const updatedDonation = await collection.findOne({ _id: new ObjectId(updateId) });
+      const updatedDonation = await collection.findOne({ _id: objectId });
+      console.log('✅ Donation updated successfully');
       return res.status(200).json(updatedDonation);
 
     case 'DELETE':
@@ -1997,6 +2046,442 @@ async function handleImageKitDelete(req, res) {
     console.error('ImageKit delete error:', error);
     return res.status(500).json({ 
       error: 'Failed to delete image', 
+      details: error.message 
+    });
+  }
+}
+
+// ==================== RAZORPAY HANDLERS ====================
+
+/**
+ * Create Razorpay Order
+ * Creates an order for payment processing
+ */
+async function handleRazorpayCreateOrder(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Check if Razorpay is configured
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      console.error('❌ Razorpay credentials not configured');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Razorpay not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to environment variables.' 
+      });
+    }
+
+    if (!Razorpay) {
+      console.error('❌ Razorpay SDK not loaded');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Razorpay SDK not available. Please install: npm install razorpay' 
+      });
+    }
+
+    const { amount, currency = 'INR' } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Valid amount is required' 
+      });
+    }
+
+    console.log('💳 Creating Razorpay order:', { amount, currency });
+
+    // Initialize Razorpay instance
+    const razorpay = new Razorpay({
+      key_id: RAZORPAY_KEY_ID,
+      key_secret: RAZORPAY_KEY_SECRET,
+    });
+
+    // Create order options
+    const options = {
+      amount: amount * 100, // Amount in paise (smallest currency unit)
+      currency: currency,
+      receipt: `receipt_${Date.now()}`,
+      notes: {
+        created_at: new Date().toISOString(),
+      },
+    };
+
+    // Create order
+    const order = await razorpay.orders.create(options);
+
+    console.log('✅ Razorpay order created:', order.id);
+
+    return res.status(200).json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      receipt: order.receipt,
+    });
+
+  } catch (error) {
+    console.error('❌ Razorpay order creation error:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to create order', 
+      details: error.message 
+    });
+  }
+}
+
+/**
+ * Verify Razorpay Payment
+ * Verifies payment signature and saves donation
+ */
+async function handleRazorpayVerifyPayment(req, res, db) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { 
+      razorpay_payment_id, 
+      razorpay_order_id, 
+      razorpay_signature,
+      donationData 
+    } = req.body;
+
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Missing payment verification data' 
+      });
+    }
+
+    console.log('🔐 Verifying Razorpay payment:', razorpay_payment_id);
+
+    // Verify signature using crypto
+    const crypto = require('crypto');
+    const expectedSignature = crypto
+      .createHmac('sha256', RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      console.error('❌ Payment signature verification failed');
+      return res.status(400).json({ 
+        success: false,
+        error: 'Payment verification failed' 
+      });
+    }
+
+    console.log('✅ Payment signature verified');
+
+    // Save donation to database if donation data provided
+    if (donationData && db) {
+      const collection = db.collection('donations');
+      
+      const donation = {
+        ...donationData,
+        razorpay_payment_id,
+        razorpay_order_id,
+        transactionId: razorpay_payment_id, // Store payment ID as transaction ID for admin panel
+        status: 'completed',
+        approved: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await collection.insertOne(donation);
+      console.log('💾 Donation saved to database:', result.insertedId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Payment verified and donation saved',
+        donationId: result.insertedId,
+        paymentId: razorpay_payment_id,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Payment verified successfully',
+      paymentId: razorpay_payment_id,
+    });
+
+  } catch (error) {
+    console.error('❌ Payment verification error:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Payment verification failed', 
+      details: error.message 
+    });
+  }
+}
+
+/**
+ * Generate UPI Payment String for QR Code
+ * Since Razorpay test accounts don't support QR Code API or Payment Links,
+ * we generate a UPI intent string that the frontend will convert to QR code
+ */
+async function handleRazorpayQRCode(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { amount, orderId, customerName } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Valid amount is required' 
+      });
+    }
+
+    console.log('📱 Generating UPI payment string for QR:', { amount, orderId });
+
+    // BHIM requires strict UPI QR format
+    const upiId = process.env.UPI_ID || 'test@razorpay';
+    const merchantName = process.env.UPI_MERCHANT_NAME || 'BSM Gandhinagar';
+    const transactionNote = orderId || 'Donation';
+    
+    console.log('🔑 UPI ID being used:', upiId);
+    console.log('🏪 Merchant Name:', merchantName);
+    console.log('💰 Amount:', amount);
+    
+    // Validate UPI ID format
+    if (!upiId.includes('@')) {
+      console.error('❌ Invalid UPI ID format:', upiId);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid UPI ID format. Must be like: name@paytm, name@ybl, etc.'
+      });
+    }
+    
+    // BHIM-compliant UPI QR format (without special characters in note)
+    // Format: upi://pay?pa=VPA&pn=Name&am=Amount&cu=Currency&tn=Note
+    const cleanMerchantName = merchantName.replace(/[^a-zA-Z0-9\s]/g, '');
+    const cleanNote = transactionNote.replace(/[^a-zA-Z0-9\s]/g, '');
+    
+    const upiUrl = `upi://pay?pa=${upiId}&pn=${cleanMerchantName}&am=${amount}&cu=INR&tn=${cleanNote}`;
+    
+    console.log('🔗 Generated UPI URL:', upiUrl);
+    
+    // Generate unique ID for this QR code
+    const qrCodeId = `upi_qr_${Date.now()}`;
+    
+    console.log('✅ UPI payment string generated:', qrCodeId);
+
+    return res.status(200).json({
+      success: true,
+      qrCodeId,
+      qrCodeUrl: upiUrl, // Frontend will convert this to QR code image
+      qrCodeData: upiUrl,
+      amount: amount * 100,
+      currency: 'INR',
+      status: 'active',
+      expiresAt: Math.floor(Date.now() / 1000) + (30 * 60), // 30 min expiry
+      paymentMethod: 'upi',
+      merchantName,
+      upiId,
+      note: transactionNote,
+    });
+
+  } catch (error) {
+    console.error('❌ QR code generation error:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to generate payment QR code', 
+      details: error.message 
+    });
+  }
+}
+
+// Email with PDF attachment handler
+async function handleSendEmailWithPDF(req, res) {
+  console.log('📧 Processing email with PDF attachment request');
+  
+  try {
+    const nodemailer = require('nodemailer');
+    
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const { donorEmail, donorName, amount, campaign, pdfBase64, receiptData } = req.body;
+    
+    if (!donorEmail || !donorName || !pdfBase64) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    console.log('📧 Email request details:', {
+      donorEmail,
+      donorName,
+      amount,
+      campaign,
+      hasPDF: !!pdfBase64
+    });
+
+    // Create a test transporter (for development - replace with real SMTP in production)
+    const transporter = nodemailer.createTransporter({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER || 'your-email@gmail.com', // Add to .env.local
+        pass: process.env.SMTP_PASS || 'your-app-password'     // Add to .env.local
+      },
+    });
+
+    // Convert base64 to buffer for attachment
+    const pdfBuffer = Buffer.from(pdfBase64.split(',')[1], 'base64');
+    const fileName = `BSM_Receipt_${receiptData.receiptNo}_${donorName.replace(/\s+/g, '_')}.pdf`;
+
+    // Upload PDF to ImageKit for permanent public URL
+    let downloadLinkHtml = '';
+    let uploadResponse = null;
+    try {
+      console.log('📤 Uploading PDF to ImageKit...');
+      
+      uploadResponse = await imagekit.upload({
+        file: pdfBuffer,
+        fileName: fileName,
+        folder: '/bsm-gandhinagar/receipts/',
+        useUniqueFileName: true,
+        tags: ['receipt', 'donation', receiptData.receiptNo]
+      });
+
+      console.log('✅ PDF uploaded to ImageKit:', uploadResponse.url);
+      
+      // Create download link HTML
+      downloadLinkHtml = `
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${uploadResponse.url}" target="_blank" 
+             style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:5px;text-decoration:none;display:inline-block;font-weight:bold;">
+             📄 Download Receipt (PDF)
+          </a>
+        </div>
+        <p style="font-size: 12px; color: #666;">
+          Receipt URL: <a href="${uploadResponse.url}" target="_blank">${uploadResponse.url}</a>
+        </p>`;
+        
+    } catch (uploadError) {
+      console.error('❌ Failed to upload PDF to ImageKit:', uploadError);
+      downloadLinkHtml = '<p style="color: #e53e3e;">Receipt will be available as email attachment.</p>';
+    }
+
+    // Email options
+    const mailOptions = {
+      from: process.env.SMTP_FROM || '"Bihar Sanskritik Mandal" <noreply@bsmgandhinagar.org>',
+      to: donorEmail,
+      subject: 'BSM Gandhinagar - Donation Receipt & Approval Confirmation',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Bihar Sanskritik Mandal Gandhinagar</h2>
+          <p>Dear ${donorName},</p>
+          
+          <p>Thank you for your generous donation of <strong>₹${amount.toLocaleString('en-IN')}</strong> for the campaign "<strong>${campaign}</strong>".</p>
+          
+          <p>Your donation has been <strong style="color: #059669;">approved and processed successfully</strong>.</p>
+          
+          <p>Please find your official receipt attached to this email and available for download below:</p>
+          
+          ${downloadLinkHtml}
+          
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin: 0 0 10px 0;">Receipt Details:</h3>
+            <p style="margin: 5px 0;"><strong>Receipt No:</strong> ${receiptData.receiptNo}</p>
+            <p style="margin: 5px 0;"><strong>Date:</strong> ${receiptData.date}</p>
+            <p style="margin: 5px 0;"><strong>Amount:</strong> ₹${amount.toLocaleString('en-IN')}</p>
+            <p style="margin: 5px 0;"><strong>Campaign:</strong> ${campaign}</p>
+          </div>
+          
+          <p>For any queries, please contact us.</p>
+          
+          <p>Best regards,<br>
+          <strong>Bihar Sanskritik Mandal Gandhinagar</strong><br>
+          Registration Number: BSM/2024/REG001</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: fileName,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    };
+
+    // Send email
+    console.log('📧 Attempting to send email via SMTP...');
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('✅ Email with PDF sent successfully:', info.messageId);
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Email with PDF sent successfully',
+      messageId: info.messageId,
+      pdfUrl: uploadResponse?.url || null
+    });
+
+  } catch (error) {
+    console.error('❌ Email sending error:', error);
+    
+    // Return error but don't break the whole flow
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to send email with PDF', 
+      details: error.message 
+    });
+  }
+}
+
+// Upload PDF to ImageKit handler
+async function handleUploadPDFToImageKit(req, res) {
+  console.log('📤 Processing PDF upload to ImageKit request');
+  
+  try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const { pdfBase64, fileName, receiptData } = req.body;
+    
+    if (!pdfBase64 || !fileName) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    console.log('📤 ImageKit upload details:', {
+      fileName,
+      hasBase64: !!pdfBase64,
+      receiptNo: receiptData?.receiptNo
+    });
+
+    // Convert base64 to buffer
+    const pdfBuffer = Buffer.from(pdfBase64.split(',')[1], 'base64');
+
+    // Upload to ImageKit
+    const uploadResponse = await imagekit.upload({
+      file: pdfBuffer,
+      fileName: fileName,
+      folder: '/bsm-gandhinagar/receipts/',
+      useUniqueFileName: true,
+      tags: ['receipt', 'donation', receiptData?.receiptNo || 'unknown']
+    });
+
+    console.log('✅ PDF uploaded to ImageKit successfully:', uploadResponse.url);
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: 'PDF uploaded to ImageKit successfully',
+      url: uploadResponse.url,
+      fileId: uploadResponse.fileId
+    });
+
+  } catch (error) {
+    console.error('❌ ImageKit upload error:', error);
+    
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to upload PDF to ImageKit', 
       details: error.message 
     });
   }

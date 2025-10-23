@@ -15,6 +15,7 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ImageUploadTest } from './components/ui/ImageUploadTest';
 import ImageKitTest from './pages/ImageKitTest';
+import { EmailTest } from './pages/EmailTest';
 
 function App() {
   return (
@@ -162,6 +163,18 @@ function App() {
                 <Header />
                 <main className="flex-1">
                   <ImageKitTest />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/email-test" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <EmailTest />
                 </main>
                 <Footer />
               </>

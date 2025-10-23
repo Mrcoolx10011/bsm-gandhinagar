@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Smartphone, QrCode, DollarSign, Users, Target, TrendingUp, CheckCircle, X, Loader } from 'lucide-react';
+import { Heart, CreditCard, Smartphone, QrCode, DollarSign, Users, Target, TrendingUp, CheckCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { 
-  loadRazorpayScript, 
-  createRazorpayOrder, 
-  verifyRazorpayPayment,
-  initiateRazorpayPayment,
-  generateUpiQrCode
-} from '../lib/razorpay';
 
 const donationAmounts = [25, 50, 100, 250, 500, 1000];
 
@@ -33,21 +26,20 @@ interface DonationFormData {
   paymentMethod: string;
   isAnonymous: boolean;
   message: string;
-  upiId?: string; // Optional: user's UPI ID for collect request
 }
 
 interface RecentDonor {
   id: string;
   donorName: string;
   amount: number;
-  createdAt: string; // Changed from 'date' to match backend field
+  date: string;
   isAnonymous: boolean;
 }
 
 export const Donations: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [selectedCampaign, setSelectedCampaign] = useState('Education for All');
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -56,8 +48,6 @@ export const Donations: React.FC = () => {
   const [loadingDonors, setLoadingDonors] = useState(true);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
-  const [showQrCode, setShowQrCode] = useState(false);
   
   const [formData, setFormData] = useState<DonationFormData>({
     donorName: '',
@@ -65,14 +55,12 @@ export const Donations: React.FC = () => {
     phone: '',
     amount: 0,
     campaign: 'Education for All',
-    paymentMethod: 'upi',
+    paymentMethod: 'card',
     isAnonymous: false,
-    message: '',
-    upiId: '' // User's UPI ID for collect request
+    message: ''
   });
 
   const totalAmount = selectedAmount || parseFloat(customAmount) || 0;
-  const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || import.meta.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
   // Fetch recent completed donations
   const fetchRecentDonors = async () => {
@@ -83,6 +71,8 @@ export const Donations: React.FC = () => {
       if (response.ok) {
         const recentCompletedDonors = await response.json();
         setRecentDonors(recentCompletedDonors);
+      } else {
+        console.error('Failed to fetch recent donors:', response.status);
       }
     } catch (error) {
       console.error('Error fetching recent donors:', error);
@@ -94,10 +84,9 @@ export const Donations: React.FC = () => {
   useEffect(() => {
     fetchRecentDonors();
     fetchCampaigns();
-    loadRazorpayScript();
   }, []);
 
-  // Fetch active campaigns
+  // Fetch active campaigns with real donation data
   const fetchCampaigns = async () => {
     try {
       setLoadingCampaigns(true);
@@ -106,6 +95,10 @@ export const Donations: React.FC = () => {
       if (response.ok) {
         const campaignsData = await response.json();
         setCampaigns(campaignsData);
+        console.log('Fetched campaigns:', campaignsData);
+      } else {
+        console.error('Failed to fetch campaigns:', response.status);
+        // Keep empty array as fallback
       }
     } catch (error) {
       console.error('Error fetching campaigns:', error);
@@ -114,6 +107,7 @@ export const Donations: React.FC = () => {
     }
   };
 
+  // Helper function to format time ago
   const getTimeAgo = (dateString: string) => {
     const now = new Date();
     const donationDate = new Date(dateString);
@@ -166,8 +160,9 @@ export const Donations: React.FC = () => {
     setShowDonationForm(true);
   };
 
-  // Handle QR Code payment
-  const handleQRPayment = async () => {
+  const handleSubmitDonation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!formData.donorName || !formData.email) {
       toast.error('Please fill in all required fields');
       return;
@@ -176,222 +171,7 @@ export const Donations: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Create order first
-      const orderData = await createRazorpayOrder(formData.amount, 'INR');
-      
-      if (!orderData.success) {
-        throw new Error(orderData.error || 'Failed to create order');
-      }
-
-      // Generate QR code
-      const qrData = await generateUpiQrCode(
-        formData.amount,
-        orderData.orderId
-      );
-
-      if (!qrData.success) {
-        throw new Error(qrData.error || 'Failed to generate QR code');
-      }
-
-      setQrCodeUrl(qrData.qrCodeUrl || '');
-      setShowQrCode(true);
-      toast.success('QR Code generated! Please scan to complete payment');
-
-    } catch (error) {
-      console.error('QR payment error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to generate QR code');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Handle UPI ID payment - Direct payment request to user's UPI app
-  const handleUPIIDPayment = async () => {
-    if (!formData.donorName || !formData.email) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    if (!formData.upiId) {
-      toast.error('Please enter your UPI ID');
-      return;
-    }
-
-    // Validate UPI ID format
-    if (!formData.upiId.includes('@')) {
-      toast.error('Invalid UPI ID format. Should be like: name@paytm, name@ybl');
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Generate unique transaction reference
-      const transactionRef = `UPIID_${Date.now()}_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-      
-      // Save donation to database first
-      const donationData = {
-        donorName: formData.isAnonymous ? 'Anonymous' : formData.donorName,
-        email: formData.email,
-        phone: formData.phone,
-        amount: formData.amount,
-        campaign: formData.campaign,
-        paymentMethod: 'upi-id',
-        transactionId: transactionRef,
-        status: 'pending', // Will be verified manually by admin
-        approved: false,
-        isAnonymous: formData.isAnonymous,
-        message: formData.message,
-        upiId: formData.upiId, // Store the UPI ID used for payment
-        date: new Date().toISOString(),
-      };
-
-      // Save to database
-      const response = await fetch('/api/donations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(donationData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save donation');
-      }
-
-      console.log('✅ Donation saved with ref:', transactionRef);
-      
-      // Create UPI payment intent URL
-      const merchantName = 'BSM Gandhinagar';
-      const transactionNote = `Donation ${transactionRef}`;
-      
-      // Generate UPI intent URL (clean format for better compatibility)
-      const upiUrl = `upi://pay?pa=${formData.upiId}&pn=${merchantName}&am=${formData.amount}&cu=INR&tn=${transactionNote}`;
-      
-      console.log('🔗 Generated UPI URL:', upiUrl);
-      
-      // Check if mobile device
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // On mobile: Try to open UPI app directly
-        window.location.href = upiUrl;
-        toast.success(`Payment initiated! Reference: ${transactionRef}`);
-        
-        // Reset form after delay
-        setTimeout(() => {
-          resetForm();
-        }, 2000);
-      } else {
-        // On desktop: Generate QR code to scan with phone
-        const QRCode = (await import('qrcode')).default;
-        const qrCodeDataUrl = await QRCode.toDataURL(upiUrl, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
-        
-        setQrCodeUrl(qrCodeDataUrl);
-        setShowQrCode(true);
-        toast.success(`Payment QR generated! Reference: ${transactionRef}`);
-      }
-      
-    } catch (error) {
-      console.error('UPI ID payment error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to initiate UPI payment');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Handle UPI payment
-  const handleUPIPayment = async () => {
-    if (!formData.donorName || !formData.email) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    if (!RAZORPAY_KEY_ID) {
-      toast.error('Payment gateway not configured');
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Create order
-      const orderData = await createRazorpayOrder(formData.amount, 'INR');
-      
-      if (!orderData.success) {
-        throw new Error(orderData.error || 'Failed to create order');
-      }
-
-      // Initialize Razorpay payment
-      await initiateRazorpayPayment({
-        razorpayKey: RAZORPAY_KEY_ID,
-        orderId: orderData.orderId,
-        amount: formData.amount * 100, // Convert to paise
-        currency: 'INR',
-        name: 'Bihar Sanskritik Mandal',
-        description: `Donation for ${formData.campaign}`,
-        prefill: {
-          name: formData.donorName,
-          email: formData.email,
-          contact: formData.phone,
-        },
-        notes: {
-          campaign: formData.campaign,
-          isAnonymous: formData.isAnonymous,
-          message: formData.message,
-        },
-        theme: {
-          color: '#ea580c',
-        },
-        handler: async (response) => {
-          // Payment successful - verify on backend
-          const verificationData = await verifyRazorpayPayment(
-            response.razorpay_payment_id,
-            response.razorpay_order_id,
-            response.razorpay_signature
-          );
-
-          if (verificationData.success) {
-            // Save donation
-            await saveDonation(response.razorpay_payment_id, response.razorpay_order_id);
-            
-            setShowDonationForm(false);
-            setShowSuccessModal(true);
-            toast.success('Payment successful! Thank you for your donation.');
-            fetchRecentDonors();
-            
-            // Reset form
-            resetForm();
-          } else {
-            toast.error('Payment verification failed');
-          }
-          setIsProcessing(false);
-        },
-        modal: {
-          ondismiss: () => {
-            toast.error('Payment cancelled');
-            setIsProcessing(false);
-          },
-        },
-      });
-
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error(error instanceof Error ? error.message : 'Payment failed');
-      setIsProcessing(false);
-    }
-  };
-
-  // Save donation to database
-  const saveDonation = async (paymentId: string, orderId: string) => {
-    try {
+      // Send donation data to backend API
       const response = await fetch('/api/donations', {
         method: 'POST',
         headers: {
@@ -405,55 +185,48 @@ export const Donations: React.FC = () => {
           campaign: formData.campaign,
           paymentMethod: formData.paymentMethod,
           isAnonymous: formData.isAnonymous,
-          message: formData.message,
-          razorpay_payment_id: paymentId,
-          razorpay_order_id: orderId,
-          transactionId: paymentId, // Add transaction ID for admin display
-          status: 'completed',
-          approved: true,
+          message: formData.message
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save donation');
+      if (response.ok) {
+        await response.json();
+        
+        setShowDonationForm(false);
+        setShowSuccessModal(true);
+        toast.success('Donation successful! Thank you for your contribution.');
+        
+        // Refresh recent donors list
+        fetchRecentDonors();
+        
+        // Reset form
+        setFormData({
+          donorName: '',
+          email: '',
+          phone: '',
+          amount: 0,
+          campaign: 'Education for All',
+          paymentMethod: 'card',
+          isAnonymous: false,
+          message: ''
+        });
+        setSelectedAmount(null);
+        setCustomAmount('');
+      } else {
+        const errorData = await response.json();
+        toast.error(`Failed to process donation: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error saving donation:', error);
+      console.error('Error submitting donation:', error);
+      toast.error('Failed to process donation. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
-  };
-
-  const handleSubmitDonation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (paymentMethod === 'qr') {
-      await handleQRPayment();
-    } else if (paymentMethod === 'upi-id') {
-      await handleUPIIDPayment();
-    } else {
-      await handleUPIPayment();
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      donorName: '',
-      email: '',
-      phone: '',
-      amount: 0,
-      campaign: 'Education for All',
-      paymentMethod: 'upi',
-      isAnonymous: false,
-      message: ''
-    });
-    setSelectedAmount(null);
-    setCustomAmount('');
-    setQrCodeUrl('');
-    setShowQrCode(false);
   };
 
   const handleCampaignDonate = (campaignTitle: string) => {
     setSelectedCampaign(campaignTitle);
-    setSelectedAmount(100);
+    setSelectedAmount(100); // Default amount for campaign donation
     setFormData(prev => ({ ...prev, amount: 100, campaign: campaignTitle }));
     setShowDonationForm(true);
   };
@@ -538,7 +311,20 @@ export const Donations: React.FC = () => {
                   Payment Method
                 </h3>
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border-orange-600 bg-orange-50">
+                  <label className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="text-orange-600"
+                    />
+                    <CreditCard className="w-5 h-5 text-gray-600" />
+                    <span>Credit/Debit Card</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="payment"
@@ -547,30 +333,11 @@ export const Donations: React.FC = () => {
                       onChange={(e) => setPaymentMethod(e.target.value)}
                       className="text-orange-600"
                     />
-                    <Smartphone className="w-5 h-5 text-orange-600" />
-                    <div>
-                      <span className="font-medium text-gray-900">UPI/Digital Wallet</span>
-                      <p className="text-xs text-gray-500">Google Pay, PhonePe, Paytm, etc.</p>
-                    </div>
+                    <Smartphone className="w-5 h-5 text-gray-600" />
+                    <span>UPI/Digital Wallet</span>
                   </label>
                   
-                  <label className="flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border-gray-300">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="upi-id"
-                      checked={paymentMethod === 'upi-id'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="text-orange-600"
-                    />
-                    <Smartphone className="w-5 h-5 text-gray-600" />
-                    <div>
-                      <span className="font-medium text-gray-900">Enter UPI ID</span>
-                      <p className="text-xs text-gray-500">Get payment request in your UPI app</p>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border-gray-300">
+                  <label className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="payment"
@@ -580,13 +347,28 @@ export const Donations: React.FC = () => {
                       className="text-orange-600"
                     />
                     <QrCode className="w-5 h-5 text-gray-600" />
-                    <div>
-                      <span className="font-medium text-gray-900">Dynamic QR Code</span>
-                      <p className="text-xs text-gray-500">Scan with any UPI app</p>
-                    </div>
+                    <span>QR Code</span>
                   </label>
                 </div>
               </div>
+
+              {/* QR Code Display */}
+              {paymentMethod === 'qr' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mb-6 text-center"
+                >
+                  <div className="bg-gray-100 p-6 rounded-lg">
+                    <div className="w-48 h-48 bg-white mx-auto mb-4 flex items-center justify-center border-2 border-gray-300 rounded-lg">
+                      <QrCode className="w-32 h-32 text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Scan this QR code with your payment app
+                    </p>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Donation Summary */}
               {totalAmount > 0 && (
@@ -682,7 +464,7 @@ export const Donations: React.FC = () => {
                           <div className="font-medium text-gray-900">
                             {donor.isAnonymous ? 'Anonymous' : donor.donorName}
                           </div>
-                          <div className="text-sm text-gray-500">{getTimeAgo(donor.createdAt)}</div>
+                          <div className="text-sm text-gray-500">{getTimeAgo(donor.date)}</div>
                         </div>
                         <div className="font-semibold text-orange-600">
                           ₹{(donor.amount || 0).toLocaleString()}
@@ -695,6 +477,11 @@ export const Donations: React.FC = () => {
                     </div>
                   )}
                 </div>
+                {recentDonors.length > 10 && (
+                  <div className="text-center mt-3 text-sm text-gray-500">
+                    Showing 10 of {recentDonors.length} recent donations
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -780,202 +567,133 @@ export const Donations: React.FC = () => {
         {/* Donation Form Modal */}
         <AnimatePresence>
           {showDonationForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto my-8"
+                className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Complete Your Donation</h2>
                     <button
-                      onClick={() => {
-                        setShowDonationForm(false);
-                        setShowQrCode(false);
-                        setQrCodeUrl('');
-                      }}
+                      onClick={() => setShowDonationForm(false)}
                       className="text-gray-400 hover:text-gray-500"
                     >
                       <X className="w-6 h-6" />
                     </button>
                   </div>
 
-                  {showQrCode && qrCodeUrl ? (
-                    <div className="text-center space-y-4">
-                      <div className="bg-orange-50 p-6 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                          Scan & Pay with Any UPI App
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                          Google Pay • PhonePe • Paytm • BHIM • Any UPI App
-                        </p>
-                        <div className="bg-white p-4 rounded-lg inline-block">
-                          <img 
-                            src={qrCodeUrl} 
-                            alt="UPI Payment QR Code" 
-                            className="mx-auto w-64 h-64"
-                            onError={(e) => {
-                              console.error('QR Code image failed to load:', qrCodeUrl);
-                              e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><text x="50%" y="50%" text-anchor="middle" fill="red">QR Code Error</text></svg>';
-                            }}
-                          />
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          <p className="text-lg font-bold text-orange-600">
-                            Amount: ₹{formData.amount}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Merchant: Bihar Sanskritik Mandal Gandhinagar
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setShowQrCode(false);
-                          setQrCodeUrl('');
-                        }}
-                        className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold transition-colors"
-                      >
-                        Go Back
-                      </button>
+                  <form onSubmit={handleSubmitDonation} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="donorName"
+                        required
+                        value={formData.donorName}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Enter your full name"
+                      />
                     </div>
-                  ) : (
-                    <form onSubmit={handleSubmitDonation} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          name="donorName"
-                          required
-                          value={formData.donorName}
-                          onChange={handleFormChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          placeholder="Enter your full name"
-                        />
-                      </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email Address *
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          required
-                          value={formData.email}
-                          onChange={handleFormChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          placeholder="Enter your email"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        value={formData.email}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Enter your email"
+                      />
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Phone Number *
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          required
-                          value={formData.phone}
-                          onChange={handleFormChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          placeholder="Enter your phone number"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
 
-                      {/* UPI ID field - only show when "Enter UPI ID" is selected */}
-                      {paymentMethod === 'upi-id' && (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Your UPI ID (VPA) *
-                          </label>
-                          <input
-                            type="text"
-                            name="upiId"
-                            required
-                            value={formData.upiId || ''}
-                            onChange={handleFormChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="yourname@paytm, yourname@ybl, etc."
-                          />
-                          <p className="text-xs text-gray-600 mt-1">
-                            💡 You'll receive a payment request notification in your UPI app
-                          </p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Message (Optional)
+                      </label>
+                      <textarea
+                        name="message"
+                        rows={3}
+                        value={formData.message}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                        placeholder="Leave a message..."
+                      />
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="isAnonymous"
+                        checked={formData.isAnonymous}
+                        onChange={handleFormChange}
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                      />
+                      <label className="ml-2 block text-sm text-gray-700">
+                        Make this donation anonymous
+                      </label>
+                    </div>
+
+                    <div className="bg-orange-50 p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">Campaign:</span>
+                        <span className="text-sm text-gray-900">{formData.campaign}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">Payment Method:</span>
+                        <span className="text-sm text-gray-900 capitalize">{formData.paymentMethod}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
+                        <span className="text-xl font-bold text-orange-600">₹{formData.amount}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isProcessing}
+                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
+                        isProcessing
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-orange-600 hover:bg-orange-700'
+                      } text-white`}
+                    >
+                      {isProcessing ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Processing...
                         </div>
+                      ) : (
+                        <>
+                          <Heart className="w-5 h-5 inline mr-2" />
+                          Complete Donation
+                        </>
                       )}
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Message (Optional)
-                        </label>
-                        <textarea
-                          name="message"
-                          rows={3}
-                          value={formData.message}
-                          onChange={handleFormChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                          placeholder="Leave a message..."
-                        />
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="isAnonymous"
-                          checked={formData.isAnonymous}
-                          onChange={handleFormChange}
-                          className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                        />
-                        <label className="ml-2 block text-sm text-gray-700">
-                          Make this donation anonymous
-                        </label>
-                      </div>
-
-                      <div className="bg-orange-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-700">Campaign:</span>
-                          <span className="text-sm text-gray-900">{formData.campaign}</span>
-                        </div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-700">Payment Method:</span>
-                          <span className="text-sm text-gray-900 capitalize">
-                            {paymentMethod === 'upi' ? 'UPI/Digital Wallet' : 'QR Code'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                          <span className="text-xl font-bold text-orange-600">₹{formData.amount}</span>
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isProcessing}
-                        className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                          isProcessing
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-orange-600 hover:bg-orange-700'
-                        } text-white`}
-                      >
-                        {isProcessing ? (
-                          <div className="flex items-center justify-center">
-                            <Loader className="animate-spin h-5 w-5 mr-2" />
-                            Processing...
-                          </div>
-                        ) : (
-                          <>
-                            <Heart className="w-5 h-5 inline mr-2" />
-                            {paymentMethod === 'qr' ? 'Generate QR Code' : 'Pay with UPI'}
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  )}
+                    </button>
+                  </form>
                 </div>
               </motion.div>
             </div>
@@ -1018,3 +736,4 @@ export const Donations: React.FC = () => {
     </div>
   );
 };
+

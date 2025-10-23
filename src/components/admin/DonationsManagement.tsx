@@ -3,6 +3,8 @@ import { Search, Download, Eye, DollarSign, TrendingUp, Calendar, Filter, Plus, 
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { makeAuthenticatedRequest, handleApiError } from '../../utils/auth';
+import { sendDonationApprovalEmail, openEmailWithPDFInstruction, type DonationForReceipt } from '../../utils/emailService';
+import { generateSimpleReceipt, createSimpleReceiptFromDonation } from '../../utils/simplePdfGenerator';
 
 interface Donation {
   id: string;
@@ -202,7 +204,7 @@ export const DonationsManagement: React.FC = () => {
     }
   };
 
-  // Update donation status
+  // Update donation status (NO EMAIL SENDING)
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       console.log('🔄 Updating donation status:', { id, status });
@@ -219,9 +221,27 @@ export const DonationsManagement: React.FC = () => {
 
       if (response.ok) {
         const updatedDonation = await response.json();
-        setDonations(donations.map(d => d.id === id ? updatedDonation : d));
+        console.log('📦 Updated donation from API:', updatedDonation);
+        
+        // Transform the updated donation to ensure proper ID format
+        const transformedDonation = {
+          ...updatedDonation,
+          id: updatedDonation._id || updatedDonation.id,
+        };
+        
+        setDonations(donations.map(d => d.id === id ? transformedDonation : d));
+        
+        // Update viewing donation if it's the one being viewed
+        if (viewingDonation && viewingDonation.id === id) {
+          setViewingDonation(transformedDonation);
+        }
+        
         toast.success('Donation status updated');
         console.log('✅ Status updated successfully');
+        
+        // NO EMAIL SENDING HERE - Only status update
+        // Emails are only sent when clicking "Approve" button
+        
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || `Failed to update status (Status: ${response.status})`;
@@ -239,6 +259,9 @@ export const DonationsManagement: React.FC = () => {
     try {
       console.log('🔄 Toggling approval status:', { id, currentApproval });
       
+      // Find the donation to get donor details for email
+      const donation = donations.find(d => d.id === id);
+      
       const response = await makeAuthenticatedRequest(`/api/consolidated?endpoint=donations&id=${id}`, {
         method: 'PUT',
         headers: {
@@ -251,9 +274,50 @@ export const DonationsManagement: React.FC = () => {
 
       if (response.ok) {
         const updatedDonation = await response.json();
-        setDonations(donations.map(d => d.id === id ? updatedDonation : d));
+        console.log('📦 Updated donation from API:', updatedDonation);
+        
+        // Transform the updated donation to ensure proper ID format
+        const transformedDonation = {
+          ...updatedDonation,
+          id: updatedDonation._id || updatedDonation.id,
+        };
+        
+        setDonations(donations.map(d => d.id === id ? transformedDonation : d));
         toast.success(`Donation ${!currentApproval ? 'approved' : 'disapproved'} successfully`);
         console.log('✅ Approval status updated successfully');
+        
+        // Send email notification when approving a donation
+        if (donation && !currentApproval && donation.email) {
+          console.log('📧 Sending approval email to:', donation.email);
+          
+          // Prepare donation object for PDF receipt generation
+          const donationForReceipt = {
+            id: donation.id,
+            donorName: donation.donorName,
+            email: donation.email,
+            phone: donation.phone,
+            amount: donation.amount,
+            campaign: donation.campaign,
+            paymentMethod: donation.paymentMethod,
+            transactionId: donation.transactionId,
+            date: donation.date,
+            message: donation.message
+          };
+          
+          const emailSent = await sendDonationApprovalEmail(
+            donation.email,
+            donation.donorName,
+            donation.amount,
+            donation.campaign,
+            donationForReceipt
+          );
+          
+          if (emailSent) {
+            toast.success('✅ Approval notification sent! � Email with PDF sent to donor + 📄 Local copy downloaded');
+          } else {
+            toast.error('Failed to send approval email');
+          }
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || `Failed to update approval status (Status: ${response.status})`;
@@ -288,6 +352,60 @@ export const DonationsManagement: React.FC = () => {
   const handleViewDonation = (donation: Donation) => {
     setViewingDonation(donation);
     setShowViewModal(true);
+  };
+
+  // Download PDF receipt for a donation
+  const handleDownloadReceipt = async (donation: Donation) => {
+    try {
+      console.log('📄 Generating PDF receipt for donation:', donation.id);
+      
+      // Prepare donation object for PDF receipt generation
+      const donationForReceipt: DonationForReceipt = {
+        id: donation.id,
+        donorName: donation.donorName,
+        email: donation.email,
+        phone: donation.phone,
+        amount: donation.amount,
+        campaign: donation.campaign,
+        paymentMethod: donation.paymentMethod,
+        transactionId: donation.transactionId,
+        date: donation.date,
+        message: donation.message
+      };
+      
+      const receiptData = createSimpleReceiptFromDonation(donationForReceipt);
+      await generateSimpleReceipt(receiptData);
+      
+      toast.success('📄 PDF receipt downloaded successfully');
+      console.log('✅ PDF receipt generated and downloaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to generate PDF receipt:', error);
+      toast.error('Failed to generate receipt');
+    }
+  };
+
+  // Open email client with PDF and receipt template
+  const handleEmailWithPDF = async (donation: Donation) => {
+    try {
+      console.log('📧 Opening email client for donation:', donation.id);
+      
+      // First download the PDF receipt
+      await handleDownloadReceipt(donation);
+      
+      // Then open email client with template
+      openEmailWithPDFInstruction(
+        donation.email,
+        donation.donorName,
+        donation.amount,
+        donation.campaign
+      );
+      
+      toast.success('📧 Email client opened! PDF downloaded - attach it manually');
+      console.log('✅ Email client opened with receipt template');
+    } catch (error) {
+      console.error('❌ Failed to open email client:', error);
+      toast.error('Failed to open email client');
+    }
   };
 
   // Reset form
@@ -479,7 +597,7 @@ export const DonationsManagement: React.FC = () => {
       {/* Donations Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 table-auto">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -829,9 +947,27 @@ export const DonationsManagement: React.FC = () => {
                 <p className="mt-1 text-sm text-gray-900">{viewingDonation.paymentMethod.toUpperCase()}</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Transaction ID</label>
-                <p className="mt-1 text-sm text-gray-900 font-mono">{viewingDonation.transactionId}</p>
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <label className="block text-sm font-medium text-blue-900">Transaction ID</label>
+                {viewingDonation.transactionId ? (
+                  <div className="mt-1 flex items-center space-x-2">
+                    <p className="text-sm text-blue-900 font-mono break-all">{viewingDonation.transactionId}</p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(viewingDonation.transactionId);
+                        toast.success('Transaction ID copied!');
+                      }}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Copy Transaction ID"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-gray-400">No Transaction ID</p>
+                )}
               </div>
 
               <div>
@@ -868,6 +1004,20 @@ export const DonationsManagement: React.FC = () => {
                     disabled={viewingDonation.status === 'failed'}
                   >
                     Mark Failed
+                  </button>
+                  <button
+                    onClick={() => handleDownloadReceipt(viewingDonation)}
+                    className="px-3 py-1 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                    title="Download PDF Receipt"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleEmailWithPDF(viewingDonation)}
+                    className="px-3 py-1 text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors"
+                    title="Open Email Client with PDF Template"
+                  >
+                    📧
                   </button>
                 </div>
                 <button

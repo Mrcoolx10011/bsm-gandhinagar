@@ -28,6 +28,18 @@
       "dest": "/api/consolidated.js?endpoint=imagekit-delete"
     },
     {
+      "src": "/api/razorpay-order",
+      "dest": "/api/consolidated.js?endpoint=razorpay-order"
+    },
+    {
+      "src": "/api/razorpay-verify",
+      "dest": "/api/consolidated.js?endpoint=razorpay-verify"
+    },
+    {
+      "src": "/api/razorpay-qrcode",
+      "dest": "/api/consolidated.js?endpoint=razorpay-qrcode"
+    },
+    {
       "src": "/api/auth/login",
       "dest": "/api/consolidated.js?endpoint=auth"
     },

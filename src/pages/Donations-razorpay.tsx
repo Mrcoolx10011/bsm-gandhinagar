@@ -33,14 +33,13 @@ interface DonationFormData {
   paymentMethod: string;
   isAnonymous: boolean;
   message: string;
-  upiId?: string; // Optional: user's UPI ID for collect request
 }
 
 interface RecentDonor {
   id: string;
   donorName: string;
   amount: number;
-  createdAt: string; // Changed from 'date' to match backend field
+  date: string;
   isAnonymous: boolean;
 }
 
@@ -67,8 +66,7 @@ export const Donations: React.FC = () => {
     campaign: 'Education for All',
     paymentMethod: 'upi',
     isAnonymous: false,
-    message: '',
-    upiId: '' // User's UPI ID for collect request
+    message: ''
   });
 
   const totalAmount = selectedAmount || parseFloat(customAmount) || 0;
@@ -205,108 +203,6 @@ export const Donations: React.FC = () => {
     }
   };
 
-  // Handle UPI ID payment - Direct payment request to user's UPI app
-  const handleUPIIDPayment = async () => {
-    if (!formData.donorName || !formData.email) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    if (!formData.upiId) {
-      toast.error('Please enter your UPI ID');
-      return;
-    }
-
-    // Validate UPI ID format
-    if (!formData.upiId.includes('@')) {
-      toast.error('Invalid UPI ID format. Should be like: name@paytm, name@ybl');
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Generate unique transaction reference
-      const transactionRef = `UPIID_${Date.now()}_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-      
-      // Save donation to database first
-      const donationData = {
-        donorName: formData.isAnonymous ? 'Anonymous' : formData.donorName,
-        email: formData.email,
-        phone: formData.phone,
-        amount: formData.amount,
-        campaign: formData.campaign,
-        paymentMethod: 'upi-id',
-        transactionId: transactionRef,
-        status: 'pending', // Will be verified manually by admin
-        approved: false,
-        isAnonymous: formData.isAnonymous,
-        message: formData.message,
-        upiId: formData.upiId, // Store the UPI ID used for payment
-        date: new Date().toISOString(),
-      };
-
-      // Save to database
-      const response = await fetch('/api/donations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(donationData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save donation');
-      }
-
-      console.log('✅ Donation saved with ref:', transactionRef);
-      
-      // Create UPI payment intent URL
-      const merchantName = 'BSM Gandhinagar';
-      const transactionNote = `Donation ${transactionRef}`;
-      
-      // Generate UPI intent URL (clean format for better compatibility)
-      const upiUrl = `upi://pay?pa=${formData.upiId}&pn=${merchantName}&am=${formData.amount}&cu=INR&tn=${transactionNote}`;
-      
-      console.log('🔗 Generated UPI URL:', upiUrl);
-      
-      // Check if mobile device
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // On mobile: Try to open UPI app directly
-        window.location.href = upiUrl;
-        toast.success(`Payment initiated! Reference: ${transactionRef}`);
-        
-        // Reset form after delay
-        setTimeout(() => {
-          resetForm();
-        }, 2000);
-      } else {
-        // On desktop: Generate QR code to scan with phone
-        const QRCode = (await import('qrcode')).default;
-        const qrCodeDataUrl = await QRCode.toDataURL(upiUrl, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
-        
-        setQrCodeUrl(qrCodeDataUrl);
-        setShowQrCode(true);
-        toast.success(`Payment QR generated! Reference: ${transactionRef}`);
-      }
-      
-    } catch (error) {
-      console.error('UPI ID payment error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to initiate UPI payment');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   // Handle UPI payment
   const handleUPIPayment = async () => {
     if (!formData.donorName || !formData.email) {
@@ -408,9 +304,7 @@ export const Donations: React.FC = () => {
           message: formData.message,
           razorpay_payment_id: paymentId,
           razorpay_order_id: orderId,
-          transactionId: paymentId, // Add transaction ID for admin display
           status: 'completed',
-          approved: true,
         }),
       });
 
@@ -427,8 +321,6 @@ export const Donations: React.FC = () => {
     
     if (paymentMethod === 'qr') {
       await handleQRPayment();
-    } else if (paymentMethod === 'upi-id') {
-      await handleUPIIDPayment();
     } else {
       await handleUPIPayment();
     }
@@ -558,22 +450,6 @@ export const Donations: React.FC = () => {
                     <input
                       type="radio"
                       name="payment"
-                      value="upi-id"
-                      checked={paymentMethod === 'upi-id'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="text-orange-600"
-                    />
-                    <Smartphone className="w-5 h-5 text-gray-600" />
-                    <div>
-                      <span className="font-medium text-gray-900">Enter UPI ID</span>
-                      <p className="text-xs text-gray-500">Get payment request in your UPI app</p>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border-gray-300">
-                    <input
-                      type="radio"
-                      name="payment"
                       value="qr"
                       checked={paymentMethod === 'qr'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
@@ -682,7 +558,7 @@ export const Donations: React.FC = () => {
                           <div className="font-medium text-gray-900">
                             {donor.isAnonymous ? 'Anonymous' : donor.donorName}
                           </div>
-                          <div className="text-sm text-gray-500">{getTimeAgo(donor.createdAt)}</div>
+                          <div className="text-sm text-gray-500">{getTimeAgo(donor.date)}</div>
                         </div>
                         <div className="font-semibold text-orange-600">
                           ₹{(donor.amount || 0).toLocaleString()}
@@ -804,32 +680,18 @@ export const Donations: React.FC = () => {
 
                   {showQrCode && qrCodeUrl ? (
                     <div className="text-center space-y-4">
-                      <div className="bg-orange-50 p-6 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                          Scan & Pay with Any UPI App
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                          Google Pay • PhonePe • Paytm • BHIM • Any UPI App
+                      <div className="bg-orange-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-700 mb-3">
+                          Scan this QR code with any UPI app to complete your donation
                         </p>
-                        <div className="bg-white p-4 rounded-lg inline-block">
-                          <img 
-                            src={qrCodeUrl} 
-                            alt="UPI Payment QR Code" 
-                            className="mx-auto w-64 h-64"
-                            onError={(e) => {
-                              console.error('QR Code image failed to load:', qrCodeUrl);
-                              e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><text x="50%" y="50%" text-anchor="middle" fill="red">QR Code Error</text></svg>';
-                            }}
-                          />
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          <p className="text-lg font-bold text-orange-600">
-                            Amount: ₹{formData.amount}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Merchant: Bihar Sanskritik Mandal Gandhinagar
-                          </p>
-                        </div>
+                        <img 
+                          src={qrCodeUrl} 
+                          alt="Payment QR Code" 
+                          className="mx-auto w-64 h-64 border-2 border-gray-200 rounded-lg"
+                        />
+                        <p className="text-sm text-gray-600 mt-3">
+                          Amount: <span className="font-bold text-orange-600">₹{formData.amount}</span>
+                        </p>
                       </div>
                       <button
                         onClick={() => {
@@ -887,27 +749,6 @@ export const Donations: React.FC = () => {
                           placeholder="Enter your phone number"
                         />
                       </div>
-
-                      {/* UPI ID field - only show when "Enter UPI ID" is selected */}
-                      {paymentMethod === 'upi-id' && (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Your UPI ID (VPA) *
-                          </label>
-                          <input
-                            type="text"
-                            name="upiId"
-                            required
-                            value={formData.upiId || ''}
-                            onChange={handleFormChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="yourname@paytm, yourname@ybl, etc."
-                          />
-                          <p className="text-xs text-gray-600 mt-1">
-                            💡 You'll receive a payment request notification in your UPI app
-                          </p>
-                        </div>
-                      )}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
