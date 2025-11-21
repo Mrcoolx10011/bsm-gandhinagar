@@ -35,7 +35,7 @@ const updates = [
     date: 'July 20, 2025',
     category: 'Media',
     title: 'Featured in Local News',
-    description: 'Bihar Sanskritik Mandal\'s community service efforts were highlighted in Dainik Jagran for our education initiatives.',
+    description: 'Bihar Purvanchal Samaj\'s community service efforts were highlighted in Dainik Jagran for our education initiatives.',
     image: 'https://images.unsplash.com/photo-1524863479829-916d8e77f114?auto=format&fit=crop&w=400&q=80',
     link: '/media'
   },

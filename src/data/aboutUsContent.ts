@@ -1,4 +1,4 @@
-// Bihar Sanskritik Mandal - About Us Content
+// Bihar Purvanchal Samaj - About Us Content
 export const aboutUsContent = {
   // Header Taglines
   taglines: [
@@ -11,7 +11,7 @@ export const aboutUsContent = {
   introduction: {
     hindi: "बिहार संस्कृतिक मंडल एक समर्पित सामाजिक-सांस्कृतिक संगठन है जो बिहार और पूर्वांचल की समृद्ध विरासत, परंपराओं और मूल्यों को बढ़ावा देने के लिए प्रतिबद्ध है। एकता, रचनात्मकता और सामुदायिक उत्थान में निहित विरासत के साथ, मंडल सांस्कृतिक अभिव्यक्ति, युवा सहभागिता और सामाजिक सुधार के लिए एक गतिशील मंच बन गया है।",
     
-    english: "Bihar Sanskritik Mandal stands as a beacon of cultural preservation and social progress, dedicated to celebrating and promoting the rich heritage of Bihar and Purvanchal. Founded on the pillars of unity, creativity, and community empowerment, we serve as a vibrant platform where traditional wisdom meets contemporary aspirations. Through our diverse initiatives—from reviving ancient folk arts to organizing transformative festivals and implementing meaningful social programs—we bridge the gap between honoring our glorious past and building a progressive, inclusive future for all."
+    english: "Bihar Purvanchal Samaj stands as a beacon of cultural preservation and social progress, dedicated to celebrating and promoting the rich heritage of Bihar and Purvanchal. Founded on the pillars of unity, creativity, and community empowerment, we serve as a vibrant platform where traditional wisdom meets contemporary aspirations. Through our diverse initiatives—from reviving ancient folk arts to organizing transformative festivals and implementing meaningful social programs—we bridge the gap between honoring our glorious past and building a progressive, inclusive future for all."
   },
 
   // Mission & Vision
@@ -30,7 +30,7 @@ export const aboutUsContent = {
   history: {
     founding: {
       year: "1987",
-      context: "In the late 1980s, as urbanization rapidly changed the cultural landscape of Bihar and Purvanchal, a group of passionate cultural enthusiasts recognized the urgent need to preserve their rich heritage. Led by visionary social reformer Pandit Ramesh Kumar Mishra and renowned folk artist Smt. Kamala Devi, the Bihar Sanskritik Mandal was established on the auspicious occasion of Makar Sankranti in 1987."
+      context: "In the late 1980s, as urbanization rapidly changed the cultural landscape of Bihar and Purvanchal, a group of passionate cultural enthusiasts recognized the urgent need to preserve their rich heritage. Led by visionary social reformer Pandit Ramesh Kumar Mishra and renowned folk artist Smt. Kamala Devi, Bihar Purvanchal Samaj was established on the auspicious occasion of Makar Sankranti in 1987."
     },
     
     earlyDays: "The early years were marked by humble beginnings—organizing small cultural gatherings in community halls, teaching traditional music and dance to children, and documenting disappearing folk traditions. Despite limited resources, the founders' unwavering dedication attracted like-minded individuals who shared their vision.",
@@ -58,7 +58,7 @@ export const aboutUsContent = {
       }
     ],
     
-    modernEra: "Today, Bihar Sanskritik Mandal stands as one of the region's most respected cultural organizations, having touched thousands of lives while remaining true to its founding principles. Our journey from a small community initiative to a recognized cultural institution reflects the enduring power of collective dedication and cultural pride."
+    modernEra: "Today, Bihar Purvanchal Samaj stands as one of the region's most respected cultural organizations, having touched thousands of lives while remaining true to its founding principles. Our journey from a small community initiative to a recognized cultural institution reflects the enduring power of collective dedication and cultural pride."
   },
 
   // Founders & Leaders

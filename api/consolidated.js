@@ -2369,12 +2369,12 @@ async function handleSendEmailWithPDF(req, res) {
 
     // Email options
     const mailOptions = {
-      from: process.env.SMTP_FROM || '"Bihar Sanskritik Mandal" <noreply@bsmgandhinagar.org>',
+      from: process.env.SMTP_FROM || '"Bihar Purvanchal Samaj" <noreply@bsmgandhinagar.org>',
       to: donorEmail,
       subject: 'BSM Gandhinagar - Donation Receipt & Approval Confirmation',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">Bihar Sanskritik Mandal Gandhinagar</h2>
+          <h2 style="color: #2563eb;">Bihar Purvanchal Samaj Gandhinagar</h2>
           <p>Dear ${donorName},</p>
           
           <p>Thank you for your generous donation of <strong>₹${amount.toLocaleString('en-IN')}</strong> for the campaign "<strong>${campaign}</strong>".</p>
@@ -2396,7 +2396,7 @@ async function handleSendEmailWithPDF(req, res) {
           <p>For any queries, please contact us.</p>
           
           <p>Best regards,<br>
-          <strong>Bihar Sanskritik Mandal Gandhinagar</strong><br>
+          <strong>Bihar Purvanchal Samaj Gandhinagar</strong><br>
           Registration Number: BSM/2024/REG001</p>
         </div>
       `,

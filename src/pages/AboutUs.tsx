@@ -32,7 +32,7 @@ export const AboutUs: React.FC = () => {
             className="text-center"
           >
             <h1 className="text-5xl md:text-7xl font-serif font-bold mb-6 bg-gradient-to-r from-yellow-300 to-orange-200 bg-clip-text text-transparent">
-              Bihar Sanskritik Mandal
+              Bihar Purvanchal Samaj
             </h1>
             <div className="w-32 h-2 bg-gradient-to-r from-yellow-400 to-orange-300 mx-auto mb-6 rounded-full"></div>
             <p className="text-2xl md:text-3xl mb-8 text-yellow-100 font-light">

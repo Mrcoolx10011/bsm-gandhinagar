@@ -33,7 +33,7 @@ export const AboutUsPreview: React.FC = () => {
               transition={{ delay: 0.4, duration: 0.8 }}
               className="text-lg text-gray-700 leading-relaxed mb-6"
             >
-              Bihar Sanskritik Mandal is a dedicated socio-cultural organization promoting the rich heritage, unity, and traditions of Bihar and Purvanchal through art, education, and community programs.
+              Bihar Purvanchal Samaj is a dedicated socio-cultural organization promoting the rich heritage, unity, and traditions of Bihar and Purvanchal through art, education, and community programs.
             </motion.p>
 
             <motion.p
@@ -85,7 +85,7 @@ export const AboutUsPreview: React.FC = () => {
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img
                 src="https://images.unsplash.com/photo-1524863479829-916d8e77f114?auto=format&fit=crop&w=800&q=80"
-                alt="Bihar Sanskritik Mandal Activities"
+                alt="Bihar Purvanchal Samaj Activities"
                 className="w-full h-96 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />

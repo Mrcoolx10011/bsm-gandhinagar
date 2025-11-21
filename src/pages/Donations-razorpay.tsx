@@ -231,7 +231,7 @@ export const Donations: React.FC = () => {
         orderId: orderData.orderId,
         amount: formData.amount * 100, // Convert to paise
         currency: 'INR',
-        name: 'Bihar Sanskritik Mandal',
+        name: 'Bihar Purvanchal Samaj',
         description: `Donation for ${formData.campaign}`,
         prefill: {
           name: formData.donorName,

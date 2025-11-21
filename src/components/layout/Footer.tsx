@@ -11,11 +11,11 @@ export const Footer: React.FC = () => {
             <div className="flex items-center space-x-0">
               <img 
                 src="/bihar-cultural-logo.png" 
-                alt="Bihar Sanskritik Mandal Logo" 
+                alt="Bihar Purvanchal Samaj Logo" 
                 className="w-16 h-16 object-contain rounded-lg"
               />
               <div>
-                <span className="text-lg font-heading font-bold">Bihar Sanskritik Mandal</span>
+                <span className="text-lg font-heading font-bold">Bihar Purvanchal Samaj</span>
                 <p className="text-xs text-gray-400">संस्कृति की जड़ें | समाज का कल्याण</p>
               </div>
             </div>
@@ -85,7 +85,7 @@ export const Footer: React.FC = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © 2025 Bihar Sanskritik Mandal. All rights reserved. | Privacy Policy | Terms of Service
+            © 2025 Bihar Purvanchal Samaj. All rights reserved. | Privacy Policy | Terms of Service
           </p>
         </div>
       </div>

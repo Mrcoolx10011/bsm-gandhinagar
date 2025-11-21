@@ -78,7 +78,7 @@ export const generateSimpleReceipt = (data: SimpleReceiptData): void => {
   // Main Header - Organization Name
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('BIHAR SANSKRITIK MANDAL GANDHINAGAR', 105, y, { align: 'center' });
+  doc.text('BIHAR PURVANCHAL SAMAJ GANDHINAGAR', 105, y, { align: 'center' });
   
   y += 10;
   // Address Line 1
@@ -154,7 +154,7 @@ export const generateSimpleReceipt = (data: SimpleReceiptData): void => {
   // Thank you and signature
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('For Bihar Sanskritik Mandal', 120, y + 5);
+  doc.text('For Bihar Purvanchal Samaj', 120, y + 5);
   doc.text('Thank You', 145, y + 15, { align: 'center' });
   doc.text('Signature: _______________', 130, y + 25);
   
@@ -180,7 +180,7 @@ export const generateReceiptBlob = async (data: SimpleReceiptData): Promise<{ bl
   // Main Header - Organization Name
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('BIHAR SANSKRITIK MANDAL GANDHINAGAR', 105, y, { align: 'center' });
+  doc.text('BIHAR PURVANCHAL SAMAJ GANDHINAGAR', 105, y, { align: 'center' });
   
   y += 10;
   // Address Line 1
@@ -250,7 +250,7 @@ export const generateReceiptBlob = async (data: SimpleReceiptData): Promise<{ bl
   // Thank you and signature
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('For Bihar Sanskritik Mandal', 120, y + 5);
+  doc.text('For Bihar Purvanchal Samaj', 120, y + 5);
   doc.text('Thank You', 145, y + 15, { align: 'center' });
   doc.text('Signature: _______________', 130, y + 25);
   

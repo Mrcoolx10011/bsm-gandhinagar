@@ -7,7 +7,7 @@ const AboutUs = () => {
       <section className="mb-12 text-center">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Who We Are</h1>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Bihar Sanskritik Mandal is a dedicated socio-cultural organization committed to promoting the rich heritage, traditions, and values of Bihar & Purvanchal. With a legacy rooted in unity, creativity, and community upliftment, the Mandal has become a dynamic platform for cultural expression, youth engagement, and social reform. Whether it’s reviving folk arts, organizing grand festivals, or implementing impactful social initiatives — we believe in preserving our roots while shaping a progressive future.
+          Bihar Purvanchal Samaj is a dedicated socio-cultural organization committed to promoting the rich heritage, traditions, and values of Bihar & Purvanchal. With a legacy rooted in unity, creativity, and community upliftment, the organization has become a dynamic platform for cultural expression, youth engagement, and social reform. Whether it's reviving folk arts, organizing grand festivals, or implementing impactful social initiatives — we believe in preserving our roots while shaping a progressive future.
         </p>
       </section>
 
@@ -35,13 +35,13 @@ const AboutUs = () => {
         <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">Our Journey</h2>
         <div className="text-gray-600 max-w-4xl mx-auto space-y-4">
           <p>
-            The Bihar Sanskritik Mandal was born from a simple yet profound idea: to create a home away from home for the people of Bihar and Purvanchal. Founded in 1985 by a group of visionaries, the Mandal began as a small community gathering aimed at celebrating festivals like Chhath Puja and Holi with authentic traditions. In an era of rapid urbanization, our founders recognized a growing disconnect between the younger generation and their cultural roots. They sought to bridge this gap by creating a platform for intergenerational dialogue and cultural exchange.
+            The Bihar Purvanchal Samaj was born from a simple yet profound idea: to create a home away from home for the people of Bihar and Purvanchal. Founded in 1985 by a group of visionaries, it began as a small community gathering aimed at celebrating festivals like Chhath Puja and Holi with authentic traditions. In an era of rapid urbanization, our founders recognized a growing disconnect between the younger generation and their cultural roots. They sought to bridge this gap by creating a platform for intergenerational dialogue and cultural exchange.
           </p>
           <p>
-            The early years were filled with challenges. With limited resources but boundless passion, the founding members organized events in public parks and community halls, relying on word-of-mouth to grow their network. Their unwavering dedication soon attracted artists, scholars, and social leaders who shared their vision. A major milestone was our first large-scale cultural festival in 1992, which brought together over a thousand people and showcased folk artists from rural Bihar, giving them a platform and a voice.
+            The early years were filled with challenges. With limited resources but boundless passion, the founding members organized events in public parks and community halls, relying on word-of-mouth to grow their network. Their unwavering dedication soon attracted artists, scholars, and social leaders who shared their vision. A major milestone was the first large-scale cultural festival in 1992, which brought together over a thousand people and showcased folk artists from rural Bihar, giving them a platform and a voice.
           </p>
           <p>
-            Over the decades, the Mandal has evolved from a festival-centric group into a multifaceted socio-cultural organization. We have launched youth empowerment workshops, social reform campaigns addressing issues like dowry and casteism, and digital archives to preserve folk music and literature. Our journey is a testament to the power of community and the enduring spirit of our culture.
+            Over the decades, Bihar Purvanchal Samaj has evolved from a festival-centric group into a multifaceted socio-cultural organization. We have launched youth empowerment workshops, social reform campaigns addressing issues like dowry and casteism, and digital archives to preserve folk music and literature. Our journey is a testament to the power of community and the enduring spirit of our culture.
           </p>
         </div>
       </section>

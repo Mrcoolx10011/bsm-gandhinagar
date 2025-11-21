@@ -125,7 +125,7 @@ export const mediaGalleryContent = {
       {
         id: "hindustan-times-2024",
         publication: "Hindustan Times",
-        title: "Bihar Sanskritik Mandal Hosts Grand Folk Revival Event",
+        title: "Bihar Purvanchal Samaj Hosts Grand Folk Revival Event",
         date: "January 2024",
         summary: "A celebration of Bhojpuri and Maithili dance attended by over 2,000 people.",
         category: "Cultural Events",
@@ -157,7 +157,7 @@ export const mediaGalleryContent = {
         publication: "Times of India",
         title: "Bihar Cultural Group Wins State Recognition for Heritage Work",
         date: "December 2023",
-        summary: "Bihar Sanskritik Mandal receives official recognition for outstanding cultural preservation efforts.",
+        summary: "Bihar Purvanchal Samaj receives official recognition for outstanding cultural preservation efforts.",
         category: "Awards",
         readTime: "3 min read",
         featured: false

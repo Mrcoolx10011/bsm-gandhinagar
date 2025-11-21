@@ -27,7 +27,7 @@ export const MembershipSection: React.FC = () => {
             Join Our Cultural Family
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Become a part of Bihar Sanskritik Mandal and help preserve our rich cultural heritage while making a positive impact in the community.
+            Become a part of Bihar Purvanchal Samaj and help preserve our rich cultural heritage while making a positive impact in the community.
           </p>
         </motion.div>
 

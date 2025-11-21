@@ -127,7 +127,7 @@ ${uploadResult.url}
 Thank you for your generous donation of ₹${amount} to ${campaign}.
 
 Best regards,
-Bihar Sanskritik Mandal Gandhinagar`
+Bihar Purvanchal Samaj Gandhinagar`
             };
             
             console.log('📧 Sending single email with PDF link:', {
@@ -210,7 +210,7 @@ const sendSimpleApprovalEmail = async (
 Thank you for your generous support!
 
 Best regards,
-Bihar Sanskritik Mandal Gandhinagar`
+Bihar Purvanchal Samaj Gandhinagar`
     };
 
     console.log('📧 Sending simple approval email (fallback):', {
@@ -303,7 +303,7 @@ Please find your official receipt attached to this email.
 For any queries, please contact us.
 
 Best regards,
-Bihar Sanskritik Mandal Gandhinagar
+Bihar Purvanchal Samaj Gandhinagar
 Registration Number: BSM/2024/REG001`;
 
   const mailtoLink = `mailto:${donorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

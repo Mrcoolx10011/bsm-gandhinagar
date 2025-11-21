@@ -66,7 +66,7 @@ export const MessageSection: React.FC = () => {
                   Shri Ramesh Kumar Yadav
                 </h3>
                 <p className="text-orange-100 font-medium">
-                  President, Bihar Sanskritik Mandal
+                  President, Bihar Purvanchal Samaj
                 </p>
                 <p className="text-orange-200 text-sm mt-1">
                   Founder & Cultural Leader

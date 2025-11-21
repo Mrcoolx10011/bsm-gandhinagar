@@ -77,24 +77,24 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between h-24 px-6 border-b border-gray-200 bg-gradient-to-r from-orange-600 to-red-600">
-          <Link to="/admin" className="flex items-center space-x-4">
+        <div className="flex flex-col items-start justify-center h-24 px-4 border-b border-gray-200 bg-gradient-to-r from-orange-600 to-red-600">
+          <Link to="/admin" className="flex items-center space-x-3 w-full mb-2">
             <img 
               src="/bihar-cultural-logo.png" 
-              alt="Bihar Sanskritik Mandal Logo" 
-              className="w-20 h-20 rounded-xl object-contain"
+              alt="Bihar Purvanchal Samaj Logo" 
+              className="w-14 h-14 rounded-lg object-contain flex-shrink-0"
             />
-            <div>
-              <span className="text-lg font-bold text-white">Bihar Sanskritik Mandal</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-bold text-white block leading-tight">Bihar Purvanchal Samaj</span>
               <p className="text-xs text-orange-100">Admin Panel</p>
             </div>
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors flex-shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </Link>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-2 rounded-xl text-white hover:bg-white hover:bg-opacity-20 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
 
         <div className="flex-1 flex flex-col overflow-y-auto">

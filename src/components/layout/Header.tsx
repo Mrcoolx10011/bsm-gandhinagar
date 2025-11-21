@@ -28,12 +28,12 @@ export const Header: React.FC = () => {
           <Link to="/" className="flex items-center space-x-0">
             <img
               src="/bihar-cultural-logo.png"
-              alt="Bihar Sanskritik Mandal Logo" 
+              alt="Bihar Purvanchal Samaj Logo" 
               className="w-16 h-16 rounded-lg object-contain"
             />
             <div className="flex flex-col">
               <span className="text-xl font-bold text-orange-600">
-                Bihar Sanskritik Mandal
+                Bihar Purvanchal Samaj
               </span>
               <span className="text-xs text-gray-600 -mt-1">
                 संस्कृति की जड़ें | समाज का कल्याण
