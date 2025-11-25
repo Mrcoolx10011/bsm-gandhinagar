@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Calendar, Clock, MapPin, Tag, Users, FileText, Upload } from 'lucide-react';
+import { X, Save, Calendar, Clock, MapPin, Tag, Users, FileText, Upload, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -43,6 +43,8 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
   });
 
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [galleryUrl, setGalleryUrl] = useState('');
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
   useEffect(() => {
     if (event) {
@@ -143,6 +145,92 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
   // Remove uploaded image
   const removeImage = () => {
     setFormData(prev => ({ ...prev, image: '' }));
+  };
+
+  // Add gallery image from URL
+  const addGalleryImage = () => {
+    if (!galleryUrl.trim()) {
+      toast.error('Please enter an image URL');
+      return;
+    }
+
+    // Basic URL validation
+    try {
+      new URL(galleryUrl);
+      setFormData(prev => ({
+        ...prev,
+        gallery: [...(prev.gallery || []), galleryUrl]
+      }));
+      setGalleryUrl('');
+      toast.success('Gallery image added');
+    } catch (error) {
+      toast.error('Please enter a valid URL');
+    }
+  };
+
+  // Remove gallery image
+  const removeGalleryImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      gallery: (prev.gallery || []).filter((_, i) => i !== index)
+    }));
+    toast.success('Gallery image removed');
+  };
+
+  // Handle gallery image upload
+  const handleGalleryImageUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload only image files');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size should be less than 10MB');
+      return;
+    }
+
+    setUploadingGallery(true);
+    
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', file);
+      uploadFormData.append('folder', 'events/gallery');
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: uploadFormData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        const imageUrl = result.imageUrl;
+        setFormData(prev => ({
+          ...prev,
+          gallery: [...(prev.gallery || []), imageUrl]
+        }));
+        toast.success('Gallery image uploaded successfully!');
+      } else {
+        toast.error(result.error || 'Failed to upload gallery image');
+      }
+    } catch (error) {
+      console.error('Gallery upload error:', error);
+      toast.error('Failed to upload gallery image');
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  // Handle gallery file input change
+  const handleGalleryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleGalleryImageUpload(file);
+    }
   };
 
   const categories = ['Healthcare', 'Education', 'Environment', 'Community Development', 'Emergency Relief'];
@@ -376,6 +464,115 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Gallery Images Section */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <ImageIcon className="w-4 h-4 inline mr-2" />
+                Event Gallery (Optional)
+              </label>
+              <p className="text-xs text-gray-500 mb-3">Add multiple images to showcase your event</p>
+              
+              {/* Upload or Add URL Section */}
+              <div className="space-y-4 mb-4">
+                {/* Upload Button */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-orange-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleGalleryFileChange}
+                    className="hidden"
+                    id="gallery-image-upload"
+                    disabled={uploadingGallery}
+                  />
+                  <label
+                    htmlFor="gallery-image-upload"
+                    className="cursor-pointer flex items-center justify-center gap-3"
+                  >
+                    {uploadingGallery ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
+                        <span className="text-sm text-gray-600">Uploading...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-orange-600" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Click to upload gallery image
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {/* OR divider */}
+                <div className="flex items-center">
+                  <div className="flex-1 border-t border-gray-300"></div>
+                  <span className="px-3 text-xs text-gray-500">OR</span>
+                  <div className="flex-1 border-t border-gray-300"></div>
+                </div>
+
+                {/* Add URL Input */}
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={galleryUrl}
+                    onChange={(e) => setGalleryUrl(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addGalleryImage();
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Or enter image URL and click Add"
+                  />
+                  <button
+                    type="button"
+                    onClick={addGalleryImage}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Gallery Preview Grid */}
+              {formData.gallery && formData.gallery.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {formData.gallery.map((imageUrl, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={imageUrl}
+                        alt={`Gallery ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=400';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                        title="Remove image"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                        {index + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 font-medium mb-1">No gallery images added yet</p>
+                  <p className="text-xs text-gray-500">Upload images or add URLs above to create a gallery</p>
+                </div>
+              )}
             </div>
 
             <div className="flex space-x-4 pt-6">

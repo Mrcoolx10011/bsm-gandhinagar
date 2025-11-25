@@ -269,6 +269,8 @@ module.exports = async function handler(req, res) {
         return await handleMembers(req, res, db);
       case 'events':
         return await handleEvents(req, res, db);
+      case 'registrations':
+        return await handleRegistrations(req, res, db);
       case 'donations':
         return await handleDonations(req, res, db);
       case 'inquiries':
@@ -513,6 +515,251 @@ function handleMembersDevelopmentMode(req, res) {
   }
 }
 
+// Registrations Handler
+async function handleRegistrations(req, res, db) {
+  console.log('📋 handleRegistrations called:', req.query);
+
+  try {
+    const { eventId } = req.query;
+
+    if (!eventId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Event ID is required'
+      });
+    }
+
+    // Development mode - return mock data
+    if (!db || isDevelopmentMode) {
+      console.log('🔄 Development mode - returning mock registrations');
+      return res.status(200).json([
+        {
+          _id: '1',
+          registrationId: 'BSM/2025/REG0001',
+          name: 'John Doe',
+          email: 'john@example.com',
+          phone: '1234567890',
+          numberOfAttendees: 2,
+          status: 'confirmed',
+          registeredAt: new Date().toISOString(),
+          confirmationSent: true
+        },
+        {
+          _id: '2',
+          registrationId: 'BSM/2025/REG0002',
+          name: 'Jane Smith',
+          email: 'jane@example.com',
+          phone: '0987654321',
+          numberOfAttendees: 1,
+          status: 'confirmed',
+          registeredAt: new Date().toISOString(),
+          confirmationSent: false
+        }
+      ]);
+    }
+
+    // Production mode with database
+    const registrationsCollection = db.collection('event_registrations');
+    const registrations = await registrationsCollection
+      .find({ eventId })
+      .sort({ registeredAt: -1 })
+      .toArray();
+
+    console.log(`✅ Found ${registrations.length} registrations for event ${eventId}`);
+    return res.status(200).json(registrations);
+
+  } catch (error) {
+    console.error('❌ Registrations Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch registrations',
+      error: error.message
+    });
+  }
+}
+
+// Event Registration Handler
+async function handleEventRegistration(req, res, db) {
+  console.log('📝 handleEventRegistration called:', req.body);
+
+  try {
+    const { eventId, name, email, phone, numberOfAttendees, recaptchaToken } = req.body;
+
+    // Validation
+    if (!eventId || !name || !email || !phone || !numberOfAttendees) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
+      });
+    }
+
+    // Verify reCAPTCHA token
+    if (recaptchaToken) {
+      try {
+        const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY;
+        const recaptchaResponse = await fetch(
+          `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptchaToken}`,
+          { method: 'POST' }
+        );
+        const recaptchaData = await recaptchaResponse.json();
+        
+        console.log('🤖 reCAPTCHA verification:', recaptchaData);
+
+        if (!recaptchaData.success || recaptchaData.score < 0.5) {
+          return res.status(400).json({
+            success: false,
+            message: 'Bot detection failed. Please try again.'
+          });
+        }
+      } catch (recaptchaError) {
+        console.error('❌ reCAPTCHA verification error:', recaptchaError);
+        // Continue without reCAPTCHA in development
+        if (!isDevelopmentMode) {
+          return res.status(400).json({
+            success: false,
+            message: 'Security verification failed'
+          });
+        }
+      }
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email address'
+      });
+    }
+
+    // Phone validation
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid phone number. Must be 10 digits'
+      });
+    }
+
+    // Number validation
+    if (numberOfAttendees < 1 || numberOfAttendees > 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Number of attendees must be between 1 and 10'
+      });
+    }
+
+    // Development mode - simulate registration
+    if (!db || isDevelopmentMode) {
+      console.log('🔄 Development mode - simulating registration');
+      const registrationId = `BSM/2025/REG${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+      
+      // Simulate delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('✅ Registration simulated:', registrationId);
+      return res.status(200).json({
+        success: true,
+        registrationId,
+        message: 'Registration successful (development mode)',
+        data: {
+          eventId,
+          name,
+          email,
+          numberOfAttendees
+        }
+      });
+    }
+
+    // Production mode with database
+    const eventsCollection = db.collection('events');
+    const registrationsCollection = db.collection('event_registrations');
+
+    // Check if event exists
+    const event = await eventsCollection.findOne({ _id: new ObjectId(eventId) });
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Check capacity
+    const spotsLeft = event.maxAttendees - event.attendees;
+    if (spotsLeft < numberOfAttendees) {
+      return res.status(400).json({
+        success: false,
+        message: `Only ${spotsLeft} spots available`
+      });
+    }
+
+    // Check for duplicate registration
+    const existingRegistration = await registrationsCollection.findOne({
+      eventId,
+      email: email.toLowerCase()
+    });
+
+    if (existingRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already registered for this event'
+      });
+    }
+
+    // Generate registration ID
+    const count = await registrationsCollection.countDocuments({});
+    const registrationId = `BSM/2025/REG${String(count + 1).padStart(4, '0')}`;
+
+    // Create registration
+    const registration = {
+      eventId,
+      registrationId,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone.trim(),
+      numberOfAttendees,
+      status: 'confirmed',
+      registeredAt: new Date(),
+      confirmationSent: false
+    };
+
+    await registrationsCollection.insertOne(registration);
+
+    // Update event attendee count
+    await eventsCollection.updateOne(
+      { _id: new ObjectId(eventId) },
+      { 
+        $inc: { attendees: numberOfAttendees },
+        $set: { updatedAt: new Date() }
+      }
+    );
+
+    console.log('✅ Registration successful:', registrationId);
+
+    // TODO: Send confirmation email via EmailJS (disabled for now)
+    // await sendConfirmationEmail(registration, event);
+
+    return res.status(200).json({
+      success: true,
+      registrationId,
+      message: 'Registration successful! Confirmation email will be sent shortly.',
+      data: {
+        name,
+        email,
+        numberOfAttendees
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Registration Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to process registration. Please try again.',
+      error: error.message
+    });
+  }
+}
+
 // Events API Handler
 async function handleEvents(req, res, db) {
   console.log('🎯 handleEvents called with:', {
@@ -521,6 +768,13 @@ async function handleEvents(req, res, db) {
     hasDb: !!db,
     isDevelopmentMode
   });
+
+  const { action } = req.query;
+
+  // Handle registration action
+  if (action === 'register' && req.method === 'POST') {
+    return handleEventRegistration(req, res, db);
+  }
 
   // Handle development mode when database is not available
   if (!db || isDevelopmentMode) {
