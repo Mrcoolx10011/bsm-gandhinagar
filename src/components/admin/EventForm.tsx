@@ -13,6 +13,7 @@ interface Event {
   location: string;
   category: string;
   image: string;
+  imageAlt?: string;
   gallery?: string[];
   attendees: number;
   maxAttendees: number;
@@ -36,6 +37,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
     location: '',
     category: 'Healthcare',
     image: '',
+    imageAlt: '',
     gallery: [] as string[],
     attendees: 0,
     maxAttendees: 50,
@@ -59,6 +61,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
         location: event.location,
         category: event.category,
         image: event.image || '',
+        imageAlt: event.imageAlt || '',
         gallery: event.gallery || [],
         attendees: event.attendees || 0,
         maxAttendees: event.maxAttendees || 50,
@@ -462,6 +465,22 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="https://example.com/image.jpg"
                   />
+                </div>
+
+                {/* Alt Text Input for SEO */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image Alt Text (optional, for SEO)
+                  </label>
+                  <input
+                    type="text"
+                    name="imageAlt"
+                    value={formData.imageAlt}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Auto-generated if left empty (e.g., 'Healthcare event - Bihar Sanskritik Mandal - Mumbai')"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Describe the image for search engines and accessibility. Leave empty for auto-generated description.</p>
                 </div>
               </div>
             </div>

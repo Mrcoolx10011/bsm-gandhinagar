@@ -1,0 +1,13 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow admin pages
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://bsm-gandhinagar-mrcools-projects-43554004.vercel.app/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 10

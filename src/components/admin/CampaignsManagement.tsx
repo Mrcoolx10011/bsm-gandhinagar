@@ -3,6 +3,7 @@ import { Search, Plus, Edit, Trash2, Eye, Download, TrendingUp, Users, DollarSig
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { makeAuthenticatedRequest, handleApiError } from '../../utils/auth';
+import { getCampaignImageAlt } from '../../utils/seo';
 
 interface Campaign {
   id: string;
@@ -443,7 +444,7 @@ export const CampaignsManagement: React.FC = () => {
           >
             <img
               src={campaign.image}
-              alt={campaign.title}
+              alt={getCampaignImageAlt(campaign.title, campaign.category)}
               className="w-full h-48 object-cover"
             />
             
@@ -674,7 +675,7 @@ export const CampaignsManagement: React.FC = () => {
                         <div className="relative">
                           <img
                             src={formData.image}
-                            alt="Campaign preview"
+                            alt={`${formData.title || 'Campaign'} preview - ${formData.category}`}
                             className="w-full h-48 object-cover rounded-lg border"
                           />
                           <button
@@ -792,7 +793,7 @@ export const CampaignsManagement: React.FC = () => {
               <div className="relative">
                 <img
                   src={selectedCampaign.image}
-                  alt={selectedCampaign.title}
+                  alt={getCampaignImageAlt(selectedCampaign.title, selectedCampaign.category)}
                   className="w-full h-64 object-cover"
                 />
                 <button

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Eye, Heart, Tag, Search, Filter, ChevronLeft, ChevronRight, Share2, Copy, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getCampaignImageAlt } from '../utils/seo';
 
 interface Post {
   _id: string;
@@ -395,7 +396,7 @@ export const Posts: React.FC = () => {
                   <div className="h-48 overflow-hidden">
                     <img
                       src={post.image}
-                      alt={post.title}
+                      alt={getCampaignImageAlt(post.title, categories.find(c => c.value === post.category)?.label || post.category)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -483,7 +484,7 @@ export const Posts: React.FC = () => {
                 <div className="h-64 md:h-80 overflow-hidden">
                   <img
                     src={selectedPost.image}
-                    alt={selectedPost.title}
+                    alt={getCampaignImageAlt(selectedPost.title, categories.find(c => c.value === selectedPost.category)?.label || selectedPost.category)}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -592,7 +593,7 @@ export const Posts: React.FC = () => {
                   {sharingPost.image && (
                     <img
                       src={sharingPost.image}
-                      alt={sharingPost.title}
+                      alt={getCampaignImageAlt(sharingPost.title, categories.find(c => c.value === sharingPost.category)?.label || sharingPost.category)}
                       className="w-12 h-12 rounded-lg object-cover mr-4"
                     />
                   )}

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, MapPin, Phone, Mail, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getMemberImageAlt } from '../utils/seo';
 
 interface Member {
   id: string;
@@ -305,7 +306,7 @@ export const Members: React.FC = () => {
                     {member.image ? (
                       <img
                         src={member.image}
-                        alt={member.name}
+                        alt={getMemberImageAlt(member.name, member.role)}
                         className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-orange-200 transition-all duration-300"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -410,7 +411,7 @@ export const Members: React.FC = () => {
                 {selectedMember.image ? (
                   <img
                     src={selectedMember.image}
-                    alt={selectedMember.name}
+                    alt={getMemberImageAlt(selectedMember.name, selectedMember.role)}
                     className="w-24 h-24 rounded-full object-cover mx-auto mb-4 ring-4 ring-orange-100"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;

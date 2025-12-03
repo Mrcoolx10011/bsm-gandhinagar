@@ -128,12 +128,6 @@ export const AdminLogin: React.FC = () => {
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Demo credentials: admin / admin123
-          </p>
-        </div>
       </motion.div>
     </div>
   );

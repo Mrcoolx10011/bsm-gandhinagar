@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, Filter, Search, Users, ArrowRight, X, Share2, Mail, Phone, Download, Copy, CheckCircle, AlertCircle, Loader, ExternalLink, Facebook, Twitter, Linkedin, MessageCircle, SortAsc, SortDesc, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { EventRegistrationForm } from '../components/events/EventRegistrationForm';
+import { getEventImageAlt, getGalleryImageAlt } from '../utils/seo';
 
 interface Event {
   id: string;
@@ -13,6 +14,7 @@ interface Event {
   location: string;
   category: string;
   image: string;
+  imageAlt?: string;
   attendees: number;
   maxAttendees: number;
   gallery: string[];
@@ -540,7 +542,7 @@ END:VCALENDAR`;
                   <div className="relative h-64 bg-gray-200 overflow-hidden">
                     <img
                       src={event.image}
-                      alt={event.title}
+                      alt={getEventImageAlt(event)}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=600';
@@ -638,7 +640,7 @@ END:VCALENDAR`;
               <div className="relative h-72 sm:h-96 bg-gray-200 overflow-hidden">
                 <img
                   src={getCombinedImages(selectedEvent)[currentImageIndex]}
-                  alt={selectedEvent.title}
+                  alt={currentImageIndex === 0 ? getEventImageAlt(selectedEvent) : getGalleryImageAlt(selectedEvent, currentImageIndex, getCombinedImages(selectedEvent).length)}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=600';
@@ -945,7 +947,7 @@ END:VCALENDAR`;
 
           <img
             src={getCombinedImages(selectedEvent)[currentImageIndex]}
-            alt={selectedEvent.title}
+            alt={currentImageIndex === 0 ? getEventImageAlt(selectedEvent) : getGalleryImageAlt(selectedEvent, currentImageIndex, getCombinedImages(selectedEvent).length)}
             className="max-w-[90vw] max-h-[90vh] object-contain transition-transform duration-300"
             style={{ transform: `scale(${lightboxZoom})` }}
             onClick={(e) => e.stopPropagation()}

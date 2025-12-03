@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, ArrowRight, X, Users, Share2, Download, ExternalLink, Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getEventImageAlt, getGalleryImageAlt } from '../../utils/seo';
 
 interface Event {
   id?: string;
@@ -12,6 +13,7 @@ interface Event {
   location: string;
   category: string;
   image: string;
+  imageAlt?: string;
   gallery?: string[];
   attendees: number;
   maxAttendees: number;
@@ -150,7 +152,7 @@ export const FeaturedEvents: React.FC = () => {
             >
               <img
                 src={event.image}
-                alt={event.title}
+                alt={getEventImageAlt(event)}
                 className="w-full h-48 object-cover"
               />
               <div className="p-6">
@@ -235,7 +237,7 @@ export const FeaturedEvents: React.FC = () => {
               <div className="relative h-72 sm:h-96 bg-gray-200 overflow-hidden">
                 <img
                   src={getCombinedImages(selectedEvent)[currentImageIndex]}
-                  alt={selectedEvent.title}
+                  alt={currentImageIndex === 0 ? getEventImageAlt(selectedEvent) : getGalleryImageAlt(selectedEvent, currentImageIndex, getCombinedImages(selectedEvent).length)}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
