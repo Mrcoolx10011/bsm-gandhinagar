@@ -177,7 +177,7 @@ export const LatestUpdates: React.FC = () => {
                     href={update.link}
                     className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold transition-colors duration-300"
                   >
-                    Read More
+                    Read Latest Updates
                     <ExternalLink className="w-4 h-4 ml-1" />
                   </a>
                 </div>

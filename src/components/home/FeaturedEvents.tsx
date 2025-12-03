@@ -189,7 +189,7 @@ export const FeaturedEvents: React.FC = () => {
                   onClick={() => handleLearnMore(event)}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                 >
-                  <span>Learn More</span>
+                  <span>View Event Details</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

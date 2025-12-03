@@ -131,7 +131,7 @@ export const HeroSection: React.FC = () => {
               href="/contact"
               className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-colors"
             >
-              Learn More
+              Contact Us
             </a>
           </motion.div>
         </div>

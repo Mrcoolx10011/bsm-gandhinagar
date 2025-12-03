@@ -605,7 +605,7 @@ END:VCALENDAR`;
                       onClick={() => openEventModal(event)}
                       className="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white py-3 px-6 rounded-lg hover:from-orange-700 hover:to-orange-800 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-xl"
                     >
-                      Learn More
+                      View Event Details
                       <ArrowRight className="w-5 h-5" />
                     </button>
                   </div>

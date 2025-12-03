@@ -168,7 +168,7 @@ export const FeaturedPosts: React.FC = () => {
                               className="flex items-center text-orange-600 group-hover:text-orange-800"
                               whileHover={{ x: 5 }}
                             >
-                              <span className="text-sm font-medium mr-1">Read More</span>
+                              <span className="text-sm font-medium mr-1">View Campaign Details</span>
                               <ArrowRight size={14} />
                             </motion.div>
                           </div>
