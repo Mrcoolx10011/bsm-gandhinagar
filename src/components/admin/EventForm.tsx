@@ -478,7 +478,7 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                     value={formData.imageAlt}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Auto-generated if left empty (e.g., 'Healthcare event - Bihar Sanskritik Mandal - Mumbai')"
+                    placeholder="Auto-generated if left empty (e.g., 'Healthcare event - Bihar Purvanchal Samaj - Mumbai')"
                   />
                   <p className="text-xs text-gray-500 mt-1">Describe the image for search engines and accessibility. Leave empty for auto-generated description.</p>
                 </div>

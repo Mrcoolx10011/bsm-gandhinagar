@@ -161,7 +161,7 @@ const MediaGallery: React.FC = () => {
                   <div className="relative h-48 overflow-hidden">
                     <img
                       src={album.imageUrl}
-                      alt={`${album.title} - ${album.category} - Bihar Sanskritik Mandal - ${album.photoCount} photos`}
+                      alt={`${album.title} - ${album.category} - Bihar Purvanchal Samaj - ${album.photoCount} photos`}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                     />
                     <div className="absolute top-4 left-4">
@@ -213,7 +213,7 @@ const MediaGallery: React.FC = () => {
                   <div className="relative h-48 overflow-hidden">
                     <img
                       src={category.thumbnail}
-                      alt={`${category.title} - Bihar Sanskritik Mandal video collection - ${category.videoCount} videos - ${category.duration}`}
+                      alt={`${category.title} - Bihar Purvanchal Samaj video collection - ${category.videoCount} videos - ${category.duration}`}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">

@@ -24,7 +24,7 @@ export const getEventImageAlt = (event: Event): string => {
   const parts = [
     event.title,
     event.category && `${event.category} event`,
-    'Bihar Sanskritik Mandal',
+    'Bihar Purvanchal Samaj',
     event.location
   ];
   
@@ -55,7 +55,7 @@ export const getCampaignImageAlt = (title: string, category?: string): string =>
   const parts = [
     title,
     category && `${category} campaign`,
-    'Bihar Sanskritik Mandal'
+    'Bihar Purvanchal Samaj'
   ];
   return parts.filter(Boolean).join(' - ');
 };
