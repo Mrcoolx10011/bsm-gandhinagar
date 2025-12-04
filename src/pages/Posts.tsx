@@ -62,6 +62,23 @@ export const Posts: React.FC = () => {
     fetchPosts();
   }, []);
 
+  // SEO: Update page title
+  useEffect(() => {
+    document.title = 'Posts & Updates | Bihar Sanskritik Mandal Gandhinagar';
+    return () => {
+      document.title = 'Bihar Sanskritik Mandal Gandhinagar';
+    };
+  }, []);
+
+  // SEO: Update title when viewing a specific post
+  useEffect(() => {
+    if (selectedPost) {
+      document.title = `${selectedPost.title} | Bihar Sanskritik Mandal`;
+    } else {
+      document.title = 'Posts & Updates | Bihar Sanskritik Mandal Gandhinagar';
+    }
+  }, [selectedPost]);
+
   // Auto-slide for featured posts
   useEffect(() => {
     if (featuredPosts.length > 1) {
