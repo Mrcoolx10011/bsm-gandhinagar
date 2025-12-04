@@ -101,7 +101,75 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
+        {/* Trust Badges Section */}
+        <div className="border-t border-gray-800 mt-12 pt-8 mb-8">
+          <div className="text-center mb-6">
+            <h3 className="text-white text-lg font-semibold mb-2">
+              Certified & Trusted Organization
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Registered under Income Tax Act - Government of India
+            </p>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            {/* Official Certificate Image */}
+            <div className="bg-white p-2 rounded-lg shadow-xl max-w-[200px] sm:max-w-[240px]">
+              <img 
+                src="/80g-and-12a.jpeg" 
+                alt="80G and 12A Registration Certificate - Income Tax Department, Government of India"
+                className="w-full h-auto rounded"
+              />
+            </div>
+
+            {/* Badge Summary */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm">12A Registered</p>
+                  <p className="text-gray-400 text-xs">Income Tax Act</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm">80G Approved</p>
+                  <p className="text-gray-400 text-xs">Tax Exemption</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm">Trust Verified</p>
+                  <p className="text-gray-400 text-xs">Public Trust</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-6">
+            <p className="text-gray-400 text-xs">
+              ✓ All donations are eligible for 50% tax deduction under Section 80G
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-800 pt-8 text-center">
           <p className="text-gray-400 text-sm">
             © 2025 Bihar Purvanchal Samaj. All rights reserved. | Privacy Policy | Terms of Service
           </p>
