@@ -62,9 +62,28 @@ export const Posts: React.FC = () => {
     fetchPosts();
   }, []);
 
-  // SEO: Update page title
+  // SEO: Update page title and meta tags
   useEffect(() => {
     document.title = 'Posts & Updates | Bihar Sanskritik Mandal Gandhinagar';
+    
+    // Add meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', 'Stay updated with latest news, events, and announcements from Bihar Sanskritik Mandal Gandhinagar. Community posts and cultural updates.');
+    
+    // Add robots meta tag
+    let robotsMeta = document.querySelector('meta[name="robots"]');
+    if (!robotsMeta) {
+      robotsMeta = document.createElement('meta');
+      robotsMeta.setAttribute('name', 'robots');
+      document.head.appendChild(robotsMeta);
+    }
+    robotsMeta.setAttribute('content', 'index, follow');
+    
     return () => {
       document.title = 'Bihar Sanskritik Mandal Gandhinagar';
     };

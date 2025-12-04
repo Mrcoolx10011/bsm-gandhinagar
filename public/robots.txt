@@ -6,8 +6,15 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
+# Important pages for crawling
+Allow: /posts
+Allow: /events
+Allow: /gallery
+Allow: /about
+Allow: /contact
+
 # Sitemap location
-Sitemap: https://bsm-gandhinagar-mrcools-projects-43554004.vercel.app/sitemap.xml
+Sitemap: https://biharpurvanchalsamaj.org/sitemap.xml
 
 # Crawl delay (optional)
 Crawl-delay: 10
