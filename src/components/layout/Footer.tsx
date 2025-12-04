@@ -67,17 +67,35 @@ export const Footer: React.FC = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Contact Info</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
-                <span className="text-gray-300">Gandhinagar, Gujarat, India</span>
+              <div className="flex items-start space-x-3">
+                <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-300">307/308 Pujer Complex<br />Subhanpura, Vadodara - 390023<br />Gujarat, India</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-orange-400 flex-shrink-0" />
-                <span className="text-gray-300">+91 (XXX) XXX-XXXX</span>
+                <a 
+                  href="tel:+919714037766" 
+                  className="text-gray-300 hover:text-orange-400 transition-colors"
+                >
+                  +91 9714037766
+                </a>
               </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="w-4 h-4 text-orange-400 flex-shrink-0" />
-                <span className="text-gray-300">info@biharsamskritikmandal.org</span>
+              <div className="flex items-start space-x-3">
+                <Mail className="w-4 h-4 text-orange-400 flex-shrink-0 mt-1" />
+                <div className="flex flex-col space-y-1">
+                  <a 
+                    href="mailto:bsmvadodara@gmail.com" 
+                    className="text-gray-300 hover:text-orange-400 transition-colors"
+                  >
+                    bsmvadodara@gmail.com
+                  </a>
+                  <a 
+                    href="mailto:biharpurvanchalsamaj@gmail.com" 
+                    className="text-gray-300 hover:text-orange-400 transition-colors"
+                  >
+                    biharpurvanchalsamaj@gmail.com
+                  </a>
+                </div>
               </div>
             </div>
           </div>

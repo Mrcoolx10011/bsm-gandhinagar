@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -12,6 +12,85 @@ export const Contact: React.FC = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // SEO Meta Tags
+  useEffect(() => {
+    // Page Title
+    document.title = 'Contact Us - Bihar Purvanchal Samaj | Get in Touch';
+    
+    // Meta Description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Contact Bihar Purvanchal Samaj in Vadodara, Gujarat. Visit us at 307/308 Pujer Complex, Subhanpura. Call +91 9714037766 or email bsmvadodara@gmail.com for cultural events and community support.');
+    }
+
+    // Open Graph Tags
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', 'Contact Bihar Purvanchal Samaj | Vadodara, Gujarat');
+    
+    const ogDescription = document.querySelector('meta[property="og:description"]');
+    if (ogDescription) ogDescription.setAttribute('content', 'Get in touch with Bihar Purvanchal Samaj. Located in Vadodara, Gujarat. Contact us for cultural events, community support, and membership information.');
+    
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl) ogUrl.setAttribute('content', 'https://biharpurvanchalsamaj.org/contact');
+
+    // Twitter Card Tags
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    if (twitterTitle) twitterTitle.setAttribute('content', 'Contact Bihar Purvanchal Samaj | Vadodara, Gujarat');
+    
+    const twitterDescription = document.querySelector('meta[name="twitter:description"]');
+    if (twitterDescription) twitterDescription.setAttribute('content', 'Contact us at 307/308 Pujer Complex, Subhanpura, Vadodara. Call +91 9714037766 or email for inquiries.');
+
+    // Schema.org LocalBusiness Structured Data
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      'name': 'Bihar Purvanchal Samaj',
+      'description': 'Cultural organization serving Bihar and Purvanchal communities in Gujarat',
+      'url': 'https://biharpurvanchalsamaj.org',
+      'telephone': '+919714037766',
+      'email': 'bsmvadodara@gmail.com',
+      'address': {
+        '@type': 'PostalAddress',
+        'streetAddress': '307/308 Pujer Complex, Subhanpura',
+        'addressLocality': 'Vadodara',
+        'addressRegion': 'Gujarat',
+        'postalCode': '390023',
+        'addressCountry': 'IN'
+      },
+      'geo': {
+        '@type': 'GeoCoordinates',
+        'latitude': '22.304421',
+        'longitude': '73.179612'
+      },
+      'openingHoursSpecification': [
+        {
+          '@type': 'OpeningHoursSpecification',
+          'dayOfWeek': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          'opens': '09:00',
+          'closes': '18:00'
+        },
+        {
+          '@type': 'OpeningHoursSpecification',
+          'dayOfWeek': 'Saturday',
+          'opens': '10:00',
+          'closes': '16:00'
+        }
+      ],
+      'sameAs': [
+        'https://www.facebook.com/biharpurvanchalsamaj',
+        'https://www.instagram.com/biharpurvanchalsamaj'
+      ]
+    });
+    document.head.appendChild(script);
+
+    // Cleanup
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,9 +169,9 @@ export const Contact: React.FC = () => {
                   <div>
                     <h3 className="font-semibold text-gray-900">Address</h3>
                     <p className="text-gray-600">
-                      123 NGO Street<br />
-                      City, State 12345<br />
-                      United States
+                      307/308 Pujer Complex<br />
+                      Subhanpura, Vadodara - 390023<br />
+                      Gujarat, India
                     </p>
                   </div>
                 </div>
@@ -103,8 +182,12 @@ export const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Phone</h3>
-                    <p className="text-gray-600">+1 (555) 123-4567</p>
-                    <p className="text-gray-600">+1 (555) 987-6543</p>
+                    <a 
+                      href="tel:+919714037766" 
+                      className="text-gray-600 hover:text-orange-600 transition-colors duration-300 cursor-pointer inline-flex items-center group"
+                    >
+                      <span className="group-hover:underline">+91 9714037766</span>
+                    </a>
                   </div>
                 </div>
 
@@ -114,8 +197,18 @@ export const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Email</h3>
-                    <p className="text-gray-600">info@ngofoundation.org</p>
-                    <p className="text-gray-600">support@ngofoundation.org</p>
+                    <a 
+                      href="mailto:bsmvadodara@gmail.com" 
+                      className="block text-gray-600 hover:text-orange-600 transition-colors duration-300 cursor-pointer group"
+                    >
+                      <span className="group-hover:underline">bsmvadodara@gmail.com</span>
+                    </a>
+                    <a 
+                      href="mailto:biharpurvanchalsamaj@gmail.com" 
+                      className="block text-gray-600 hover:text-orange-600 transition-colors duration-300 cursor-pointer group"
+                    >
+                      <span className="group-hover:underline">biharpurvanchalsamaj@gmail.com</span>
+                    </a>
                   </div>
                 </div>
 
@@ -280,13 +373,16 @@ export const Contact: React.FC = () => {
             transition={{ duration: 0.6 }}
             className="bg-white rounded-lg shadow-lg overflow-hidden"
           >
-            <div className="h-96 bg-gray-300 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Interactive map would be embedded here</p>
-                <p className="text-sm text-gray-500">123 NGO Street, City, State 12345</p>
-              </div>
-            </div>
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3691.2947805853!2d73.17761287520564!3d22.304421979690547!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395fcf4a0c3c3c3d%3A0x1234567890abcdef!2sSubhanpura%2C%20Vadodara%2C%20Gujarat%20390023!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin"
+              width="100%" 
+              height="100%" 
+              style={{ border: 0, minHeight: '384px' }}
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Office Location: 307/308 Pujer Complex, Subhanpura, Vadodara - 390023, Gujarat, India"
+            ></iframe>
           </motion.div>
         </div>
       </div>
