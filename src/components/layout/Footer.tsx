@@ -103,29 +103,50 @@ export const Footer: React.FC = () => {
 
         {/* Trust Badges Section */}
         <div className="border-t border-gray-800 mt-12 pt-8 mb-8">
-          <div className="text-center mb-6">
+          <div className="text-center mb-8">
             <h3 className="text-white text-lg font-semibold mb-2">
               Certified & Trusted Organization
             </h3>
             <p className="text-gray-400 text-sm">
-              Registered under Income Tax Act - Government of India
+              Registered with Government of India | NITI Aayog Partner | CSR-1 Certified
             </p>
           </div>
           
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-            {/* Official Certificate Image */}
-            <div className="bg-white p-2 rounded-lg shadow-xl max-w-[200px] sm:max-w-[240px]">
-              <img 
-                src="/80g-and-12a.jpeg" 
-                alt="80G and 12A Registration Certificate - Income Tax Department, Government of India"
-                className="w-full h-auto rounded"
-              />
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
+            {/* Left Side - Certificate Logos */}
+            <div className="flex flex-col sm:flex-row gap-6 items-center">
+              {/* 80G and 12A Certificate */}
+              <div className="bg-white p-3 rounded-lg shadow-xl w-64 h-52 flex items-center justify-center">
+                <img 
+                  src="/80g-and-12a.jpeg" 
+                  alt="80G and 12A Registration Certificate - Income Tax Department, Government of India"
+                  className="w-full h-full object-contain rounded"
+                />
+              </div>
+
+              {/* NITI Aayog Logo */}
+              <div className="bg-white p-4 rounded-lg shadow-xl w-52 h-52 flex items-center justify-center">
+                <img 
+                  src="/NITI_Aayog_logo.svg.png" 
+                  alt="NITI Aayog - Government of India Partner Organization"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              {/* CSR-1 Logo */}
+              <div className="bg-white p-4 rounded-lg shadow-xl w-52 h-52 flex items-center justify-center">
+                <img 
+                  src="/cs.jpeg" 
+                  alt="CSR-1 Registration Certificate - Ministry of Corporate Affairs"
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
 
-            {/* Badge Summary */}
+            {/* Right Side - Badge Summary */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -137,7 +158,7 @@ export const Footer: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
@@ -149,20 +170,32 @@ export const Footer: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-white font-bold text-sm">Trust Verified</p>
-                  <p className="text-gray-400 text-xs">Public Trust</p>
+                  <p className="text-white font-bold text-sm">CSR-1 Registered</p>
+                  <p className="text-gray-400 text-xs">Ministry of Corporate Affairs</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm">NITI Aayog Partner</p>
+                  <p className="text-gray-400 text-xs">Government of India</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="text-center mt-6">
+          <div className="text-center mt-8">
             <p className="text-gray-400 text-xs">
               ✓ All donations are eligible for 50% tax deduction under Section 80G
             </p>
