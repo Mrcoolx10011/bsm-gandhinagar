@@ -570,7 +570,7 @@ END:VCALENDAR`;
                     <img
                       src={event.image}
                       alt={getEventImageAlt(event)}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=600';
                       }}
@@ -664,16 +664,18 @@ END:VCALENDAR`;
               </button>
 
               {/* Modal Header Image with Gallery Carousel */}
-              <div className="relative h-72 sm:h-96 bg-gray-200 overflow-hidden">
-                <img
-                  src={getCombinedImages(selectedEvent)[currentImageIndex]}
-                  alt={currentImageIndex === 0 ? getEventImageAlt(selectedEvent) : getGalleryImageAlt(selectedEvent, currentImageIndex, getCombinedImages(selectedEvent).length)}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=600';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+              <div className="relative w-full bg-gray-900">
+                <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                  <img
+                    src={getCombinedImages(selectedEvent)[currentImageIndex]}
+                    alt={currentImageIndex === 0 ? getEventImageAlt(selectedEvent) : getGalleryImageAlt(selectedEvent, currentImageIndex, getCombinedImages(selectedEvent).length)}
+                    className="absolute inset-0 w-full h-full object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=600';
+                    }}
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
                 
                 {/* Gallery Navigation - Only show if there are multiple images */}
                 {getCombinedImages(selectedEvent).length > 1 && (

@@ -16,6 +16,9 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ImageUploadTest } from './components/ui/ImageUploadTest';
 import ImageKitTest from './pages/ImageKitTest';
 import { EmailTest } from './pages/EmailTest';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { Terms } from './pages/Terms';
+import { RefundPolicy } from './pages/RefundPolicy';
 
 function App() {
   return (
@@ -175,6 +178,42 @@ function App() {
                 <Header />
                 <main className="flex-1">
                   <EmailTest />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/privacy-policy" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <PrivacyPolicy />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/terms" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Terms />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/refund-policy" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <RefundPolicy />
                 </main>
                 <Footer />
               </>

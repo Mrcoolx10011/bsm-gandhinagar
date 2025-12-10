@@ -63,6 +63,16 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
+          {/* Legal & Policies */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Legal & Policies</h3>
+            <ul className="space-y-2 text-sm">
+              <li><a href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms & Conditions</a></li>
+              <li><a href="/refund-policy" className="text-gray-300 hover:text-white transition-colors">Refund Policy</a></li>
+            </ul>
+          </div>
+
           {/* Contact Info */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Contact Info</h3>
@@ -204,7 +214,10 @@ export const Footer: React.FC = () => {
 
         <div className="border-t border-gray-800 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © 2025 Bihar Purvanchal Samaj. All rights reserved. | Privacy Policy | Terms of Service
+            © 2025 Bihar Purvanchal Samaj. All rights reserved. | 
+            <a href="/privacy-policy" className="hover:text-white transition-colors ml-1">Privacy Policy</a> | 
+            <a href="/terms" className="hover:text-white transition-colors ml-1">Terms of Service</a> | 
+            <a href="/refund-policy" className="hover:text-white transition-colors ml-1">Refund Policy</a>
           </p>
         </div>
       </div>

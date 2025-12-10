@@ -9,7 +9,8 @@
     "imagekit": "^5.2.0",
     "jsonwebtoken": "^9.0.1",
     "mongodb": "^6.17.0",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "razorpay": "^2.9.6"
   },
   "engines": {
     "node": ">=18.0.0"

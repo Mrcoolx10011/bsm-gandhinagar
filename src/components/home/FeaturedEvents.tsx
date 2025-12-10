@@ -150,11 +150,13 @@ export const FeaturedEvents: React.FC = () => {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
-              <img
-                src={event.image}
-                alt={getEventImageAlt(event)}
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={event.image}
+                  alt={getEventImageAlt(event)}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-1 rounded">
@@ -234,13 +236,15 @@ export const FeaturedEvents: React.FC = () => {
               </button>
 
               {/* Modal Header Image with Gallery Carousel */}
-              <div className="relative h-72 sm:h-96 bg-gray-200 overflow-hidden">
-                <img
-                  src={getCombinedImages(selectedEvent)[currentImageIndex]}
-                  alt={currentImageIndex === 0 ? getEventImageAlt(selectedEvent) : getGalleryImageAlt(selectedEvent, currentImageIndex, getCombinedImages(selectedEvent).length)}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+              <div className="relative w-full bg-gray-900">
+                <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                  <img
+                    src={getCombinedImages(selectedEvent)[currentImageIndex]}
+                    alt={currentImageIndex === 0 ? getEventImageAlt(selectedEvent) : getGalleryImageAlt(selectedEvent, currentImageIndex, getCombinedImages(selectedEvent).length)}
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
                 
                 {/* Gallery Navigation */}
                 {getCombinedImages(selectedEvent).length > 1 && (

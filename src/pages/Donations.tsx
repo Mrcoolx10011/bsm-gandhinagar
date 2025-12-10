@@ -953,6 +953,13 @@ export const Donations: React.FC = () => {
                         </div>
                       </div>
 
+                      <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded">
+                        <p className="text-xs text-gray-700">
+                          <strong>Note:</strong> Your 80G tax receipt will be issued by <strong>Bihar Sanskritik Mandal</strong> 
+                          (our registered name under 12A & 80G). All official documents and invoices will bear this name.
+                        </p>
+                      </div>
+
                       <button
                         type="submit"
                         disabled={isProcessing}
