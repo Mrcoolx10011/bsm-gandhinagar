@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Smartphone, QrCode, DollarSign, Users, Target, TrendingUp, CheckCircle, X, Loader } from 'lucide-react';
+import { Heart, Smartphone, QrCode, Users, Target, TrendingUp, CheckCircle, X, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { 
@@ -521,7 +521,7 @@ export const Donations: React.FC = () => {
                   Custom Amount
                 </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">₹</span>
                   <input
                     type="number"
                     placeholder="Enter amount"

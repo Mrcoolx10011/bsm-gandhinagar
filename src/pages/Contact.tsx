@@ -230,7 +230,7 @@ export const Contact: React.FC = () => {
               {/* Quick Contact Buttons */}
               <div className="mt-8 space-y-3">
                 <a
-                  href="tel:+15551234567"
+                  href="tel:+919714037766"
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                 >
                   <Phone className="w-5 h-5" />
@@ -238,7 +238,7 @@ export const Contact: React.FC = () => {
                 </a>
                 
                 <a
-                  href="https://wa.me/15551234567"
+                  href="https://wa.me/919714037766"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"

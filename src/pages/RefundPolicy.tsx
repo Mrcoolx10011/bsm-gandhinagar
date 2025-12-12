@@ -87,26 +87,15 @@ export const RefundPolicy: React.FC = () => {
 
             {/* Membership */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Membership Fees</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Membership</h2>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">2.1 Cancellation Before Approval</h3>
-              <p className="text-gray-700 mb-4">
-                If your membership application has not yet been approved, you may request cancellation and 
-                receive a full refund within <strong>3 business days</strong> of payment.
-              </p>
-
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">2.2 Cancellation After Approval</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4 mb-4">
-                <li><strong>Within 7 days:</strong> 50% refund (processing fee deducted)</li>
-                <li><strong>After 7 days:</strong> No refund (membership is active)</li>
-                <li><strong>Annual membership:</strong> No refunds after 30 days</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">2.3 Rejection of Membership</h3>
-              <p className="text-gray-700">
-                If your membership application is rejected by our team, you will receive a <strong>full refund</strong> 
-                within 7 business days.
-              </p>
+              <div className="bg-green-50 border-l-4 border-green-600 p-4 rounded">
+                <p className="text-gray-700">
+                  <strong>Membership to Bihar Purvanchal Samaj is completely FREE.</strong> We do not charge 
+                  any membership fees. Therefore, no refunds are applicable for membership registration as there 
+                  are no payments involved.
+                </p>
+              </div>
             </div>
 
             {/* Events */}

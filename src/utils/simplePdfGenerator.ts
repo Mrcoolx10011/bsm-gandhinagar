@@ -65,201 +65,374 @@ export interface SimpleReceiptData {
 }
 
 /**
- * Generate simple donation receipt (matches your format)
+ * Generate professional donation receipt with logo, table, and signature
  */
 export const generateSimpleReceipt = (data: SimpleReceiptData): void => {
   const doc = new jsPDF();
   
+  // Add orange border around entire page
+  doc.setDrawColor(255, 140, 0); // Orange color
+  doc.setLineWidth(1);
+  doc.rect(5, 5, 200, 287);
+  
+  // Inner border
+  doc.setLineWidth(0.5);
+  doc.rect(8, 8, 194, 281);
+  
   let y = 20;
   
-  // Logo placeholder (you can add logo image here later)
-  // doc.addImage(logoBase64, 'PNG', 15, 10, 30, 30); // Uncomment when logo is available
-  
-  // Main Header - Organization Name
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text('BIHAR PURVANCHAL SAMAJ GANDHINAGAR', 105, y, { align: 'center' });
-  
-  y += 10;
-  // Address Line 1
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('307/308 Pujer Complex, Subhanpura, Vadodara - 390023', 105, y, { align: 'center' });
-  
-  y += 6;
-  // Contact Details Line
-  doc.text('Phone: 9714037766  Email: bsmvadodara@gmail.com', 105, y, { align: 'center' });
-  
-  y += 6;
-  // Website
-  doc.text('Website: www.biharsamaj.com', 105, y, { align: 'center' });
-  
-  y += 10;
-  // Registration details - Line 1
-  doc.setFontSize(9);
-  doc.text('Regd. No.: A-2676     PAN No.: AACTB4197R', 105, y, { align: 'center' });
-  
-  y += 5;
-  // Registration details - Line 2
-  doc.text('I.T. Exemption Cert. No. (80G No.): AACTB4197RF20009', 105, y, { align: 'center' });
-  
-  y += 15;
-  // Title
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Donation Receipt', 105, y, { align: 'center' });
-  
-  y += 20;
-  // Receipt details
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Receipt No.: ${data.receiptNo}`, 20, y);
-  doc.text(`F.Y.: 2025-2026`, 105, y, { align: 'center' });
-  doc.text(`Date: ${data.date}`, 180, y, { align: 'right' });
-  
-  y += 15;
-  // Donor details with underlines (simple format)
-  const addLine = (label: string, value: string) => {
-    doc.text(`${label}: ${value}`, 20, y);
-    // Simple underline
-    doc.line(20 + doc.getTextWidth(`${label}: `), y + 1, 190, y + 1);
-    y += 10;
-  };
-  
-  addLine('Received with thanks from Ms./Mr./Mrs.', data.donorName);
-  addLine('Address', data.address);
-  
-  // Phone and email on same line
-  doc.text(`Tel. No.: ${data.phone}`, 20, y);
-  doc.text(`Email: ${data.email}`, 120, y);
-  doc.line(20 + doc.getTextWidth('Tel. No.: '), y + 1, 110, y + 1);
-  doc.line(120 + doc.getTextWidth('Email: '), y + 1, 190, y + 1);
-  y += 10;
-  
-  addLine('Rupees', `${numberToWords(data.amount)} Only`);
-  addLine('on a/c of: Voluntary Donation', `for: ${data.campaign}`);
-  addLine('Date', data.date);
-  
-  if (data.transactionId && data.transactionId !== 'N/A') {
-    addLine('Transaction ID', data.transactionId);
+  // Add Logo (left side)
+  try {
+    const logoImg = new Image();
+    logoImg.src = '/bihar-cultural-logo.png';
+    doc.addImage(logoImg, 'PNG', 15, 15, 25, 25);
+  } catch (error) {
+    console.log('Logo not found, continuing without logo');
   }
   
-  y += 10;
-  // Amount box (simple)
-  doc.rect(20, y, 50, 15);
-  doc.setFontSize(12);
+  // Main Header - Organization Name (Official Registered Name)
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Rs. ${data.amount.toLocaleString('en-IN')}/-`, 45, y + 10, { align: 'center' });
+  doc.setTextColor(255, 140, 0); // Orange
+  doc.text('BIHAR SANSKRITIK MANDAL', 105, y, { align: 'center' });
+  doc.setTextColor(0, 0, 0); // Black
   
-  // Thank you and signature
+  y += 8;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text('(Operating as Bihar Purvanchal Samaj Gandhinagar)', 105, y, { align: 'center' });
+  
+  y += 8;
+  // Address
+  doc.setFontSize(9);
+  doc.text('307/308 Pujer Complex, Subhanpura, Vadodara - 390023, Gujarat', 105, y, { align: 'center' });
+  
+  y += 5;
+  doc.text('Phone: +91 9714037766  |  Email: bsmvadodara@gmail.com', 105, y, { align: 'center' });
+  
+  y += 5;
+  doc.text('Website: https://biharpurvanchalsamaj.org', 105, y, { align: 'center' });
+  
+  y += 8;
+  // Registration details box
+  doc.setFillColor(255, 248, 240); // Light orange background
+  doc.rect(15, y - 3, 180, 12, 'F');
+  doc.setFontSize(8);
+  doc.text('Regd. No.: A-2676  |  PAN: AACTB4197R  |  80G No.: AACTB4197RF20009  |  12A Registered', 105, y + 3, { align: 'center' });
+  
+  y += 15;
+  // Title with underline
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 140, 0);
+  doc.text('DONATION RECEIPT', 105, y, { align: 'center' });
+  doc.setLineWidth(0.5);
+  doc.line(40, y + 2, 170, y + 2);
+  doc.setTextColor(0, 0, 0);
+  
+  y += 12;
+  // Receipt metadata
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Receipt No: ${data.receiptNo}`, 15, y);
+  doc.text(`Financial Year: 2025-2026`, 105, y, { align: 'center' });
+  doc.text(`Date: ${data.date}`, 195, y, { align: 'right' });
+  
+  y += 10;
+  
+  // Donor Details Table
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DONOR DETAILS', 15, y);
+  
+  y += 5;
+  // Table with borders
+  const tableStartY = y;
+  const rowHeight = 10;
+  const col1Width = 60;
+  const col2Width = 120;
+  
+  // Table rows
+  const tableData = [
+    ['Donor Name', data.donorName],
+    ['Address', data.address],
+    ['Phone Number', data.phone],
+    ['Email Address', data.email],
+    ['Purpose', data.campaign],
+    ['Payment ID', data.transactionId || 'N/A']
+  ];
+  
+  tableData.forEach((row, index) => {
+    const currentY = tableStartY + (index * rowHeight);
+    
+    // Draw row borders
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.rect(15, currentY, col1Width, rowHeight);
+    doc.rect(15 + col1Width, currentY, col2Width, rowHeight);
+    
+    // Fill header column with light gray
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, currentY, col1Width, rowHeight, 'F');
+    
+    // Add text
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(row[0], 18, currentY + 6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(row[1], 78, currentY + 6.5);
+  });
+  
+  y = tableStartY + (tableData.length * rowHeight) + 10;
+  
+  // Amount Section
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DONATION AMOUNT', 15, y);
+  
+  y += 5;
+  // Amount box with orange border
+  doc.setDrawColor(255, 140, 0);
+  doc.setLineWidth(1);
+  doc.rect(15, y, 180, 25);
+  
+  // Amount in numbers
+  doc.setFontSize(20);
+  doc.setTextColor(255, 140, 0);
+  doc.text(`₹ ${data.amount.toLocaleString('en-IN')}/-`, 105, y + 10, { align: 'center' });
+  
+  // Amount in words
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'italic');
+  doc.text(`(Rupees ${numberToWords(data.amount)} Only)`, 105, y + 18, { align: 'center' });
+  
+  y += 32;
+  
+  // Footer section
+  doc.setFontSize(8);
+  doc.text('This is a computer-generated receipt and does not require a physical signature.', 105, y, { align: 'center' });
+  
+  y += 15;
+  
+  // Signature section
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('For Bihar Purvanchal Samaj', 120, y + 5);
-  doc.text('Thank You', 145, y + 15, { align: 'center' });
-  doc.text('Signature: _______________', 130, y + 25);
+  doc.text('For Bihar Sanskritik Mandal', 150, y);
+  
+  y += 15;
+  
+  // Add digital signature placeholder
+  try {
+    // You can add actual signature image here
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(145, y, 190, y);
+  } catch (error) {
+    console.log('Signature not added');
+  }
+  
+  y += 5;
+  doc.setFontSize(9);
+  doc.text('Authorized Signatory', 167, y, { align: 'center' });
+  
+  // Footer note
+  doc.setFontSize(7);
+  doc.setTextColor(128, 128, 128);
+  doc.text('Thank you for your generous contribution to Bihar Sanskritik Mandal.', 105, 280, { align: 'center' });
+  doc.text('For queries, contact: bsmvadodara@gmail.com | +91 9714037766', 105, 285, { align: 'center' });
   
   // Save and download
-  doc.save(`Receipt_${data.receiptNo}_${data.donorName.replace(/\s+/g, '_')}.pdf`);
+  doc.save(`BSM_Receipt_${data.receiptNo}_${data.donorName.replace(/\s+/g, '_')}.pdf`);
   
-  console.log(`📄 PDF receipt generated and downloaded: Receipt_${data.receiptNo}_${data.donorName.replace(/\s+/g, '_')}.pdf`);
+  console.log(`📄 Professional PDF receipt generated: BSM_Receipt_${data.receiptNo}_${data.donorName.replace(/\s+/g, '_')}.pdf`);
 };
 
 /**
- * Generate PDF receipt as blob for email attachment
+ * Generate PDF receipt as blob for email attachment (Professional format)
  * @param data - Receipt data
  * @returns PDF blob, filename, and base64 data
  */
 export const generateReceiptBlob = async (data: SimpleReceiptData): Promise<{ blob: Blob; filename: string; base64: string }> => {
   const doc = new jsPDF();
   
+  // Add orange border around entire page
+  doc.setDrawColor(255, 140, 0);
+  doc.setLineWidth(1);
+  doc.rect(5, 5, 200, 287);
+  
+  // Inner border
+  doc.setLineWidth(0.5);
+  doc.rect(8, 8, 194, 281);
+  
   let y = 20;
   
-  // Logo placeholder (you can add logo image here later)
-  // doc.addImage(logoBase64, 'PNG', 15, 10, 30, 30); // Uncomment when logo is available
-  
-  // Main Header - Organization Name
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text('BIHAR PURVANCHAL SAMAJ GANDHINAGAR', 105, y, { align: 'center' });
-  
-  y += 10;
-  // Address Line 1
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('307/308 Pujer Complex, Subhanpura, Vadodara - 390023', 105, y, { align: 'center' });
-  
-  y += 6;
-  // Contact Details Line
-  doc.text('Phone: 9714037766  Email: bsmvadodara@gmail.com', 105, y, { align: 'center' });
-  
-  y += 6;
-  // Website
-  doc.text('Website: www.biharsamaj.com', 105, y, { align: 'center' });
-  
-  y += 10;
-  // Registration details - Line 1
-  doc.setFontSize(9);
-  doc.text('Regd. No.: A-2676     PAN No.: AACTB4197R', 105, y, { align: 'center' });
-  
-  y += 5;
-  // Registration details - Line 2
-  doc.text('I.T. Exemption Cert. No. (80G No.): AACTB4197RF20009', 105, y, { align: 'center' });
-  
-  y += 15;
-  // Receipt details
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Receipt No.: ${data.receiptNo}`, 20, y);
-  doc.text(`F.Y.: 2025-2026`, 105, y, { align: 'center' });
-  doc.text(`Date: ${data.date}`, 180, y, { align: 'right' });
-  
-  y += 15;
-  // Donor details with underlines (simple format)
-  const addLine = (label: string, value: string) => {
-    doc.text(`${label}: ${value}`, 20, y);
-    // Simple underline
-    doc.line(20 + doc.getTextWidth(`${label}: `), y + 1, 190, y + 1);
-    y += 10;
-  };
-  
-  addLine('Received with thanks from Ms./Mr./Mrs.', data.donorName);
-  addLine('Address', data.address);
-  
-  // Phone and email on same line
-  doc.text(`Tel. No.: ${data.phone}`, 20, y);
-  doc.text(`Email: ${data.email}`, 120, y);
-  doc.line(20 + doc.getTextWidth('Tel. No.: '), y + 1, 110, y + 1);
-  doc.line(120 + doc.getTextWidth('Email: '), y + 1, 190, y + 1);
-  y += 10;
-  
-  addLine('Rupees', `${numberToWords(data.amount)} Only`);
-  addLine('on a/c of: Voluntary Donation', `for: ${data.campaign}`);
-  addLine('Date', data.date);
-  
-  if (data.transactionId && data.transactionId !== 'N/A') {
-    addLine('Transaction ID', data.transactionId);
+  // Add Logo (left side)
+  try {
+    const logoImg = new Image();
+    logoImg.src = '/bihar-cultural-logo.png';
+    doc.addImage(logoImg, 'PNG', 15, 15, 25, 25);
+  } catch (error) {
+    console.log('Logo not found, continuing without logo');
   }
   
-  // Amount box
-  y += 10;
-  doc.rect(20, y, 70, 20);
-  doc.setFontSize(12);
+  // Main Header - Organization Name (Official Registered Name)
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Rs. ${data.amount.toLocaleString('en-IN')}/-`, 55, y + 12, { align: 'center' });
+  doc.setTextColor(255, 140, 0);
+  doc.text('BIHAR SANSKRITIK MANDAL', 105, y, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
   
-  // Thank you and signature
+  y += 8;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text('(Operating as Bihar Purvanchal Samaj Gandhinagar)', 105, y, { align: 'center' });
+  
+  y += 8;
+  // Address
+  doc.setFontSize(9);
+  doc.text('307/308 Pujer Complex, Subhanpura, Vadodara - 390023, Gujarat', 105, y, { align: 'center' });
+  
+  y += 5;
+  doc.text('Phone: +91 9714037766  |  Email: bsmvadodara@gmail.com', 105, y, { align: 'center' });
+  
+  y += 5;
+  doc.text('Website: https://biharpurvanchalsamaj.org', 105, y, { align: 'center' });
+  
+  y += 8;
+  // Registration details box
+  doc.setFillColor(255, 248, 240);
+  doc.rect(15, y - 3, 180, 12, 'F');
+  doc.setFontSize(8);
+  doc.text('Regd. No.: A-2676  |  PAN: AACTB4197R  |  80G No.: AACTB4197RF20009  |  12A Registered', 105, y + 3, { align: 'center' });
+  
+  y += 15;
+  // Title with underline
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 140, 0);
+  doc.text('TAX EXEMPTION DONATION RECEIPT', 105, y, { align: 'center' });
+  doc.setLineWidth(0.5);
+  doc.line(40, y + 2, 170, y + 2);
+  doc.setTextColor(0, 0, 0);
+  
+  y += 12;
+  // Receipt metadata
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Receipt No: ${data.receiptNo}`, 15, y);
+  doc.text(`Financial Year: 2025-2026`, 105, y, { align: 'center' });
+  doc.text(`Date: ${data.date}`, 195, y, { align: 'right' });
+  
+  y += 10;
+  
+  // Donor Details Table
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DONOR DETAILS', 15, y);
+  
+  y += 5;
+  // Table with borders
+  const tableStartY = y;
+  const rowHeight = 10;
+  const col1Width = 60;
+  const col2Width = 120;
+  
+  // Table rows
+  const tableData = [
+    ['Donor Name', data.donorName],
+    ['Address', data.address],
+    ['Phone Number', data.phone],
+    ['Email Address', data.email],
+    ['Purpose', data.campaign],
+    ['Payment ID', data.transactionId || 'N/A']
+  ];
+  
+  tableData.forEach((row, index) => {
+    const currentY = tableStartY + (index * rowHeight);
+    
+    // Draw row borders
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.rect(15, currentY, col1Width, rowHeight);
+    doc.rect(15 + col1Width, currentY, col2Width, rowHeight);
+    
+    // Fill header column with light gray
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, currentY, col1Width, rowHeight, 'F');
+    
+    // Add text
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(row[0], 18, currentY + 6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(row[1], 78, currentY + 6.5);
+  });
+  
+  y = tableStartY + (tableData.length * rowHeight) + 10;
+  
+  // Amount Section
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DONATION AMOUNT', 15, y);
+  
+  y += 5;
+  // Amount box with orange border
+  doc.setDrawColor(255, 140, 0);
+  doc.setLineWidth(1);
+  doc.rect(15, y, 180, 25);
+  
+  // Amount in numbers
+  doc.setFontSize(20);
+  doc.setTextColor(255, 140, 0);
+  doc.text(`₹ ${data.amount.toLocaleString('en-IN')}/-`, 105, y + 10, { align: 'center' });
+  
+  // Amount in words
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'italic');
+  doc.text(`(Rupees ${numberToWords(data.amount)} Only)`, 105, y + 18, { align: 'center' });
+  
+  y += 32;
+  
+  // Footer section
+  doc.setFontSize(8);
+  doc.text('This is a computer-generated receipt and does not require a physical signature.', 105, y, { align: 'center' });
+  
+  y += 15;
+  
+  // Signature section
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('For Bihar Purvanchal Samaj', 120, y + 5);
-  doc.text('Thank You', 145, y + 15, { align: 'center' });
-  doc.text('Signature: _______________', 130, y + 25);
+  doc.text('For Bihar Sanskritik Mandal', 150, y);
+  
+  y += 15;
+  
+  // Add digital signature placeholder
+  try {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(145, y, 190, y);
+  } catch (error) {
+    console.log('Signature not added');
+  }
+  
+  y += 5;
+  doc.setFontSize(9);
+  doc.text('Authorized Signatory', 167, y, { align: 'center' });
+  
+  // Footer note
+  doc.setFontSize(7);
+  doc.setTextColor(128, 128, 128);
+  doc.text('Thank you for your generous contribution to Bihar Sanskritik Mandal.', 105, 280, { align: 'center' });
+  doc.text('For queries, contact: bsmvadodara@gmail.com | +91 9714037766', 105, 285, { align: 'center' });
   
   // Generate blob and base64
   const pdfBlob = doc.output('blob');
-  const pdfBase64 = doc.output('datauristring'); // Get base64 data URI
-  const filename = `BSM_Receipt_${data.donorName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+  const pdfBase64 = doc.output('datauristring');
+  const filename = `BSM_Receipt_${data.receiptNo}_${data.donorName.replace(/\s+/g, '_')}.pdf`;
   
-  console.log(`📄 PDF receipt blob generated: ${filename}`);
+  console.log(`📄 Professional PDF receipt blob generated: ${filename}`);
   
   return { blob: pdfBlob, filename, base64: pdfBase64 };
 };
