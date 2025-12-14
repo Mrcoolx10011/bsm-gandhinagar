@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Phone, Mail, User } from 'lucide-react';
+import { Search, MapPin, Phone, Mail, User, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMemberImageAlt } from '../utils/seo';
 
@@ -339,20 +339,33 @@ export const Members: React.FC = () => {
                   {/* Contact Actions */}
                   <div className="flex flex-col sm:flex-row gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <a
+                      href={`https://wa.me/${member.phone.replace(/[^0-9]/g, '')}`}
+                      onClick={(e) => e.stopPropagation()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-10 h-10 bg-green-100 text-green-600 rounded-full hover:bg-green-200 transition-colors duration-200"
+                      title="WhatsApp"
+                      aria-label={`Chat with ${member.name} on WhatsApp`}
+                    >
+                      <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                    <a
                       href={`tel:${member.phone}`}
                       onClick={(e) => e.stopPropagation()}
                       className="flex items-center justify-center w-10 h-10 bg-orange-100 text-orange-600 rounded-full hover:bg-orange-200 transition-colors duration-200"
                       title="Call"
+                      aria-label={`Call ${member.name}`}
                     >
-                      <Phone className="w-4 h-4" />
+                      <Phone className="w-4 h-4" aria-hidden="true" />
                     </a>
                     <a
                       href={`mailto:${member.email}`}
                       onClick={(e) => e.stopPropagation()}
                       className="flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-200"
                       title="Email"
+                      aria-label={`Email ${member.name}`}
                     >
-                      <Mail className="w-4 h-4" />
+                      <Mail className="w-4 h-4" aria-hidden="true" />
                     </a>
                   </div>
                 </div>
@@ -458,24 +471,50 @@ export const Members: React.FC = () => {
                     {selectedMember.email}
                   </a>
                 </div>
+                
+                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                  <MessageCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                  <a
+                    href={`https://wa.me/${selectedMember.phone.replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-900 hover:text-green-600 transition-colors font-medium"
+                  >
+                    WhatsApp Chat
+                  </a>
+                </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3">
                 <a
-                  href={`tel:${selectedMember.phone}`}
-                  className="bg-orange-500 text-white py-3 px-4 rounded-xl text-center hover:bg-orange-600 transition-colors font-semibold shadow-md hover:shadow-lg"
+                  href={`https://wa.me/${selectedMember.phone.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Chat with ${selectedMember.name} on WhatsApp`}
+                  className="w-full bg-green-500 text-white py-3 px-4 rounded-xl text-center hover:bg-green-600 transition-colors font-semibold shadow-md hover:shadow-lg flex items-center justify-center"
                 >
-                  <Phone className="w-4 h-4 inline mr-2" />
-                  Call Now
+                  <MessageCircle className="w-4 h-4 mr-2" aria-hidden="true" />
+                  WhatsApp Chat
                 </a>
-                <a
-                  href={`mailto:${selectedMember.email}`}
-                  className="bg-gray-100 text-gray-700 py-3 px-4 rounded-xl text-center hover:bg-gray-200 transition-colors font-semibold"
-                >
-                  <Mail className="w-4 h-4 inline mr-2" />
-                  Email
-                </a>
+                <div className="grid grid-cols-2 gap-3">
+                  <a
+                    href={`tel:${selectedMember.phone}`}
+                    aria-label={`Call ${selectedMember.name}`}
+                    className="bg-orange-500 text-white py-3 px-4 rounded-xl text-center hover:bg-orange-600 transition-colors font-semibold shadow-md hover:shadow-lg"
+                  >
+                    <Phone className="w-4 h-4 inline mr-2" aria-hidden="true" />
+                    Call
+                  </a>
+                  <a
+                    href={`mailto:${selectedMember.email}`}
+                    aria-label={`Email ${selectedMember.name}`}
+                    className="bg-gray-100 text-gray-700 py-3 px-4 rounded-xl text-center hover:bg-gray-200 transition-colors font-semibold"
+                  >
+                    <Mail className="w-4 h-4 inline mr-2" aria-hidden="true" />
+                    Email
+                  </a>
+                </div>
               </div>
             </motion.div>
           </motion.div>
