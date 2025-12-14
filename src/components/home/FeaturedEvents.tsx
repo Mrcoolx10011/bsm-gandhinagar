@@ -189,10 +189,11 @@ export const FeaturedEvents: React.FC = () => {
                 
                 <button 
                   onClick={() => handleLearnMore(event)}
+                  aria-label={`View details for ${event.title}`}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                 >
                   <span>View Event Details</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             </motion.div>
@@ -205,10 +206,11 @@ export const FeaturedEvents: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
                 href="/events"
+                aria-label="View all upcoming events"
                 className="inline-flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
               >
                 <span>View All Events</span>
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5" aria-hidden="true" />
               </motion.a>
             </div>
           </>
@@ -230,9 +232,10 @@ export const FeaturedEvents: React.FC = () => {
               {/* Close button */}
               <button
                 onClick={closeModal}
+                aria-label="Close event details"
                 className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-6 h-6 text-gray-600" aria-hidden="true" />
               </button>
 
               {/* Modal Header Image with Gallery Carousel */}
@@ -251,15 +254,17 @@ export const FeaturedEvents: React.FC = () => {
                   <>
                     <button
                       onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                      aria-label="Previous image"
                       className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors z-10"
                     >
-                      <ChevronLeft className="w-6 h-6 text-gray-800" />
+                      <ChevronLeft className="w-6 h-6 text-gray-800" aria-hidden="true" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                      aria-label="Next image"
                       className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors z-10"
                     >
-                      <ChevronRight className="w-6 h-6 text-gray-800" />
+                      <ChevronRight className="w-6 h-6 text-gray-800" aria-hidden="true" />
                     </button>
                     
                     {/* Image Counter */}
@@ -273,6 +278,8 @@ export const FeaturedEvents: React.FC = () => {
                         <button
                           key={index}
                           onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(index); }}
+                          aria-label={`View image ${index + 1}`}
+                          aria-current={index === currentImageIndex ? 'true' : 'false'}
                           className={`w-2 h-2 rounded-full transition-all ${
                             index === currentImageIndex 
                               ? 'bg-white w-6' 
@@ -368,20 +375,22 @@ export const FeaturedEvents: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   <a
                     href="/events"
+                    aria-label="View all upcoming events"
                     className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-200 flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl"
                   >
-                    <Calendar className="w-5 h-5" />
+                    <Calendar className="w-5 h-5" aria-hidden="true" />
                     View All Events
                   </a>
                   <a
                     href={getGoogleMapsUrl(selectedEvent.location)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`Get directions to ${selectedEvent.location}`}
                     className="flex-1 bg-white border-2 border-orange-600 text-orange-600 py-4 px-6 rounded-xl hover:bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
                   >
-                    <MapPin className="w-5 h-5" />
+                    <MapPin className="w-5 h-5" aria-hidden="true" />
                     Get Directions
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="w-4 h-4" aria-hidden="true" />
                   </a>
                 </div>
               </div>

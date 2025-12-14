@@ -33,20 +33,22 @@ export const CallToAction: React.FC = () => {
           >
             <a
               href="/members"
+              aria-label="Become a member of Bihar Purvanchal Samaj"
               className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-5 h-5" aria-hidden="true" />
               <span>Become a Member</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5" aria-hidden="true" />
             </a>
             
             <a
               href="/donations"
+              aria-label="Make a donation to Bihar Purvanchal Samaj"
               className="border-2 border-white text-white hover:bg-white hover:text-orange-600 px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center justify-center space-x-2"
             >
-              <Heart className="w-5 h-5" />
+              <Heart className="w-5 h-5" aria-hidden="true" />
               <span>Donate Now</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5" aria-hidden="true" />
             </a>
           </motion.div>
         </div>
