@@ -7,7 +7,21 @@
 
 import { createServer } from 'http';
 import { parse } from 'url';
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import consolidatedHandler from './api/consolidated.js';
+
+// Load environment variables
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+config({ path: join(__dirname, '.env.local') });
+
+console.log('🔍 Environment Variables Loaded:', {
+  SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL ? '✅ Configured' : '❌ Missing',
+  ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'Not Set',
+  NODE_ENV: process.env.NODE_ENV || 'development'
+});
 
 const PORT = 3000;
 

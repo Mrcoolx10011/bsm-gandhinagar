@@ -20,6 +20,7 @@ const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 
 // Debug environment variables
 console.log('🔍 Environment Debug:', {
@@ -134,6 +135,150 @@ function parseMultipartFormData(body, boundary) {
 
   return { fields, files };
 }
+
+// ============================================
+// IP DETECTION & USER AGENT PARSING
+// ============================================
+
+/**
+ * Get client IP address from request headers
+ */
+function getClientIP(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.headers['x-real-ip'] || 
+         req.socket?.remoteAddress || 
+         req.connection?.remoteAddress ||
+         'Unknown';
+}
+
+/**
+ * Parse User Agent to extract OS and Browser
+ */
+function parseUserAgent(userAgent) {
+  if (!userAgent) {
+    return { os: 'Unknown', browser: 'Unknown' };
+  }
+
+  let os = 'Unknown';
+  if (userAgent.includes('Windows NT 10.0')) os = 'Windows 10';
+  else if (userAgent.includes('Windows NT 11.0')) os = 'Windows 11';
+  else if (userAgent.includes('Windows NT')) os = 'Windows';
+  else if (userAgent.includes('Windows')) os = 'Windows';
+  else if (userAgent.includes('Mac OS X')) os = 'macOS';
+  else if (userAgent.includes('Linux')) os = 'Linux';
+  else if (userAgent.includes('iPhone')) os = 'iOS (iPhone)';
+  else if (userAgent.includes('iPad')) os = 'iOS (iPad)';
+  else if (userAgent.includes('Android')) os = 'Android';
+
+  let browser = 'Unknown';
+  if (userAgent.includes('Edg/')) browser = 'Edge';
+  else if (userAgent.includes('Edg')) browser = 'Edge';
+  else if (userAgent.includes('Chrome/')) browser = 'Chrome';
+  else if (userAgent.includes('Chrome')) browser = 'Chrome';
+  else if (userAgent.includes('Firefox/')) browser = 'Firefox';
+  else if (userAgent.includes('Firefox')) browser = 'Firefox';
+  else if (userAgent.includes('Safari/') && !userAgent.includes('Chrome')) browser = 'Safari';
+  else if (userAgent.includes('Safari')) browser = 'Safari';
+  else if (userAgent.includes('MSIE') || userAgent.includes('Trident/')) browser = 'Internet Explorer';
+  // If still unknown, use a portion of the user agent
+  else browser = userAgent.substring(0, 20);
+
+  return { os, browser };
+}
+
+// ============================================
+// SLACK NOTIFICATION FUNCTIONS
+// ============================================
+
+/**
+ * Send Slack notification for admin login
+ */
+async function sendSlackNotification(data) {
+  if (!SLACK_WEBHOOK_URL) {
+    console.warn('⚠️ SLACK_WEBHOOK_URL not configured - skipping notification');
+    return;
+  }
+
+  try {
+    const istTime = new Date(data.timestamp).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+
+    const message = {
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '🔐 Admin Login',
+            emoji: true
+          }
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Admin:*\n${data.email || data.username}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Time:*\n${istTime}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*IP Address:*\n${data.ip}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Device:*\n${data.deviceInfo.os} - ${data.deviceInfo.browser}`
+            }
+          ]
+        },
+        {
+          type: 'context',
+          elements: [
+            {
+              type: 'mrkdwn',
+              text: `Status: ✅ Verified | User Agent: ${data.userAgent.substring(0, 50)}...`
+            }
+          ]
+        }
+      ]
+    };
+
+    const response = await fetch(SLACK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Slack API error: ${response.status}`);
+    }
+
+    const result = await response.text();
+    console.log('✅ Slack notification sent successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Slack notification failed:', error.message);
+    // Don't throw - notification failure shouldn't break login
+  }
+}
+
+// ============================================
+// DATABASE CONNECTION
+// ============================================
 
 async function connectToDatabase() {
   if (cachedClient) {
@@ -1554,6 +1699,34 @@ async function handleAuth(req, res, db) {
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
       console.log('✅ Login successful for:', username);
+      
+      // Send Slack notification (fire & forget - don't block login)
+      try {
+        console.log('📤 Attempting to send Slack notification...');
+        console.log('🔍 SLACK_WEBHOOK_URL configured:', SLACK_WEBHOOK_URL ? '✅ YES' : '❌ NO');
+        
+        const ip = getClientIP(req);
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        const deviceInfo = parseUserAgent(userAgent);
+        
+        console.log('📊 Login data:', { ip, deviceInfo, userAgent: userAgent.substring(0, 50) });
+        
+        sendSlackNotification({
+          email: 'admin@bsmgandhinagar.org',
+          username: username,
+          ip: ip,
+          deviceInfo: deviceInfo,
+          userAgent: userAgent,
+          timestamp: new Date()
+        }).catch(err => console.error('❌ Slack notification error:', err));
+        
+        console.log('✅ Slack notification function called');
+        
+      } catch (notifError) {
+        console.error('❌ Failed to send Slack notification:', notifError);
+        // Continue with login even if Slack fails
+      }
+      
       return res.status(200).json({ 
         token, 
         user: { 
@@ -1616,6 +1789,34 @@ async function handleAdmin(req, res, db) {
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
       console.log('✅ Admin login successful');
+      
+      // Send Slack notification (fire & forget - don't block login)
+      try {
+        console.log('📡 Attempting to send Slack notification...');
+        console.log('🔍 SLACK_WEBHOOK_URL configured:', SLACK_WEBHOOK_URL ? '✅ YES' : '❌ NO');
+        
+        const ip = getClientIP(req);
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        const deviceInfo = parseUserAgent(userAgent);
+        
+        console.log('📊 Login data:', { ip, deviceInfo, userAgent: userAgent.substring(0, 50) });
+        
+        sendSlackNotification({
+          email: 'admin@bsmgandhinagar.org',
+          username: username,
+          ip: ip,
+          deviceInfo: deviceInfo,
+          userAgent: userAgent,
+          timestamp: new Date()
+        }).catch(err => console.error('❌ Slack notification error:', err));
+        
+        console.log('✅ Slack notification function called');
+        
+      } catch (notifError) {
+        console.error('❌ Failed to send Slack notification:', notifError);
+        // Continue with login even if Slack fails
+      }
+      
       return res.status(200).json({ token, user: { username, role: 'admin' } });
     } else {
       console.log('❌ Admin login failed - credential mismatch');
