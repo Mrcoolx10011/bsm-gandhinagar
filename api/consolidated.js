@@ -277,6 +277,112 @@ async function sendSlackNotification(data) {
 }
 
 // ============================================
+// DONATION SLACK NOTIFICATION
+// ============================================
+
+/**
+ * Send Slack notification for new donation
+ */
+async function sendDonationSlackNotification(data) {
+  if (!SLACK_WEBHOOK_URL) {
+    console.warn('⚠️ SLACK_WEBHOOK_URL not configured - skipping donation notification');
+    return;
+  }
+
+  try {
+    const istTime = new Date(data.timestamp).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+
+    const message = {
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '💰 New Donation Received',
+            emoji: true
+          }
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Donor Name:*\n${data.name}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Amount:*\n${data.currency}${data.amount.toLocaleString('en-IN')}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Email:*\n${data.email}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Payment Method:*\n${data.paymentMethod}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Time:*\n${istTime}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*IP Address:*\n${data.ip}`
+            }
+          ]
+        }
+      ]
+    };
+
+    // Add message if provided
+    if (data.message && data.message.trim()) {
+      message.blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Message:*\n${data.message}`
+        }
+      });
+    }
+
+    // Add action button to view donation
+    message.blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*Status:* ⏳ Pending verification\n*ID:* ${data.donationId}`
+      }
+    });
+
+    const response = await fetch(SLACK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Slack API error: ${response.status}`);
+    }
+
+    const result = await response.text();
+    console.log('✅ Donation notification sent to Slack:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Donation notification failed:', error.message);
+    // Don't throw - notification failure shouldn't break donation process
+  }
+}
+
+// ============================================
 // DATABASE CONNECTION
 // ============================================
 
@@ -1152,6 +1258,28 @@ async function handleDonations(req, res, db) {
         approved: false
       };
       const result = await collection.insertOne(newDonation);
+      
+      // Send Slack notification for new donation
+      try {
+        console.log('💰 New donation received, sending Slack notification...');
+        sendDonationSlackNotification({
+          donationId: result.insertedId,
+          name: newDonation.name || 'Anonymous',
+          email: newDonation.email || 'Not provided',
+          amount: newDonation.amount || 0,
+          currency: newDonation.currency || '₹',
+          message: newDonation.message || '',
+          paymentMethod: newDonation.paymentMethod || 'Unknown',
+          ip: getClientIP(req),
+          timestamp: newDonation.createdAt
+        }).catch(err => console.error('❌ Donation notification error:', err));
+        
+        console.log('✅ Donation notification queued');
+      } catch (notifError) {
+        console.error('❌ Failed to queue donation notification:', notifError);
+        // Continue with response even if Slack fails
+      }
+      
       return res.status(201).json({ _id: result.insertedId, ...newDonation });
 
     case 'PUT':
