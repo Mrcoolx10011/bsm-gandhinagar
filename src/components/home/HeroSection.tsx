@@ -7,7 +7,7 @@ const slides = [
   {
     id: 1,
     image: 'https://images.unsplash.com/photo-1524863479829-916d8e77f114?auto=format&fit=crop&w=1920&h=1080&q=80',
-    title: 'बिहार संस्कृतिक मंडल',
+    title: 'बिहार सांस्कृतिक मंडल',
     subtitle: 'संस्कृति की पहचान, बिहार और पूर्वांचल की शान',
     englishSubtitle: 'Folk Dance & Cultural Heritage',
     cta: 'Join Us',
