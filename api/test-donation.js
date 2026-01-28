@@ -3,6 +3,12 @@
  * Simulates a donation submission and tests Slack integration
  */
 
+// Skip during deployment - only run manually
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+  console.log('⏭️  Skipping test during deployment');
+  process.exit(0);
+}
+
 const dotenv = require('dotenv');
 const path = require('path');
 
