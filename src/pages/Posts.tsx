@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Eye, Heart, Tag, Search, Filter, ChevronLeft, ChevronRight, Share2, Copy, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getCampaignImageAlt } from '../utils/seo';
 
@@ -28,6 +29,7 @@ export const Posts: React.FC = () => {
   const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharingPost, setSharingPost] = useState<Post | null>(null);
+  const { id: urlPostId } = useParams<{ id: string }>();
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -61,6 +63,17 @@ export const Posts: React.FC = () => {
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  // Auto-open post when navigating directly to /posts/:id
+  useEffect(() => {
+    if (urlPostId && posts.length > 0 && !selectedPost) {
+      const post = posts.find(p => p._id === urlPostId);
+      if (post) {
+        setSelectedPost(post);
+        handleView(post._id);
+      }
+    }
+  }, [urlPostId, posts]);
 
   // SEO: Update page title and meta tags
   useEffect(() => {

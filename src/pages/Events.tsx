@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, Filter, Search, Users, ArrowRight, X, Share2, Mail, Phone, Download, Copy, CheckCircle, AlertCircle, Loader, ExternalLink, Facebook, Twitter, Linkedin, MessageCircle, SortAsc, SortDesc, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { EventRegistrationForm } from '../components/events/EventRegistrationForm';
 import { getEventImageAlt, getGalleryImageAlt } from '../utils/seo';
 
@@ -37,6 +37,7 @@ export const Events: React.FC = () => {
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxZoom, setLightboxZoom] = useState(1);
   const location = useLocation();
+  const { id: urlEventId } = useParams<{ id: string }>();
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   const categories = ['Healthcare', 'Education', 'Environment', 'Community Development', 'Emergency Relief'];
@@ -98,17 +99,22 @@ export const Events: React.FC = () => {
     };
   }, []);
 
-  // Open event modal if navigated from home page
+  // Open event modal if navigated from home page or via direct URL (/events/:id)
   useEffect(() => {
-    if (location.state?.openEventId && events.length > 0) {
-      const eventToOpen = events.find(e => (e.id || e._id) === location.state.openEventId);
+    if (events.length === 0) return;
+    if (urlEventId) {
+      const eventToOpen = events.find(e => (e._id || e.id) === urlEventId);
       if (eventToOpen) {
         openEventModal(eventToOpen);
-        // Clear the state to prevent reopening on subsequent renders
+      }
+    } else if (location.state?.openEventId) {
+      const eventToOpen = events.find(e => (e._id || e.id) === location.state.openEventId);
+      if (eventToOpen) {
+        openEventModal(eventToOpen);
         window.history.replaceState({}, document.title);
       }
     }
-  }, [events, location.state]);
+  }, [events, location.state, urlEventId]);
 
   // Filter events when filters change
   useEffect(() => {
@@ -325,7 +331,7 @@ END:VCALENDAR`;
   };
 
   const shareEvent = (platform: string, event: Event) => {
-    const eventUrl = `${window.location.origin}/events/${event.id}`;
+    const eventUrl = `${window.location.origin}/events/${event._id || event.id}`;
     const text = `Check out this event: ${event.title}`;
     
     let shareUrl = '';
@@ -351,7 +357,7 @@ END:VCALENDAR`;
   };
 
   const copyEventLink = (event: Event) => {
-    const eventUrl = `${window.location.origin}/events/${event.id}`;
+    const eventUrl = `${window.location.origin}/events/${event._id || event.id}`;
     navigator.clipboard.writeText(eventUrl).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);

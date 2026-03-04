@@ -100,6 +100,18 @@ function App() {
             } 
           />
           <Route 
+            path="/events/:id" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Events />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
             path="/donations" 
             element={
               <>
@@ -113,6 +125,18 @@ function App() {
           />
           <Route 
             path="/posts" 
+            element={
+              <>
+                <Header />
+                <main className="flex-1">
+                  <Posts />
+                </main>
+                <Footer />
+              </>
+            } 
+          />
+          <Route 
+            path="/posts/:id" 
             element={
               <>
                 <Header />
