@@ -18,6 +18,10 @@ try {
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
+
+// Debug log helper — silent in production to avoid leaking data
+const log = process.env.NODE_ENV !== 'production' ? console.log : () => {};
+
 const JWT_SECRET = process.env.JWT_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
     console.warn('⚠️ WARNING: JWT_SECRET env var is not set. Using insecure fallback. Set JWT_SECRET in Vercel environment variables.');
@@ -34,9 +38,6 @@ log('🔍 Environment Debug:', {
   ADMIN_USERNAME: process.env.ADMIN_USERNAME ? 'SET' : 'MISSING',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'SET' : 'MISSING',
 });
-
-// Debug log helper — silent in production to avoid leaking data
-const log = process.env.NODE_ENV !== 'production' ? console.log : () => {};
 
 // Initialize ImageKit
 log('🔑 ImageKit Environment Variables:', {
