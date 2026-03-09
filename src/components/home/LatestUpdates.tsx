@@ -1,93 +1,88 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, ExternalLink, FileText } from 'lucide-react';
 
-const updates = [
-  {
-    id: 1,
-    date: 'August 1, 2025',
-    category: 'Cultural',
-    title: 'Janmashtami Celebration 2025',
-    description: 'Join us for a grand celebration of Lord Krishna\'s birthday with traditional dance, music, and prasadam distribution.',
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=400&q=80',
-    link: '/events'
-  },
-  {
-    id: 2,
-    date: 'July 28, 2025',
-    category: 'Announcement',
-    title: 'New Youth Leadership Program',
-    description: 'We are launching a comprehensive leadership development program for youth aged 16-25 from Bihar and Purvanchal.',
-    image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=400&q=80',
-    link: '/about'
-  },
-  {
-    id: 3,
-    date: 'July 25, 2025',
-    category: 'Event',
-    title: 'Medical Camp Success',
-    description: 'Our recent medical camp in Patna successfully provided free health checkups to over 500 community members.',
-    image: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=400&q=80',
-    link: '/posts'
-  },
-  {
-    id: 4,
-    date: 'July 20, 2025',
-    category: 'Media',
-    title: 'Featured in Local News',
-    description: 'Bihar Purvanchal Samaj\'s community service efforts were highlighted in Dainik Jagran for our education initiatives.',
-    image: 'https://images.unsplash.com/photo-1524863479829-916d8e77f114?auto=format&fit=crop&w=400&q=80',
-    link: '/media'
-  },
-  {
-    id: 5,
-    date: 'July 15, 2025',
-    category: 'Cultural',
-    title: 'Folk Dance Workshop',
-    description: 'Traditional Bhojpuri and Maithili dance workshop conducted by renowned artists from Bihar.',
-    image: 'https://images.unsplash.com/photo-1524863479829-916d8e77f114?auto=format&fit=crop&w=400&q=80',
-    link: '/events'
-  }
-];
+interface Post {
+  _id: string;
+  title: string;
+  content?: string;
+  image?: string;
+  category: string;
+  featured: boolean;
+  author?: string;
+  createdAt: string;
+  likes: number;
+  views: number;
+}
 
-const categoryColors = {
-  'Cultural': 'bg-orange-100 text-orange-700',
-  'Announcement': 'bg-orange-100 text-orange-700',
-  'Event': 'bg-green-100 text-green-700',
-  'Media': 'bg-purple-100 text-purple-700'
+const categoryColors: Record<string, string> = {
+  'general':   'bg-orange-100 text-orange-700',
+  'news':      'bg-blue-100 text-blue-700',
+  'events':    'bg-green-100 text-green-700',
+  'community': 'bg-purple-100 text-purple-700',
+  'updates':   'bg-yellow-100 text-yellow-700',
 };
 
+const getCategoryColor = (cat: string) =>
+  categoryColors[cat?.toLowerCase()] || 'bg-orange-100 text-orange-700';
+
+const formatDate = (dateStr: string) => {
+  try {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  } catch {
+    return dateStr;
+  }
+};
+
+const stripHtml = (html: string) =>
+  html?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || '';
+
 export const LatestUpdates: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(3);
 
-  React.useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setItemsPerView(1);
-      } else if (window.innerWidth < 1024) {
-        setItemsPerView(2);
-      } else {
-        setItemsPerView(3);
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch('/api/consolidated?endpoint=posts');
+        if (res.ok) {
+          const data: Post[] = await res.json();
+          // Sort by newest first, take up to 6
+          const sorted = [...data].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setPosts(sorted.slice(0, 6));
+        }
+      } catch {
+        // silently fail â€” section just won't show
+      } finally {
+        setLoading(false);
       }
     };
+    fetchPosts();
+  }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) setItemsPerView(1);
+      else if (window.innerWidth < 1024) setItemsPerView(2);
+      else setItemsPerView(3);
+    };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const maxIndex = Math.max(0, updates.length - itemsPerView);
+  const maxIndex = Math.max(0, posts.length - itemsPerView);
+  const nextSlide = () => setCurrentIndex((p) => (p >= maxIndex ? 0 : p + 1));
+  const prevSlide = () => setCurrentIndex((p) => (p <= 0 ? maxIndex : p - 1));
+  const visiblePosts = posts.slice(currentIndex, currentIndex + itemsPerView);
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
-  };
-
-  const visibleUpdates = updates.slice(currentIndex, currentIndex + itemsPerView);
+  if (!loading && posts.length === 0) return null;
 
   return (
     <section className="py-16 bg-white">
@@ -107,103 +102,137 @@ export const LatestUpdates: React.FC = () => {
           </p>
         </motion.div>
 
-        <div className="relative">
-          {/* Navigation Arrows */}
-          {updates.length > itemsPerView && (
-            <>
-              <button
-                onClick={prevSlide}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-all duration-300"
-              >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              
-              <button
-                onClick={nextSlide}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-all duration-300"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
-              </button>
-            </>
-          )}
-
-          {/* Updates Grid */}
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            {visibleUpdates.map((update, index) => (
-              <motion.div
-                key={update.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
-              >
-                {/* Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={update.image}
-                    alt={update.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${categoryColors[update.category as keyof typeof categoryColors]}`}>
-                      {update.category}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <div className="flex items-center text-sm text-gray-500 mb-3">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    {update.date}
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors duration-300">
-                    {update.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {update.description}
-                  </p>
-                  
-                  <a
-                    href={update.link}
-                    className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold transition-colors duration-300"
-                  >
-                    Read Latest Updates
-                    <ExternalLink className="w-4 h-4 ml-1" />
-                  </a>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Pagination Dots */}
-          {updates.length > itemsPerView && (
-            <div className="flex justify-center mt-8 space-x-2">
-              {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+            <span className="ml-3 text-gray-600">Loading updates...</span>
+          </div>
+        ) : (
+          <div className="relative">
+            {/* Navigation Arrows */}
+            {posts.length > itemsPerView && (
+              <>
                 <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    index === currentIndex
-                      ? 'bg-orange-500 w-6'
-                      : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
+                  onClick={prevSlide}
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-all duration-300"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-all duration-300"
+                  aria-label="Next"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600" />
+                </button>
+              </>
+            )}
+
+            {/* Cards Grid */}
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              {visiblePosts.map((post, index) => (
+                <motion.div
+                  key={post._id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.6 }}
+                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
+                >
+                  {/* Image */}
+                  <div className="relative h-48 overflow-hidden bg-orange-50 flex-shrink-0">
+                    {post.image ? (
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                          const ph = img.nextElementSibling as HTMLElement;
+                          if (ph) ph.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full flex-col items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100"
+                      style={{ display: post.image ? 'none' : 'flex' }}
+                    >
+                      <FileText className="w-10 h-10 text-orange-300 mb-2" />
+                      <p className="text-xs text-orange-400 font-medium">No Image</p>
+                    </div>
+                    <div className="absolute top-4 left-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getCategoryColor(post.category)}`}>
+                        {post.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5 flex flex-col flex-grow">
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                      {formatDate(post.createdAt)}
+                    </div>
+
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors duration-300">
+                      {post.title}
+                    </h3>
+
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
+                      {stripHtml(post.content || '')}
+                    </p>
+
+                    <a
+                      href={`/posts/${post._id}`}
+                      className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold text-sm transition-colors duration-300"
+                    >
+                      Read More
+                      <ExternalLink className="w-4 h-4 ml-1" />
+                    </a>
+                  </div>
+                </motion.div>
               ))}
+            </motion.div>
+
+            {/* Pagination Dots */}
+            {posts.length > itemsPerView && (
+              <div className="flex justify-center mt-8 space-x-2">
+                {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentIndex
+                        ? 'bg-orange-500 w-6'
+                        : 'bg-gray-300 hover:bg-gray-400 w-2'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* View All link */}
+            <div className="text-center mt-8">
+              <a
+                href="/posts"
+                className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+              >
+                View All Updates
+                <ExternalLink className="w-4 h-4" />
+              </a>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );
 };
-

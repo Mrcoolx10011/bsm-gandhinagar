@@ -150,12 +150,27 @@ export const FeaturedEvents: React.FC = () => {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={event.image}
-                  alt={getEventImageAlt(event)}
-                  className="w-full h-full object-cover object-top"
-                />
+              <div className="relative h-48 overflow-hidden bg-orange-50">
+                {event.image ? (
+                  <img
+                    src={event.image}
+                    alt={getEventImageAlt(event)}
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      img.style.display = 'none';
+                      const ph = img.nextElementSibling as HTMLElement;
+                      if (ph) ph.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="w-full h-full flex-col items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100"
+                  style={{ display: event.image ? 'none' : 'flex' }}
+                >
+                  <Calendar className="w-10 h-10 text-orange-300 mb-2" />
+                  <p className="text-xs text-orange-400 font-medium">Image Coming Soon</p>
+                </div>
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-3">
@@ -172,7 +187,7 @@ export const FeaturedEvents: React.FC = () => {
                   {event.title}
                 </h3>
                 
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                   {event.description}
                 </p>
                 
@@ -220,22 +235,22 @@ export const FeaturedEvents: React.FC = () => {
       {/* Event Detail Modal */}
       {showModal && selectedEvent && (
         <div className="fixed inset-0 z-50 overflow-y-auto" onClick={closeModal}>
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+          <div className="flex items-end sm:items-center justify-center min-h-screen p-0 sm:px-4 sm:pt-4 sm:pb-20">
             {/* Background overlay */}
             <div className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75 backdrop-blur-sm" aria-hidden="true"></div>
 
-            {/* Modal panel */}
+            {/* Modal panel — bottom-sheet on mobile, centered dialog on sm+ */}
             <div 
-              className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
+              className="relative w-full sm:max-w-4xl bg-white rounded-t-3xl sm:rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={closeModal}
                 aria-label="Close event details"
-                className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 p-2.5 sm:p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
               >
-                <X className="w-6 h-6 text-gray-600" aria-hidden="true" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" aria-hidden="true" />
               </button>
 
               {/* Modal Header Image with Gallery Carousel */}
@@ -302,7 +317,7 @@ export const FeaturedEvents: React.FC = () => {
               </div>
 
               {/* Modal Content */}
-              <div className="bg-white px-6 sm:px-8 py-6 max-h-[60vh] overflow-y-auto">
+              <div className="bg-white px-4 sm:px-8 py-4 sm:py-6 max-h-[58vh] sm:max-h-[60vh] overflow-y-auto">
                 {/* Event Details Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                   <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl">
@@ -338,14 +353,41 @@ export const FeaturedEvents: React.FC = () => {
 
                 {/* Description */}
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">About This Event</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    {selectedEvent.description}
-                  </p>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">About This Event</h3>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    {(() => {
+                      const desc = selectedEvent.description || '';
+                      const lines = desc
+                        .replace(/\.\s+(Event Highlights|Organizers?|Environment|Cause|Note|Venue|Contact|How to Register|Registration|Highlights|About|Eligibility|Requirements?|What to Bring|Schedule|Program|Details?|Star Performers?|Daily Devotion|Grand Cultural Program)\s*:/gi, '\n$1:')
+                        .split(/\n+/)
+                        .map((l: string) => l.trim())
+                        .filter(Boolean);
+                      return lines.map((line: string, i: number) => {
+                        const sectionMatch = line.match(/^([A-Za-z &]+?):\s*(.+)$/);
+                        if (sectionMatch) {
+                          return (
+                            <div key={i} className="flex flex-wrap gap-x-2 gap-y-1 bg-orange-50 border-l-4 border-orange-400 rounded-r-lg px-3 sm:px-4 py-2">
+                              <span className="font-bold text-orange-700 shrink-0">{sectionMatch[1]}:</span>
+                              <span className="text-gray-700 break-words min-w-0">{sectionMatch[2]}</span>
+                            </div>
+                          );
+                        }
+                        if (/^[-•*]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
+                          return (
+                            <div key={i} className="flex items-start gap-2 pl-2">
+                              <span className="mt-1.5 w-2 h-2 rounded-full bg-orange-500 flex-shrink-0"></span>
+                              <span>{line.replace(/^[-•*\d.]\s*/, '')}</span>
+                            </div>
+                          );
+                        }
+                        return <p key={i} className="text-gray-700">{line}</p>;
+                      });
+                    })()}
+                  </div>
                 </div>
 
                 {/* Attendance Info */}
-                <div className="mb-6 p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl">
+                <div className="mb-6 p-4 sm:p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                       <Users className="w-5 h-5 text-orange-600" />
