@@ -948,12 +948,12 @@ END:VCALENDAR`;
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <p className="text-sm text-gray-600 text-center">
                     For more information, contact us at{' '}
-                    <a href="mailto:info@bsm.org" className="text-orange-600 hover:underline font-semibold">
-                      info@bsm.org
+                    <a href="mailto:bsmvadodara@gmail.com" className="text-orange-600 hover:underline font-semibold">
+                      bsmvadodara@gmail.com
                     </a>
                     {' '}or{' '}
-                    <a href="tel:+911234567890" className="text-orange-600 hover:underline font-semibold">
-                      +91 123 456 7890
+                    <a href="tel:+919714037766" className="text-orange-600 hover:underline font-semibold">
+                      +91 9714037766
                     </a>
                   </p>
                 </div>
