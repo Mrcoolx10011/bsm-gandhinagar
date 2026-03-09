@@ -350,11 +350,26 @@ export const EventsManagement: React.FC = () => {
             transition={{ duration: 0.3, delay: index * 0.1 }}
             className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
           >
-            <img
-              src={event.image || 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=400'}
-              alt={event.title}
-              className="w-full h-40 sm:h-48 object-cover"
-            />
+            {event.image ? (
+              <img
+                src={event.image}
+                alt={event.title}
+                className="w-full h-40 sm:h-48 object-cover"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                  const placeholder = img.nextElementSibling as HTMLElement;
+                  if (placeholder) placeholder.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div
+              className="w-full h-40 sm:h-48 flex-col items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 border-b border-orange-100"
+              style={{ display: event.image ? 'none' : 'flex' }}
+            >
+              <Calendar className="w-10 h-10 text-orange-300 mb-2" />
+              <p className="text-xs text-orange-400 font-medium">No Image Uploaded</p>
+            </div>
             
             <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-3">

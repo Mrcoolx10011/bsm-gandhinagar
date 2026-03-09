@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useEffect } from 'react';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
@@ -21,6 +22,15 @@ import { Terms } from './pages/Terms';
 import { RefundPolicy } from './pages/RefundPolicy';
 
 function App() {
+  useEffect(() => {
+    const loader = document.getElementById('app-loading');
+    if (loader) {
+      loader.style.transition = 'opacity 0.25s';
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 260);
+    }
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">

@@ -18,6 +18,7 @@ interface Event {
   attendees: number;
   maxAttendees: number;
   gallery: string[];
+  seoKeywords?: string;
 }
 
 export const Events: React.FC = () => {
@@ -93,6 +94,15 @@ export const Events: React.FC = () => {
       document.head.appendChild(robotsMeta);
     }
     robotsMeta.setAttribute('content', 'index, follow');
+    
+    // Add keywords meta tag
+    let keywordsMeta = document.querySelector('meta[name="keywords"]');
+    if (!keywordsMeta) {
+      keywordsMeta = document.createElement('meta');
+      keywordsMeta.setAttribute('name', 'keywords');
+      document.head.appendChild(keywordsMeta);
+    }
+    keywordsMeta.setAttribute('content', 'Bihar Sanskritik Mandal Gandhinagar, events, cultural programs, blood donation camp, community events, healthcare, education');
     
     return () => {
       document.title = 'Bihar Sanskritik Mandal Gandhinagar';
@@ -412,6 +422,16 @@ END:VCALENDAR`;
     setShowShareMenu(false);
     setCurrentImageIndex(0);
     document.body.style.overflow = 'hidden';
+    // Update meta keywords with event-specific SEO keywords
+    if (event.seoKeywords) {
+      let keywordsMeta = document.querySelector('meta[name="keywords"]');
+      if (!keywordsMeta) {
+        keywordsMeta = document.createElement('meta');
+        keywordsMeta.setAttribute('name', 'keywords');
+        document.head.appendChild(keywordsMeta);
+      }
+      keywordsMeta.setAttribute('content', event.seoKeywords);
+    }
   };
 
   const closeEventModal = () => {
@@ -573,14 +593,26 @@ END:VCALENDAR`;
                 >
                   {/* Image Section */}
                   <div className="relative h-64 bg-gray-200 overflow-hidden">
-                    <img
-                      src={event.image}
-                      alt={getEventImageAlt(event)}
-                      className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=600';
-                      }}
-                    />
+                    {event.image ? (
+                      <img
+                        src={event.image}
+                        alt={getEventImageAlt(event)}
+                        className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => {
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                          const placeholder = img.nextElementSibling as HTMLElement;
+                          if (placeholder) placeholder.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full flex-col items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100"
+                      style={{ display: event.image ? 'none' : 'flex' }}
+                    >
+                      <img src="/bsm-logo.png" alt="Bihar Sanskritik Mandal" className="w-20 h-20 object-contain mb-2 opacity-60" />
+                      <p className="text-xs text-orange-400 font-medium">Event Image Coming Soon</p>
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     
                     {/* Status Badge */}

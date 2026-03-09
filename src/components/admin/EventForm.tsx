@@ -18,6 +18,7 @@ interface Event {
   attendees: number;
   maxAttendees: number;
   status: 'active' | 'inactive';
+  seoKeywords?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -41,7 +42,8 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
     gallery: [] as string[],
     attendees: 0,
     maxAttendees: 50,
-    status: 'active' as 'active' | 'inactive'
+    status: 'active' as 'active' | 'inactive',
+    seoKeywords: ''
   });
 
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -65,7 +67,8 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
         gallery: event.gallery || [],
         attendees: event.attendees || 0,
         maxAttendees: event.maxAttendees || 50,
-        status: event.status
+        status: event.status,
+        seoKeywords: event.seoKeywords || ''
       });
     }
   }, [event]);
@@ -568,7 +571,9 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                         alt={`Gallery ${index + 1}`}
                         className="w-full h-32 object-cover rounded-lg border border-gray-200"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=400';
+                          const img = e.target as HTMLImageElement;
+                          img.src = '/bsm-logo.png';
+                          img.className = 'w-full h-32 object-contain p-4 bg-orange-50 rounded-lg border border-orange-100';
                         }}
                       />
                       <button
@@ -592,6 +597,28 @@ export const EventForm: React.FC<EventFormProps> = ({ event, onSave, onClose }) 
                   <p className="text-xs text-gray-500">Upload images or add URLs above to create a gallery</p>
                 </div>
               )}
+            </div>
+
+            {/* SEO Section */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-orange-500" />
+                SEO Settings
+              </h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  SEO Keywords
+                </label>
+                <input
+                  type="text"
+                  name="seoKeywords"
+                  value={formData.seoKeywords}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="blood donation, health camp, Gandhinagar, volunteering"
+                />
+                <p className="text-xs text-gray-500 mt-1">Comma-separated keywords to help search engines find this event. Leave empty for auto-generated keywords.</p>
+              </div>
             </div>
 
             <div className="flex space-x-4 pt-6">
