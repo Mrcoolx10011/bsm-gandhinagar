@@ -684,21 +684,22 @@ END:VCALENDAR`;
       {/* Event Detail Modal */}
       {showModal && selectedEvent && (
         <div className="fixed inset-0 z-50 overflow-y-auto" onClick={closeEventModal}>
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+          <div className="flex items-end sm:items-center justify-center min-h-screen p-0 sm:px-4 sm:pt-4 sm:pb-20">
             {/* Background overlay */}
             <div className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75 backdrop-blur-sm" aria-hidden="true"></div>
 
-            {/* Modal panel */}
+            {/* Modal panel — bottom-sheet on mobile, centered dialog on sm+ */}
             <div 
-              className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
+              className="relative w-full sm:max-w-4xl bg-white rounded-t-3xl sm:rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={closeEventModal}
-                className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 p-2.5 sm:p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                aria-label="Close"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
               </button>
 
               {/* Modal Header Image with Gallery Carousel */}
@@ -773,7 +774,7 @@ END:VCALENDAR`;
               </div>
 
               {/* Modal Content */}
-              <div className="bg-white px-6 sm:px-8 py-6 max-h-[60vh] overflow-y-auto">
+              <div className="bg-white px-4 sm:px-8 py-4 sm:py-6 max-h-[58vh] sm:max-h-[60vh] overflow-y-auto">
                 {/* Event Details Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                   <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl">
@@ -809,14 +810,47 @@ END:VCALENDAR`;
 
                 {/* Description */}
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">About This Event</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    {selectedEvent.description}
-                  </p>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">About This Event</h3>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    {(() => {
+                      const desc = selectedEvent.description || '';
+                      // Split by newlines first, then by sentence-level section markers
+                      const sectionPattern = /(?:^|\.\s+|\n)(?=(Event Highlights|Organizers?|Environment|Cause|Note|Venue|Date|Time|Contact|How to Register|Registration|Highlights|About|Eligibility|Requirements?|What to Bring|Schedule|Program|Details?)\s*:)/gi;
+                      const lines = desc
+                        .replace(/\.\s+(Event Highlights|Organizers?|Environment|Cause|Note|Venue|Contact|How to Register|Registration|Highlights|About|Eligibility|Requirements?|What to Bring|Schedule|Program|Details?)\s*:/gi, '\n$1:')
+                        .split(/\n+/)
+                        .map(l => l.trim())
+                        .filter(Boolean);
+
+                      return lines.map((line, i) => {
+                        // Section header: "Label: content"
+                        const sectionMatch = line.match(/^([A-Za-z &]+?):\s*(.+)$/);
+                        if (sectionMatch) {
+                          return (
+                            <div key={i} className="flex flex-wrap gap-x-2 gap-y-1 bg-orange-50 border-l-4 border-orange-400 rounded-r-lg px-3 sm:px-4 py-2">
+                              <span className="font-bold text-orange-700 shrink-0">{sectionMatch[1]}:</span>
+                              <span className="text-gray-700 break-words min-w-0">{sectionMatch[2]}</span>
+                            </div>
+                          );
+                        }
+                        // Bullet line: starts with -, •, *, numbers
+                        if (/^[-•*]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
+                          return (
+                            <div key={i} className="flex items-start gap-2 pl-2">
+                              <span className="mt-1.5 w-2 h-2 rounded-full bg-orange-500 flex-shrink-0"></span>
+                              <span>{line.replace(/^[-•*\d.]\s*/, '')}</span>
+                            </div>
+                          );
+                        }
+                        // Regular paragraph
+                        return <p key={i} className="text-gray-700">{line}</p>;
+                      });
+                    })()}
+                  </div>
                 </div>
 
                 {/* Attendance Info */}
-                <div className="mb-6 p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl">
+                <div className="mb-6 p-4 sm:p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                       <Users className="w-5 h-5 text-orange-600" />
