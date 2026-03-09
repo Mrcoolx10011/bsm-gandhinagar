@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 
@@ -7,14 +7,13 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, checkAuth } = useAuthStore();
+  const { checkAuth } = useAuthStore();
 
-  useEffect(() => {
-    // Check authentication status on mount
-    checkAuth();
-  }, [checkAuth]);
+  // Synchronous check — eliminates flash of admin content for expired tokens.
+  // checkAuth() reads localStorage and updates Zustand state in one pass.
+  const isAuth = checkAuth();
 
-  if (!isAuthenticated) {
+  if (!isAuth) {
     return <Navigate to="/admin/login" replace />;
   }
 

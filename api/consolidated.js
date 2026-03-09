@@ -1,5 +1,6 @@
 const { MongoClient, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const path = require('path');
 const ImageKit = require('imagekit');
@@ -10,31 +11,35 @@ let formidable;
 try {
   formidable = require('formidable');
 } catch (error) {
-  console.log('⚠️ Formidable not available, using custom parser');
+  log('⚠️ Formidable not available, using custom parser');
 }
 
 // Load environment variables from the root directory
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: JWT_SECRET environment variable must be set in production');
+  }
+  return 'dev-only-insecure-secret-do-not-use-in-production';
+})();
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 
-// Debug environment variables
-console.log('🔍 Environment Debug:', {
+// Debug environment variables (no credentials logged)
+log('🔍 Environment Debug:', {
   NODE_ENV: process.env.NODE_ENV,
   ADMIN_USERNAME: process.env.ADMIN_USERNAME ? 'SET' : 'MISSING',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'SET' : 'MISSING',
-  actualValues: {
-    ADMIN_USERNAME: ADMIN_USERNAME,
-    ADMIN_PASSWORD: ADMIN_PASSWORD
-  }
 });
 
+// Debug log helper — silent in production to avoid leaking data
+const log = process.env.NODE_ENV !== 'production' ? console.log : () => {};
+
 // Initialize ImageKit
-console.log('🔑 ImageKit Environment Variables:', {
+log('🔑 ImageKit Environment Variables:', {
   publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ? 'SET' : 'MISSING',
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY ? 'SET' : 'MISSING',
   urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ? 'SET' : 'MISSING'
@@ -50,7 +55,7 @@ const imagekit = new ImageKit({
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
-console.log('💳 Razorpay Environment Variables:', {
+log('💳 Razorpay Environment Variables:', {
   keyId: RAZORPAY_KEY_ID ? 'SET' : 'MISSING',
   keySecret: RAZORPAY_KEY_SECRET ? 'SET' : 'MISSING'
 });
@@ -59,9 +64,9 @@ console.log('💳 Razorpay Environment Variables:', {
 let Razorpay;
 try {
   Razorpay = require('razorpay');
-  console.log('✅ Razorpay SDK loaded successfully');
+  log('✅ Razorpay SDK loaded successfully');
 } catch (error) {
-  console.log('⚠️ Razorpay SDK not available:', error.message);
+  log('⚠️ Razorpay SDK not available:', error.message);
 }
 
 let cachedClient = null;
@@ -76,7 +81,7 @@ function parseMultipartFormData(body, boundary) {
   const fullBoundary = `--${boundary}`;
   const parts = body.split(fullBoundary);
   
-  console.log('📊 Total boundary splits:', parts.length);
+  log('📊 Total boundary splits:', parts.length);
 
   for (let i = 1; i < parts.length - 1; i++) { // Skip first empty part and last closing part
     const part = parts[i];
@@ -84,12 +89,12 @@ function parseMultipartFormData(body, boundary) {
     // Skip if part doesn't contain form data
     if (!part.includes('Content-Disposition: form-data')) continue;
     
-    console.log(`📊 Processing part ${i}:`, part.substring(0, 300));
+    log(`📊 Processing part ${i}:`, part.substring(0, 300));
     
     // Find the double CRLF that separates headers from data
     const headerEndIndex = part.indexOf('\r\n\r\n');
     if (headerEndIndex === -1) {
-      console.log('📊 No header separator found');
+      log('📊 No header separator found');
       continue;
     }
     
@@ -99,13 +104,13 @@ function parseMultipartFormData(body, boundary) {
     // Remove trailing CRLF and boundary markers
     const cleanDataSection = dataSection.replace(/\r\n.*$/, '');
     
-    console.log('📊 Headers section:', headerSection);
-    console.log('📊 Data section length:', cleanDataSection.length);
+    log('📊 Headers section:', headerSection);
+    log('📊 Data section length:', cleanDataSection.length);
     
     // Parse Content-Disposition header
     const dispositionMatch = headerSection.match(/Content-Disposition:\s*form-data;\s*name="([^"]+)"(?:;\s*filename="([^"]+)")?/i);
     if (!dispositionMatch) {
-      console.log('📊 No valid Content-Disposition found');
+      log('📊 No valid Content-Disposition found');
       continue;
     }
     
@@ -116,7 +121,7 @@ function parseMultipartFormData(body, boundary) {
     const contentTypeMatch = headerSection.match(/Content-Type:\s*([^\r\n]+)/i);
     const contentType = contentTypeMatch ? contentTypeMatch[1].trim() : '';
     
-    console.log('📊 Parsed:', { name, filename, contentType });
+    log('📊 Parsed:', { name, filename, contentType });
     
     if (filename) {
       // It's a file - use binary encoding for file data
@@ -125,11 +130,11 @@ function parseMultipartFormData(body, boundary) {
         contentType: contentType,
         data: Buffer.from(cleanDataSection, 'binary')
       };
-      console.log('📊 Added file:', name, 'size:', files[name].data.length);
+      log('📊 Added file:', name, 'size:', files[name].data.length);
     } else {
       // It's a regular field
       fields[name] = cleanDataSection.trim();
-      console.log('📊 Added field:', name, '=', fields[name]);
+      log('📊 Added field:', name, '=', fields[name]);
     }
   }
 
@@ -268,7 +273,7 @@ async function sendSlackNotification(data) {
     }
 
     const result = await response.text();
-    console.log('✅ Slack notification sent successfully:', result);
+    log('✅ Slack notification sent successfully:', result);
     return result;
   } catch (error) {
     console.error('❌ Slack notification failed:', error.message);
@@ -374,7 +379,7 @@ async function sendDonationSlackNotification(data) {
     }
 
     const result = await response.text();
-    console.log('✅ Donation notification sent to Slack:', result);
+    log('✅ Donation notification sent to Slack:', result);
     return result;
   } catch (error) {
     console.error('❌ Donation notification failed:', error.message);
@@ -392,11 +397,11 @@ async function connectToDatabase() {
   }
 
   // Check if MongoDB URI is properly configured
-  console.log('🔍 Checking MongoDB URI:', MONGODB_URI ? 'URI provided' : 'URI missing');
+  log('🔍 Checking MongoDB URI:', MONGODB_URI ? 'URI provided' : 'URI missing');
   
   if (!MONGODB_URI || MONGODB_URI.includes('your-username') || MONGODB_URI.includes('your-password')) {
-    console.log('⚠️  MongoDB not configured - running in development mode with mock data');
-    console.log('⚠️  MONGODB_URI:', MONGODB_URI);
+    log('⚠️  MongoDB not configured - running in development mode with mock data');
+    log('⚠️  MONGODB_URI:', MONGODB_URI);
     isDevelopmentMode = true;
     return null;
   }
@@ -405,14 +410,17 @@ async function connectToDatabase() {
     const client = new MongoClient(MONGODB_URI);
     await client.connect();
     cachedClient = client;
-    console.log('✅ Connected to MongoDB');
+    log('✅ Connected to MongoDB');
     return client;
   } catch (error) {
-    console.log('⚠️  MongoDB connection failed - falling back to development mode:', error.message);
+    log('⚠️  MongoDB connection failed - falling back to development mode:', error.message);
     isDevelopmentMode = true;
     return null;
   }
 }
+
+// In-memory login rate limiter (10 attempts per IP per 15 min)
+const loginAttempts = new Map();
 
 // Utility function to verify JWT token
 function verifyToken(token) {
@@ -423,15 +431,16 @@ function verifyToken(token) {
   }
 }
 
-// CORS headers
+// CORS headers (restrict origin via ALLOWED_ORIGIN env var)
 function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowed = process.env.ALLOWED_ORIGIN || '*';
+  res.setHeader('Access-Control-Allow-Origin', allowed);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
 module.exports = async function handler(req, res) {
-  console.log('🚀 API Request:', {
+  log('🚀 API Request:', {
     method: req.method,
     url: req.url,
     query: req.query,
@@ -450,9 +459,9 @@ module.exports = async function handler(req, res) {
     try {
       // Check if body is already parsed by development server
       if (req.body && Object.keys(req.body).length > 0) {
-        console.log('📥 Body already parsed by dev server:', req.body);
+        log('📥 Body already parsed by dev server:', req.body);
       } else {
-        console.log('📥 Parsing JSON body manually...');
+        log('📥 Parsing JSON body manually...');
         let body = '';
         if (req.setEncoding && typeof req.setEncoding === 'function') {
           req.setEncoding('utf8');
@@ -466,7 +475,7 @@ module.exports = async function handler(req, res) {
             try {
               if (body) {
                 req.body = JSON.parse(body);
-                console.log('📥 Parsed JSON body:', req.body);
+                log('📥 Parsed JSON body:', req.body);
               } else {
                 req.body = {};
               }
@@ -485,14 +494,14 @@ module.exports = async function handler(req, res) {
   }
 
   const { endpoint } = req.query;
-  console.log('🎯 Processing endpoint:', endpoint);
-  console.log('🔍 About to enter switch statement for endpoint:', endpoint);
+  log('🎯 Processing endpoint:', endpoint);
+  log('🔍 About to enter switch statement for endpoint:', endpoint);
   
   try {
     const client = await connectToDatabase();
     const db = client ? client.db('bsm-gandhinagar') : null;
     
-    console.log('💾 Database status:', {
+    log('💾 Database status:', {
       client: !!client,
       db: !!db,
       isDevelopmentMode
@@ -531,11 +540,11 @@ module.exports = async function handler(req, res) {
       case 'campaigns':
         return await handleCampaigns(req, res, db);
       case 'admin':
-        console.log('🎯 Processing endpoint: admin (entering case)');
-        console.log('🔍 Admin handler debug:', { method: req.method, hasBody: !!req.body, bodyKeys: Object.keys(req.body || {}) });
+        log('🎯 Processing endpoint: admin (entering case)');
+        log('🔍 Admin handler debug:', { method: req.method, hasBody: !!req.body, bodyKeys: Object.keys(req.body || {}) });
         try {
           const result = await handleAdmin(req, res, db);
-          console.log('✅ Admin handler completed successfully');
+          log('✅ Admin handler completed successfully');
           return result;
         } catch (adminError) {
           console.error('❌ Admin handler error:', adminError);
@@ -554,7 +563,7 @@ module.exports = async function handler(req, res) {
       case 'health':
         if (db) {
           const collections = await db.listCollections().toArray();
-          console.log('📋 Available collections:', collections.map(c => c.name));
+          log('📋 Available collections:', collections.map(c => c.name));
           return res.status(200).json({ 
             status: 'healthy', 
             message: 'BSM Gandhinagar API is running',
@@ -572,11 +581,8 @@ module.exports = async function handler(req, res) {
           });
         }
       case 'env-check':
-        return res.status(200).json({ 
-          mongodb: !!MONGODB_URI,
-          jwt: !!JWT_SECRET,
-          timestamp: new Date().toISOString()
-        });
+        // Removed: this endpoint leaked infrastructure info publicly
+        return res.status(404).json({ error: 'Endpoint not found' });
       default:
         return res.status(404).json({ error: 'Endpoint not found' });
     }
@@ -589,7 +595,7 @@ module.exports = async function handler(req, res) {
 // Members API Handler
 // Members API Handler
 async function handleMembers(req, res, db) {
-  console.log('👥 handleMembers called with:', {
+  log('👥 handleMembers called with:', {
     method: req.method,
     query: req.query,
     hasDb: !!db,
@@ -598,7 +604,7 @@ async function handleMembers(req, res, db) {
 
   // Handle development mode when database is not available
   if (!db || isDevelopmentMode) {
-    console.log('🔄 Redirecting to development mode handler');
+    log('🔄 Redirecting to development mode handler');
     return handleMembersDevelopmentMode(req, res);
   }
 
@@ -607,28 +613,28 @@ async function handleMembers(req, res, db) {
 
     switch (req.method) {
       case 'GET':
-        console.log('🔍 Fetching members from database...');
+        log('🔍 Fetching members from database...');
         const members = await collection.find({}).toArray();
-        console.log(`📊 Found ${members.length} members in database`);
+        log(`📊 Found ${members.length} members in database`);
         if (members.length > 0) {
-          console.log('📋 Sample member:', JSON.stringify(members[0], null, 2));
+          log('📋 Sample member:', JSON.stringify(members[0], null, 2));
         }
         return res.status(200).json(members);
 
       case 'POST':
-        console.log('🆕 Creating new member:', req.body);
+        log('🆕 Creating new member:', req.body);
         const newMember = {
           ...req.body,
           createdAt: new Date(),
           updatedAt: new Date()
         };
         const result = await collection.insertOne(newMember);
-        console.log('✅ Member created successfully:', result.insertedId);
+        log('✅ Member created successfully:', result.insertedId);
         return res.status(201).json({ _id: result.insertedId, ...newMember });
 
       case 'PUT':
         const { id } = req.query;
-        console.log('✏️  Updating member:', { id, data: req.body });
+        log('✏️  Updating member:', { id, data: req.body });
         
         if (!id) {
           return res.status(400).json({ error: 'Member ID is required' });
@@ -641,7 +647,7 @@ async function handleMembers(req, res, db) {
           updatedAt: new Date()
         };
         
-        console.log('🔧 Cleaned update data:', updateData);
+        log('🔧 Cleaned update data:', updateData);
         
         const updateResult = await collection.updateOne(
           { _id: new ObjectId(id) },
@@ -652,12 +658,12 @@ async function handleMembers(req, res, db) {
           return res.status(404).json({ error: 'Member not found' });
         }
         
-        console.log('✅ Member updated successfully');
+        log('✅ Member updated successfully');
         return res.status(200).json({ message: 'Member updated successfully' });
 
       case 'DELETE':
         const { id: deleteId } = req.query;
-        console.log('🗑️ Deleting member:', deleteId);
+        log('🗑️ Deleting member:', deleteId);
         
         if (!deleteId) {
           return res.status(400).json({ error: 'Member ID is required' });
@@ -669,7 +675,7 @@ async function handleMembers(req, res, db) {
           return res.status(404).json({ error: 'Member not found' });
         }
         
-        console.log('✅ Member deleted successfully');
+        log('✅ Member deleted successfully');
         return res.status(200).json({ message: 'Member deleted successfully' });
 
       default:
@@ -686,11 +692,11 @@ async function handleMembers(req, res, db) {
 
 // Development mode handler for members
 function handleMembersDevelopmentMode(req, res) {
-  console.log('👥 Running members in development mode');
+  log('👥 Running members in development mode');
 
   switch (req.method) {
     case 'GET':
-      console.log('🔍 Returning mock members data');
+      log('🔍 Returning mock members data');
       const mockMembers = [
         {
           _id: 'member-1',
@@ -724,20 +730,20 @@ function handleMembersDevelopmentMode(req, res) {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      console.log('🆕 Created mock member:', newMember);
+      log('🆕 Created mock member:', newMember);
       return res.status(201).json(newMember);
 
     case 'PUT':
       const { id: updateId } = req.query;
-      console.log('✏️  Attempting to update member with ID:', updateId);
+      log('✏️  Attempting to update member with ID:', updateId);
       
       if (!updateId) {
-        console.log('❌ No ID provided for update');
+        log('❌ No ID provided for update');
         return res.status(400).json({ error: 'Member ID is required' });
       }
       
-      console.log('✅ Accepting update for any ID in development mode');
-      console.log('📝 Update data:', req.body);
+      log('✅ Accepting update for any ID in development mode');
+      log('📝 Update data:', req.body);
       
       return res.status(200).json({ 
         message: 'Member updated successfully (development mode)',
@@ -747,14 +753,14 @@ function handleMembersDevelopmentMode(req, res) {
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      console.log('🗑️ Attempting to delete member with ID:', deleteId);
+      log('🗑️ Attempting to delete member with ID:', deleteId);
       
       if (!deleteId) {
-        console.log('❌ No ID provided for deletion');
+        log('❌ No ID provided for deletion');
         return res.status(400).json({ error: 'Member ID is required' });
       }
       
-      console.log('✅ Accepting deletion for any ID in development mode');
+      log('✅ Accepting deletion for any ID in development mode');
       
       return res.status(200).json({ 
         message: 'Member deleted successfully (development mode)',
@@ -768,7 +774,7 @@ function handleMembersDevelopmentMode(req, res) {
 
 // Registrations Handler
 async function handleRegistrations(req, res, db) {
-  console.log('📋 handleRegistrations called:', req.query);
+  log('📋 handleRegistrations called:', req.query);
 
   try {
     const { eventId } = req.query;
@@ -782,7 +788,7 @@ async function handleRegistrations(req, res, db) {
 
     // Development mode - return mock data
     if (!db || isDevelopmentMode) {
-      console.log('🔄 Development mode - returning mock registrations');
+      log('🔄 Development mode - returning mock registrations');
       return res.status(200).json([
         {
           _id: '1',
@@ -816,7 +822,7 @@ async function handleRegistrations(req, res, db) {
       .sort({ registeredAt: -1 })
       .toArray();
 
-    console.log(`✅ Found ${registrations.length} registrations for event ${eventId}`);
+    log(`✅ Found ${registrations.length} registrations for event ${eventId}`);
     return res.status(200).json(registrations);
 
   } catch (error) {
@@ -831,7 +837,7 @@ async function handleRegistrations(req, res, db) {
 
 // Event Registration Handler
 async function handleEventRegistration(req, res, db) {
-  console.log('📝 handleEventRegistration called:', req.body);
+  log('📝 handleEventRegistration called:', req.body);
 
   try {
     const { eventId, name, email, phone, numberOfAttendees, recaptchaToken } = req.body;
@@ -854,7 +860,7 @@ async function handleEventRegistration(req, res, db) {
         );
         const recaptchaData = await recaptchaResponse.json();
         
-        console.log('🤖 reCAPTCHA verification:', recaptchaData);
+        log('🤖 reCAPTCHA verification:', recaptchaData);
 
         if (!recaptchaData.success || recaptchaData.score < 0.5) {
           return res.status(400).json({
@@ -902,13 +908,13 @@ async function handleEventRegistration(req, res, db) {
 
     // Development mode - simulate registration
     if (!db || isDevelopmentMode) {
-      console.log('🔄 Development mode - simulating registration');
+      log('🔄 Development mode - simulating registration');
       const registrationId = `BSM/2025/REG${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
       
       // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('✅ Registration simulated:', registrationId);
+      log('✅ Registration simulated:', registrationId);
       return res.status(200).json({
         success: true,
         registrationId,
@@ -985,7 +991,7 @@ async function handleEventRegistration(req, res, db) {
       }
     );
 
-    console.log('✅ Registration successful:', registrationId);
+    log('✅ Registration successful:', registrationId);
 
     // TODO: Send confirmation email via EmailJS (disabled for now)
     // await sendConfirmationEmail(registration, event);
@@ -1013,7 +1019,7 @@ async function handleEventRegistration(req, res, db) {
 
 // Events API Handler
 async function handleEvents(req, res, db) {
-  console.log('🎯 handleEvents called with:', {
+  log('🎯 handleEvents called with:', {
     method: req.method,
     query: req.query,
     hasDb: !!db,
@@ -1029,7 +1035,7 @@ async function handleEvents(req, res, db) {
 
   // Handle development mode when database is not available
   if (!db || isDevelopmentMode) {
-    console.log('🔄 Redirecting to development mode handler');
+    log('🔄 Redirecting to development mode handler');
     return handleEventsDevelopmentMode(req, res);
   }
 
@@ -1038,25 +1044,25 @@ async function handleEvents(req, res, db) {
 
     switch (req.method) {
       case 'GET':
-        console.log('🔍 Fetching events from database...');
+        log('🔍 Fetching events from database...');
         const events = await collection.find({}).sort({ date: -1 }).toArray();
-        console.log(`📊 Found ${events.length} events in database`);
+        log(`📊 Found ${events.length} events in database`);
         return res.status(200).json(events);
 
       case 'POST':
-        console.log('🆕 Creating new event:', req.body);
+        log('🆕 Creating new event:', req.body);
         const newEvent = {
           ...req.body,
           createdAt: new Date(),
           updatedAt: new Date()
         };
         const result = await collection.insertOne(newEvent);
-        console.log('✅ Event created successfully:', result.insertedId);
+        log('✅ Event created successfully:', result.insertedId);
         return res.status(201).json({ _id: result.insertedId, ...newEvent });
 
       case 'PUT':
         const { id } = req.query;
-        console.log('✏️  Updating event:', { id, data: req.body });
+        log('✏️  Updating event:', { id, data: req.body });
         
         if (!id) {
           return res.status(400).json({ error: 'Event ID is required' });
@@ -1069,7 +1075,7 @@ async function handleEvents(req, res, db) {
           updatedAt: new Date()
         };
         
-        console.log('🔧 Cleaned update data:', updateData);
+        log('🔧 Cleaned update data:', updateData);
         
         const updateResult = await collection.updateOne(
           { _id: new ObjectId(id) },
@@ -1080,12 +1086,12 @@ async function handleEvents(req, res, db) {
           return res.status(404).json({ error: 'Event not found' });
         }
         
-        console.log('✅ Event updated successfully');
+        log('✅ Event updated successfully');
         return res.status(200).json({ message: 'Event updated successfully' });
 
       case 'DELETE':
         const { id: deleteId } = req.query;
-        console.log('🗑️ Deleting event:', deleteId);
+        log('🗑️ Deleting event:', deleteId);
         
         if (!deleteId) {
           return res.status(400).json({ error: 'Event ID is required' });
@@ -1097,7 +1103,7 @@ async function handleEvents(req, res, db) {
           return res.status(404).json({ error: 'Event not found' });
         }
         
-        console.log('✅ Event deleted successfully');
+        log('✅ Event deleted successfully');
         return res.status(200).json({ message: 'Event deleted successfully' });
 
       default:
@@ -1114,10 +1120,10 @@ async function handleEvents(req, res, db) {
 
 // Development mode handler for events
 function handleEventsDevelopmentMode(req, res) {
-  console.log('🔧 Running events in development mode');
-  console.log('🔧 Request method:', req.method);
-  console.log('🔧 Request query:', req.query);
-  console.log('🔧 Request body:', req.body);
+  log('🔧 Running events in development mode');
+  log('🔧 Request method:', req.method);
+  log('🔧 Request query:', req.query);
+  log('🔧 Request body:', req.body);
   
   // Mock data for development
   const mockEvents = [
@@ -1159,7 +1165,7 @@ function handleEventsDevelopmentMode(req, res) {
 
   switch (req.method) {
     case 'GET':
-      console.log('📋 Returning mock events:', mockEvents.length);
+      log('📋 Returning mock events:', mockEvents.length);
       return res.status(200).json(mockEvents);
 
     case 'POST':
@@ -1171,22 +1177,22 @@ function handleEventsDevelopmentMode(req, res) {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      console.log('🆕 Created mock event:', newEvent);
+      log('🆕 Created mock event:', newEvent);
       return res.status(201).json(newEvent);
 
     case 'PUT':
       const { id: updateId } = req.query;
-      console.log('✏️  Attempting to update event with ID:', updateId);
+      log('✏️  Attempting to update event with ID:', updateId);
       
       if (!updateId) {
-        console.log('❌ No ID provided for update');
+        log('❌ No ID provided for update');
         return res.status(400).json({ error: 'Event ID is required' });
       }
       
       // In development mode, we'll accept any ID format and just return success
       // This handles both mock IDs and real MongoDB ObjectIds
-      console.log('✅ Accepting update for any ID in development mode');
-      console.log('📝 Update data:', req.body);
+      log('✅ Accepting update for any ID in development mode');
+      log('📝 Update data:', req.body);
       
       const updatedEvent = { 
         _id: updateId,
@@ -1194,25 +1200,25 @@ function handleEventsDevelopmentMode(req, res) {
         ...req.body, 
         updatedAt: new Date() 
       };
-      console.log('✅ Mock event updated successfully');
+      log('✅ Mock event updated successfully');
       return res.status(200).json({ message: 'Event updated successfully' });
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      console.log('🗑️  Attempting to delete event with ID:', deleteId);
+      log('🗑️  Attempting to delete event with ID:', deleteId);
       
       if (!deleteId) {
-        console.log('❌ No ID provided for delete');
+        log('❌ No ID provided for delete');
         return res.status(400).json({ error: 'Event ID is required' });
       }
       
       // In development mode, we'll accept any ID format and just return success
-      console.log('✅ Accepting delete for any ID in development mode');
-      console.log('✅ Mock event deleted successfully');
+      log('✅ Accepting delete for any ID in development mode');
+      log('✅ Mock event deleted successfully');
       return res.status(200).json({ message: 'Event deleted successfully' });
 
     default:
-      console.log('❌ Method not allowed:', req.method);
+      log('❌ Method not allowed:', req.method);
       return res.status(405).json({ error: 'Method not allowed' });
   }
 }
@@ -1261,7 +1267,7 @@ async function handleDonations(req, res, db) {
       
       // Send Slack notification for new donation
       try {
-        console.log('💰 New donation received, sending Slack notification...');
+        log('💰 New donation received, sending Slack notification...');
         sendDonationSlackNotification({
           donationId: result.insertedId,
           name: newDonation.name || 'Anonymous',
@@ -1274,7 +1280,7 @@ async function handleDonations(req, res, db) {
           timestamp: newDonation.createdAt
         }).catch(err => console.error('❌ Donation notification error:', err));
         
-        console.log('✅ Donation notification queued');
+        log('✅ Donation notification queued');
       } catch (notifError) {
         console.error('❌ Failed to queue donation notification:', notifError);
         // Continue with response even if Slack fails
@@ -1290,7 +1296,7 @@ async function handleDonations(req, res, db) {
         return res.status(400).json({ error: 'Donation ID is required' });
       }
       
-      console.log('📝 Updating donation:', updateId);
+      log('📝 Updating donation:', updateId);
       
       let objectId;
       try {
@@ -1301,14 +1307,14 @@ async function handleDonations(req, res, db) {
       }
       
       const updateData = { ...req.body, updatedAt: new Date() };
-      console.log('📝 Update data:', updateData);
+      log('📝 Update data:', updateData);
       
       const updateResult = await collection.updateOne(
         { _id: objectId },
         { $set: updateData }
       );
       
-      console.log('📝 Update result:', { matchedCount: updateResult.matchedCount, modifiedCount: updateResult.modifiedCount });
+      log('📝 Update result:', { matchedCount: updateResult.matchedCount, modifiedCount: updateResult.modifiedCount });
       
       if (updateResult.matchedCount === 0) {
         console.error('❌ Donation not found:', updateId);
@@ -1316,7 +1322,7 @@ async function handleDonations(req, res, db) {
       }
       
       const updatedDonation = await collection.findOne({ _id: objectId });
-      console.log('✅ Donation updated successfully');
+      log('✅ Donation updated successfully');
       return res.status(200).json(updatedDonation);
 
     case 'DELETE':
@@ -1341,7 +1347,7 @@ async function handleDonations(req, res, db) {
 
 // Development mode handler for donations
 function handleDonationsDevelopmentMode(req, res) {
-  console.log('🔧 Running donations in development mode');
+  log('🔧 Running donations in development mode');
   
   // Mock data for development
   const mockDonations = [
@@ -1407,7 +1413,7 @@ function handleDonationsDevelopmentMode(req, res) {
         status: 'pending',
         approved: false
       };
-      console.log('🆕 Created mock donation:', newDonation);
+      log('🆕 Created mock donation:', newDonation);
       return res.status(201).json(newDonation);
 
     case 'PUT':
@@ -1419,7 +1425,7 @@ function handleDonationsDevelopmentMode(req, res) {
       }
       
       const updatedDonation = { ...donation, ...req.body, updatedAt: new Date() };
-      console.log('✏️  Updated mock donation:', updatedDonation);
+      log('✏️  Updated mock donation:', updatedDonation);
       return res.status(200).json(updatedDonation);
 
     case 'DELETE':
@@ -1435,7 +1441,7 @@ function handleDonationsDevelopmentMode(req, res) {
         return res.status(404).json({ error: 'Donation not found' });
       }
       
-      console.log('🗑️ Deleted mock donation:', deleteId);
+      log('🗑️ Deleted mock donation:', deleteId);
       return res.status(200).json({ message: 'Donation deleted successfully' });
 
     default:
@@ -1512,7 +1518,7 @@ async function handleInquiries(req, res, db) {
 
 // Development mode handler for inquiries
 function handleInquiriesDevelopmentMode(req, res) {
-  console.log('🔧 Running inquiries in development mode');
+  log('🔧 Running inquiries in development mode');
   
   // Mock data for development
   const mockInquiries = [
@@ -1544,7 +1550,7 @@ function handleInquiriesDevelopmentMode(req, res) {
 
   switch (req.method) {
     case 'GET':
-      console.log('📋 Returning mock inquiries:', mockInquiries.length);
+      log('📋 Returning mock inquiries:', mockInquiries.length);
       return res.status(200).json(mockInquiries);
 
     case 'POST':
@@ -1556,19 +1562,19 @@ function handleInquiriesDevelopmentMode(req, res) {
         status: 'new',
         priority: req.body.priority || 'medium'
       };
-      console.log('🆕 Created mock inquiry:', newInquiry);
+      log('🆕 Created mock inquiry:', newInquiry);
       return res.status(201).json(newInquiry);
 
     case 'PUT':
       const { id: updateId } = req.query;
-      console.log('✏️  Attempting to update inquiry with ID:', updateId);
+      log('✏️  Attempting to update inquiry with ID:', updateId);
       
       if (!updateId) {
         return res.status(400).json({ error: 'Inquiry ID is required' });
       }
       
-      console.log('✅ Accepting update for any ID in development mode');
-      console.log('📝 Update data:', req.body);
+      log('✅ Accepting update for any ID in development mode');
+      log('📝 Update data:', req.body);
       
       return res.status(200).json({ 
         message: 'Inquiry updated successfully (development mode)',
@@ -1578,13 +1584,13 @@ function handleInquiriesDevelopmentMode(req, res) {
 
     case 'DELETE':
       const { id: deleteId } = req.query;
-      console.log('🗑️ Attempting to delete inquiry with ID:', deleteId);
+      log('🗑️ Attempting to delete inquiry with ID:', deleteId);
       
       if (!deleteId) {
         return res.status(400).json({ error: 'Inquiry ID is required' });
       }
       
-      console.log('✅ Accepting deletion for any ID in development mode');
+      log('✅ Accepting deletion for any ID in development mode');
       
       return res.status(200).json({ 
         message: 'Inquiry deleted successfully (development mode)',
@@ -1598,6 +1604,23 @@ function handleInquiriesDevelopmentMode(req, res) {
 
 // Posts API Handler
 async function handlePosts(req, res, db) {
+  // Dev-mode guard (matches pattern of all other handlers)
+  if (!db || isDevelopmentMode) {
+    return handlePostsDevelopmentMode(req, res);
+  }
+
+  // Require authentication for all mutating operations
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE') {
+    // Skip auth for public actions (like/view are lightweight public interactions)
+    const isPublicAction = req.query.action === 'like' || req.query.action === 'view';
+    if (!isPublicAction) {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!verifyToken(token)) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+    }
+  }
+
   const collection = db.collection('posts');
 
   switch (req.method) {
@@ -1673,11 +1696,53 @@ async function handlePosts(req, res, db) {
   }
 }
 
+// Development mode handler for posts
+function handlePostsDevelopmentMode(req, res) {
+  log('📝 Running posts in development mode');
+  const mockPosts = [
+    {
+      _id: 'post-1',
+      title: 'Welcome to BSM Gandhinagar',
+      content: 'This is a sample post in development mode.',
+      author: 'Admin',
+      category: 'General',
+      tags: ['welcome', 'bsm'],
+      likes: 5,
+      views: 42,
+      status: 'published',
+      createdAt: new Date('2024-08-01'),
+      updatedAt: new Date('2024-08-01')
+    }
+  ];
+
+  switch (req.method) {
+    case 'GET':
+      return res.status(200).json(mockPosts);
+    case 'POST':
+      const newPost = { _id: `post-${Date.now()}`, ...req.body, likes: 0, views: 0, createdAt: new Date(), updatedAt: new Date() };
+      return res.status(201).json(newPost);
+    case 'PUT':
+      return res.status(200).json({ message: 'Post updated successfully (development mode)' });
+    case 'DELETE':
+      return res.status(200).json({ message: 'Post deleted successfully (development mode)' });
+    default:
+      return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
 // Campaigns API Handler
 async function handleCampaigns(req, res, db) {
   // Handle development mode when database is not available
   if (!db || isDevelopmentMode) {
     return handleCampaignsDevelopmentMode(req, res);
+  }
+
+  // Require authentication for all mutating operations
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE') {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!verifyToken(token)) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
   }
 
   const collection = db.collection('campaigns');
@@ -1722,7 +1787,7 @@ async function handleCampaigns(req, res, db) {
 
 // Development mode handler for campaigns
 function handleCampaignsDevelopmentMode(req, res) {
-  console.log('🔧 Running campaigns in development mode');
+  log('🔧 Running campaigns in development mode');
   
   // Mock data for development
   const mockCampaigns = [
@@ -1773,7 +1838,7 @@ function handleCampaignsDevelopmentMode(req, res) {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      console.log('🆕 Created mock campaign:', newCampaign);
+      log('🆕 Created mock campaign:', newCampaign);
       return res.status(201).json(newCampaign);
 
     case 'PUT':
@@ -1785,7 +1850,7 @@ function handleCampaignsDevelopmentMode(req, res) {
       }
       
       const updatedCampaign = { ...campaign, ...req.body, updatedAt: new Date() };
-      console.log('✏️  Updated mock campaign:', updatedCampaign);
+      log('✏️  Updated mock campaign:', updatedCampaign);
       return res.status(200).json({ message: 'Campaign updated successfully' });
 
     case 'DELETE':
@@ -1801,7 +1866,7 @@ function handleCampaignsDevelopmentMode(req, res) {
         return res.status(404).json({ error: 'Campaign not found' });
       }
       
-      console.log('🗑️ Deleted mock campaign:', deleteId);
+      log('🗑️ Deleted mock campaign:', deleteId);
       return res.status(200).json({ message: 'Campaign deleted successfully' });
 
     default:
@@ -1811,7 +1876,7 @@ function handleCampaignsDevelopmentMode(req, res) {
 
 // Auth API Handler (dedicated authentication endpoint)
 async function handleAuth(req, res, db) {
-  console.log('🔐 Auth request:', {
+  log('🔐 Auth request:', {
     method: req.method,
     endpoint: req.query.endpoint,
     action: req.query.action,
@@ -1821,23 +1886,44 @@ async function handleAuth(req, res, db) {
   // Handle admin login
   if (req.method === 'POST') {
     const { username, password } = req.body;
-    
-    console.log('🔑 Login attempt:', { username, hasPassword: !!password });
-    
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+
+    // Rate limiting: max 10 attempts per IP per 15 minutes
+    const ip = getClientIP(req);
+    const now = Date.now();
+    const window = 15 * 60 * 1000; // 15 minutes
+    const entry = loginAttempts.get(ip) || { count: 0, resetAt: now + window };
+    if (now > entry.resetAt) {
+      entry.count = 0;
+      entry.resetAt = now + window;
+    }
+    if (entry.count >= 10) {
+      return res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' });
+    }
+    entry.count++;
+    loginAttempts.set(ip, entry);
+
+    log('🔑 Login attempt:', { username, hasPassword: !!password });
+
+    // Backward-compatible password check: supports plain text or bcrypt hash in env var
+    const isBcryptHash = ADMIN_PASSWORD.startsWith('$2a$') || ADMIN_PASSWORD.startsWith('$2b$');
+    const passwordMatch = isBcryptHash
+      ? bcrypt.compareSync(password, ADMIN_PASSWORD)
+      : password === ADMIN_PASSWORD;
+
+    if (username === ADMIN_USERNAME && passwordMatch) {
       const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
-      console.log('✅ Login successful for:', username);
+      log('✅ Login successful for:', username);
       
       // Send Slack notification (fire & forget - don't block login)
       try {
-        console.log('📤 Attempting to send Slack notification...');
-        console.log('🔍 SLACK_WEBHOOK_URL configured:', SLACK_WEBHOOK_URL ? '✅ YES' : '❌ NO');
+        log('📤 Attempting to send Slack notification...');
+        log('🔍 SLACK_WEBHOOK_URL configured:', SLACK_WEBHOOK_URL ? '✅ YES' : '❌ NO');
         
         const ip = getClientIP(req);
         const userAgent = req.headers['user-agent'] || 'Unknown';
         const deviceInfo = parseUserAgent(userAgent);
         
-        console.log('📊 Login data:', { ip, deviceInfo, userAgent: userAgent.substring(0, 50) });
+        log('📊 Login data:', { ip, deviceInfo, userAgent: userAgent.substring(0, 50) });
         
         sendSlackNotification({
           email: 'admin@bsmgandhinagar.org',
@@ -1848,7 +1934,7 @@ async function handleAuth(req, res, db) {
           timestamp: new Date()
         }).catch(err => console.error('❌ Slack notification error:', err));
         
-        console.log('✅ Slack notification function called');
+        log('✅ Slack notification function called');
         
       } catch (notifError) {
         console.error('❌ Failed to send Slack notification:', notifError);
@@ -1864,7 +1950,7 @@ async function handleAuth(req, res, db) {
         } 
       });
     } else {
-      console.log('❌ Invalid credentials');
+      log('❌ Invalid credentials');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
   }
@@ -1892,7 +1978,7 @@ async function handleAuth(req, res, db) {
 
 // Admin API Handler
 async function handleAdmin(req, res, db) {
-  console.log('🔐 handleAdmin called:', {
+  log('🔐 handleAdmin called:', {
     method: req.method,
     query: req.query,
     body: req.body,
@@ -1903,7 +1989,7 @@ async function handleAdmin(req, res, db) {
   if (req.method === 'POST' && (req.query.action === 'login' || req.body?.action === 'login' || req.url?.includes('/login'))) {
     const { username, password } = req.body;
     
-    console.log('🔑 Credential comparison:', {
+    log('🔑 Credential comparison:', {
       received: { username, password },
       expected: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
       usernameMatch: username === ADMIN_USERNAME,
@@ -1916,18 +2002,18 @@ async function handleAdmin(req, res, db) {
     
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
-      console.log('✅ Admin login successful');
+      log('✅ Admin login successful');
       
       // Send Slack notification (fire & forget - don't block login)
       try {
-        console.log('📡 Attempting to send Slack notification...');
-        console.log('🔍 SLACK_WEBHOOK_URL configured:', SLACK_WEBHOOK_URL ? '✅ YES' : '❌ NO');
+        log('📡 Attempting to send Slack notification...');
+        log('🔍 SLACK_WEBHOOK_URL configured:', SLACK_WEBHOOK_URL ? '✅ YES' : '❌ NO');
         
         const ip = getClientIP(req);
         const userAgent = req.headers['user-agent'] || 'Unknown';
         const deviceInfo = parseUserAgent(userAgent);
         
-        console.log('📊 Login data:', { ip, deviceInfo, userAgent: userAgent.substring(0, 50) });
+        log('📊 Login data:', { ip, deviceInfo, userAgent: userAgent.substring(0, 50) });
         
         sendSlackNotification({
           email: 'admin@bsmgandhinagar.org',
@@ -1938,7 +2024,7 @@ async function handleAdmin(req, res, db) {
           timestamp: new Date()
         }).catch(err => console.error('❌ Slack notification error:', err));
         
-        console.log('✅ Slack notification function called');
+        log('✅ Slack notification function called');
         
       } catch (notifError) {
         console.error('❌ Failed to send Slack notification:', notifError);
@@ -1947,7 +2033,7 @@ async function handleAdmin(req, res, db) {
       
       return res.status(200).json({ token, user: { username, role: 'admin' } });
     } else {
-      console.log('❌ Admin login failed - credential mismatch');
+      log('❌ Admin login failed - credential mismatch');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
   }
@@ -1957,12 +2043,12 @@ async function handleAdmin(req, res, db) {
   
   // For dashboard stats, allow public access temporarily
   if (req.method === 'GET' && type) {
-    console.log(`📊 Public admin stats request for: ${type}`);
+    log(`📊 Public admin stats request for: ${type}`);
     
     switch (type) {
       case 'posts':
         const posts = await db.collection('posts').find({}).toArray();
-        console.log(`📝 Found ${posts.length} posts`);
+        log(`📝 Found ${posts.length} posts`);
         return res.status(200).json(posts);
         
       case 'members':
@@ -2049,13 +2135,13 @@ async function handleAdmin(req, res, db) {
 
   // Verify admin token for other operations (temporarily disabled for testing)
   /*
-  console.log('🔐 Admin request headers:', req.headers);
+  log('🔐 Admin request headers:', req.headers);
   const token = req.headers?.authorization?.replace('Bearer ', '');
-  console.log('🔑 Token extracted:', token ? 'Present' : 'Missing');
+  log('🔑 Token extracted:', token ? 'Present' : 'Missing');
   const decoded = verifyToken(token);
   
   if (!decoded) {
-    console.log('❌ Admin authentication failed');
+    log('❌ Admin authentication failed');
     return res.status(401).json({ error: 'Unauthorized' });
   }
   */
@@ -2234,8 +2320,8 @@ async function handleImageUpload(req, res) {
   }
 
   try {
-    console.log('📊 Upload request received');
-    console.log('📊 Environment:', { 
+    log('📊 Upload request received');
+    log('📊 Environment:', { 
       isVercel: !!process.env.VERCEL,
       hasFormidable: !!formidable,
       nodeEnv: process.env.NODE_ENV 
@@ -2258,7 +2344,7 @@ async function handleImageUpload(req, res) {
 
     // Try formidable first (for local development), but only if not pre-parsed
     if (formidable && !process.env.VERCEL && !req.rawBody) {
-      console.log('📊 Using formidable for local development');
+      log('📊 Using formidable for local development');
       try {
         const form = formidable({
           maxFileSize: 10 * 1024 * 1024, // 10MB limit
@@ -2292,14 +2378,14 @@ async function handleImageUpload(req, res) {
         fs.unlinkSync(file.filepath);
 
       } catch (formidableError) {
-        console.log('⚠️ Formidable failed, falling back to custom parser:', formidableError.message);
+        log('⚠️ Formidable failed, falling back to custom parser:', formidableError.message);
         uploadedFile = null;
       }
     }
 
     // If formidable failed or we're on Vercel, use custom parser
     if (!uploadedFile) {
-      console.log('📊 Using custom multipart parser');
+      log('📊 Using custom multipart parser');
       
       const contentType = req.headers['content-type'] || '';
       
@@ -2320,7 +2406,7 @@ async function handleImageUpload(req, res) {
       if (req.rawBody && Buffer.isBuffer(req.rawBody)) {
         // Our development server provides rawBody for multipart uploads
         rawBody = req.rawBody.toString('binary');
-        console.log('📊 Using rawBody from development server');
+        log('📊 Using rawBody from development server');
       } else if (req.body && typeof req.body === 'string') {
         rawBody = req.body;
       } else if (req.body && Buffer.isBuffer(req.body)) {
@@ -2334,12 +2420,12 @@ async function handleImageUpload(req, res) {
           }
           rawBody = Buffer.concat(chunks).toString('binary');
         } catch (streamError) {
-          console.log('⚠️ Stream reading failed:', streamError.message);
+          log('⚠️ Stream reading failed:', streamError.message);
           return res.status(400).json({ error: 'Could not read request body' });
         }
       }
 
-      console.log('📊 Raw body length:', rawBody.length);
+      log('📊 Raw body length:', rawBody.length);
 
       // Parse multipart form data
       const { fields, files } = parseMultipartFormData(rawBody, boundary);
@@ -2348,7 +2434,7 @@ async function handleImageUpload(req, res) {
       folder = fields.folder || '';
 
       if (!uploadedFile) {
-        console.log('❌ No image file found in:', Object.keys(files));
+        log('❌ No image file found in:', Object.keys(files));
         return res.status(400).json({ error: 'No image file provided' });
       }
 
@@ -2361,7 +2447,7 @@ async function handleImageUpload(req, res) {
     // Build the folder path
     const folderPath = folder && folder.trim() !== '' ? `/bsm-gandhinagar/${folder}/` : '/bsm-gandhinagar/';
 
-    console.log('📊 Uploading to ImageKit:', {
+    log('📊 Uploading to ImageKit:', {
       filename: uploadedFile.filename,
       contentType: uploadedFile.contentType,
       size: uploadedFile.data.length,
@@ -2385,7 +2471,7 @@ async function handleImageUpload(req, res) {
       tags: [folder || 'general', 'bsm-gandhinagar']
     });
 
-    console.log('✅ ImageKit upload result:', {
+    log('✅ ImageKit upload result:', {
       fileId: result.fileId,
       url: result.url,
       name: result.name,
@@ -2413,9 +2499,9 @@ async function handleImageUpload(req, res) {
           },
           tags: ['thumbnail', 'bsm-gandhinagar']
         });
-        console.log('✅ Thumbnail created:', thumbnailResult.url);
+        log('✅ Thumbnail created:', thumbnailResult.url);
       } catch (thumbError) {
-        console.log('⚠️ Thumbnail creation failed:', thumbError.message);
+        log('⚠️ Thumbnail creation failed:', thumbError.message);
         // Continue without thumbnail
       }
     }
@@ -2436,7 +2522,7 @@ async function handleImageUpload(req, res) {
       response.thumbnailId = thumbnailResult.fileId;
     }
 
-    console.log('✅ Upload successful:', response);
+    log('✅ Upload successful:', response);
     return res.status(200).json(response);
 
   } catch (error) {
@@ -2549,7 +2635,7 @@ async function handleImageKitList(req, res) {
   try {
     const { folder = '' } = req.query;
     
-    console.log('📊 Listing ImageKit files for folder:', folder);
+    log('📊 Listing ImageKit files for folder:', folder);
     
     // List files from ImageKit
     const searchOptions = {
@@ -2563,11 +2649,11 @@ async function handleImageKitList(req, res) {
     }
     // If folder is empty, search all images without path restriction
     
-    console.log('📊 Searching ImageKit with options:', searchOptions);
+    log('📊 Searching ImageKit with options:', searchOptions);
     
     const result = await imagekit.listFiles(searchOptions);
 
-    console.log('📊 ImageKit list result:', result.length, 'files found');
+    log('📊 ImageKit list result:', result.length, 'files found');
 
     // Filter out thumbnail files manually and transform the results
     const files = result
@@ -2613,12 +2699,12 @@ async function handleImageKitDelete(req, res) {
       return res.status(400).json({ error: 'File ID is required' });
     }
 
-    console.log('📊 Deleting ImageKit file:', fileId);
+    log('📊 Deleting ImageKit file:', fileId);
     
     // Delete file from ImageKit
     const result = await imagekit.deleteFile(fileId);
     
-    console.log('📊 ImageKit delete result:', result);
+    log('📊 ImageKit delete result:', result);
 
     return res.status(200).json({
       success: true,
@@ -2672,7 +2758,7 @@ async function handleRazorpayCreateOrder(req, res) {
       });
     }
 
-    console.log('💳 Creating Razorpay order:', { amount, currency });
+    log('💳 Creating Razorpay order:', { amount, currency });
 
     // Initialize Razorpay instance
     const razorpay = new Razorpay({
@@ -2693,7 +2779,7 @@ async function handleRazorpayCreateOrder(req, res) {
     // Create order
     const order = await razorpay.orders.create(options);
 
-    console.log('✅ Razorpay order created:', order.id);
+    log('✅ Razorpay order created:', order.id);
 
     return res.status(200).json({
       success: true,
@@ -2737,7 +2823,7 @@ async function handleRazorpayVerifyPayment(req, res, db) {
       });
     }
 
-    console.log('🔐 Verifying Razorpay payment:', razorpay_payment_id);
+    log('🔐 Verifying Razorpay payment:', razorpay_payment_id);
 
     // Verify signature using crypto
     const crypto = require('crypto');
@@ -2754,7 +2840,7 @@ async function handleRazorpayVerifyPayment(req, res, db) {
       });
     }
 
-    console.log('✅ Payment signature verified');
+    log('✅ Payment signature verified');
 
     // Save donation to database if donation data provided
     if (donationData && db) {
@@ -2772,7 +2858,7 @@ async function handleRazorpayVerifyPayment(req, res, db) {
       };
 
       const result = await collection.insertOne(donation);
-      console.log('💾 Donation saved to database:', result.insertedId);
+      log('💾 Donation saved to database:', result.insertedId);
 
       return res.status(200).json({
         success: true,
@@ -2818,16 +2904,16 @@ async function handleRazorpayQRCode(req, res) {
       });
     }
 
-    console.log('📱 Generating UPI payment string for QR:', { amount, orderId });
+    log('📱 Generating UPI payment string for QR:', { amount, orderId });
 
     // BHIM requires strict UPI QR format
     const upiId = process.env.UPI_ID || 'test@razorpay';
     const merchantName = process.env.UPI_MERCHANT_NAME || 'BSM Gandhinagar';
     const transactionNote = orderId || 'Donation';
     
-    console.log('🔑 UPI ID being used:', upiId);
-    console.log('🏪 Merchant Name:', merchantName);
-    console.log('💰 Amount:', amount);
+    log('🔑 UPI ID being used:', upiId);
+    log('🏪 Merchant Name:', merchantName);
+    log('💰 Amount:', amount);
     
     // Validate UPI ID format
     if (!upiId.includes('@')) {
@@ -2845,12 +2931,12 @@ async function handleRazorpayQRCode(req, res) {
     
     const upiUrl = `upi://pay?pa=${upiId}&pn=${cleanMerchantName}&am=${amount}&cu=INR&tn=${cleanNote}`;
     
-    console.log('🔗 Generated UPI URL:', upiUrl);
+    log('🔗 Generated UPI URL:', upiUrl);
     
     // Generate unique ID for this QR code
     const qrCodeId = `upi_qr_${Date.now()}`;
     
-    console.log('✅ UPI payment string generated:', qrCodeId);
+    log('✅ UPI payment string generated:', qrCodeId);
 
     return res.status(200).json({
       success: true,
@@ -2879,7 +2965,7 @@ async function handleRazorpayQRCode(req, res) {
 
 // Email with PDF attachment handler
 async function handleSendEmailWithPDF(req, res) {
-  console.log('📧 Processing email with PDF attachment request');
+  log('📧 Processing email with PDF attachment request');
   
   try {
     const nodemailer = require('nodemailer');
@@ -2894,7 +2980,7 @@ async function handleSendEmailWithPDF(req, res) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    console.log('📧 Email request details:', {
+    log('📧 Email request details:', {
       donorEmail,
       donorName,
       amount,
@@ -2921,7 +3007,7 @@ async function handleSendEmailWithPDF(req, res) {
     let downloadLinkHtml = '';
     let uploadResponse = null;
     try {
-      console.log('📤 Uploading PDF to ImageKit...');
+      log('📤 Uploading PDF to ImageKit...');
       
       uploadResponse = await imagekit.upload({
         file: pdfBuffer,
@@ -2931,7 +3017,7 @@ async function handleSendEmailWithPDF(req, res) {
         tags: ['receipt', 'donation', receiptData.receiptNo]
       });
 
-      console.log('✅ PDF uploaded to ImageKit:', uploadResponse.url);
+      log('✅ PDF uploaded to ImageKit:', uploadResponse.url);
       
       // Create download link HTML
       downloadLinkHtml = `
@@ -2993,10 +3079,10 @@ async function handleSendEmailWithPDF(req, res) {
     };
 
     // Send email
-    console.log('📧 Attempting to send email via SMTP...');
+    log('📧 Attempting to send email via SMTP...');
     const info = await transporter.sendMail(mailOptions);
     
-    console.log('✅ Email with PDF sent successfully:', info.messageId);
+    log('✅ Email with PDF sent successfully:', info.messageId);
     
     return res.status(200).json({ 
       success: true, 
@@ -3019,7 +3105,7 @@ async function handleSendEmailWithPDF(req, res) {
 
 // Upload PDF to ImageKit handler
 async function handleUploadPDFToImageKit(req, res) {
-  console.log('📤 Processing PDF upload to ImageKit request');
+  log('📤 Processing PDF upload to ImageKit request');
   
   try {
     if (req.method !== 'POST') {
@@ -3032,7 +3118,7 @@ async function handleUploadPDFToImageKit(req, res) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    console.log('📤 ImageKit upload details:', {
+    log('📤 ImageKit upload details:', {
       fileName,
       hasBase64: !!pdfBase64,
       receiptNo: receiptData?.receiptNo
@@ -3050,7 +3136,7 @@ async function handleUploadPDFToImageKit(req, res) {
       tags: ['receipt', 'donation', receiptData?.receiptNo || 'unknown']
     });
 
-    console.log('✅ PDF uploaded to ImageKit successfully:', uploadResponse.url);
+    log('✅ PDF uploaded to ImageKit successfully:', uploadResponse.url);
     
     return res.status(200).json({ 
       success: true, 
