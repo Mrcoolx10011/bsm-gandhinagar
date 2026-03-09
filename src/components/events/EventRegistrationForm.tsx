@@ -84,11 +84,18 @@ export const EventRegistrationForm: React.FC<RegistrationFormProps> = ({ event, 
     setErrorMessage('');
 
     try {
-      // Get reCAPTCHA token
-      const recaptchaToken = await (window as any).grecaptcha.execute(
-        import.meta.env.VITE_RECAPTCHA_SITE_KEY,
-        { action: 'event_registration' }
-      );
+      // Get reCAPTCHA token (skip gracefully if not available)
+      let recaptchaToken: string | null = null;
+      try {
+        if ((window as any).grecaptcha && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
+          recaptchaToken = await (window as any).grecaptcha.execute(
+            import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+            { action: 'event_registration' }
+          );
+        }
+      } catch (captchaError) {
+        console.warn('reCAPTCHA skipped:', captchaError);
+      }
 
       const eventId = event.id || event._id;
       const response = await fetch('/api/consolidated?endpoint=events&action=register', {
