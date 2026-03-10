@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Users, Phone, Mail, Upload, X } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Users, Phone, Mail, Upload, X, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { makeAuthenticatedRequest, handleApiError } from '../../utils/auth';
@@ -24,6 +24,7 @@ interface Member {
   address: string;
   membershipType: string;
   status: string;
+  approved?: boolean;
   joinDate: string;
   profileImage?: string;
   createdAt: string;
@@ -35,6 +36,7 @@ export const MembersManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [approvalFilter, setApprovalFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -56,7 +58,7 @@ export const MembersManagement: React.FC = () => {
       setLoading(true);
       console.log('🚀 Fetching members...');
       
-      const response = await makeAuthenticatedRequest('/api/consolidated?endpoint=members');
+      const response = await makeAuthenticatedRequest('/api/consolidated?endpoint=members&all=true');
       
       console.log('📡 Members response status:', response.status);
       
@@ -86,7 +88,11 @@ export const MembersManagement: React.FC = () => {
                          member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.membershipType.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesApproval =
+      approvalFilter === 'all' ||
+      (approvalFilter === 'pending' && member.approved === false) ||
+      (approvalFilter === 'approved' && member.approved !== false);
+    return matchesSearch && matchesStatus && matchesApproval;
   });
 
   const handleAddMember = () => {
@@ -207,6 +213,35 @@ export const MembersManagement: React.FC = () => {
     }
   };
 
+  // Approve or reject a member registration
+  const handleToggleApproval = async (member: Member) => {
+    const memberId = member.id || member._id || '';
+    const newApproved = member.approved === false ? true : false;
+    const newStatus = newApproved ? 'active' : 'pending';
+    try {
+      const response = await makeAuthenticatedRequest(
+        `/api/consolidated?endpoint=members&id=${memberId}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approved: newApproved, status: newStatus }),
+        }
+      );
+      if (response.ok) {
+        setMembers(members.map(m =>
+          (m.id || m._id) === memberId
+            ? { ...m, approved: newApproved, status: newStatus }
+            : m
+        ));
+        toast.success(newApproved ? 'Member approved — now visible on public page' : 'Member rejected');
+      } else {
+        toast.error('Failed to update approval status');
+      }
+    } catch (error) {
+      toast.error('Error updating approval status');
+    }
+  };
+
   // Handle image upload
   const handleImageUpload = async (file: File) => {
     if (!file) return;
@@ -293,7 +328,7 @@ export const MembersManagement: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
@@ -333,11 +368,25 @@ export const MembersManagement: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-orange-200 p-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-orange-400 rounded-lg flex items-center justify-center">
+              <Clock className="w-6 h-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Pending Approval</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {members.filter(m => m.approved === false).length}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -357,6 +406,16 @@ export const MembersManagement: React.FC = () => {
             <option value="all">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
+          </select>
+
+          <select
+            value={approvalFilter}
+            onChange={(e) => setApprovalFilter(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          >
+            <option value="all">All Approvals</option>
+            <option value="pending">Pending Approval</option>
+            <option value="approved">Approved</option>
           </select>
           
           <div className="text-sm text-gray-600 flex items-center">
@@ -382,6 +441,9 @@ export const MembersManagement: React.FC = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Approval
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -447,6 +509,35 @@ export const MembersManagement: React.FC = () => {
                       {member.status}
                     </span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {member.approved === false ? (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+                          <Clock className="w-3 h-3" /> Pending
+                        </span>
+                        <button
+                          onClick={() => handleToggleApproval(member)}
+                          title="Approve member"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" /> Approve
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                          <CheckCircle className="w-3 h-3" /> Approved
+                        </span>
+                        <button
+                          onClick={() => handleToggleApproval(member)}
+                          title="Revoke approval"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
+                        >
+                          <XCircle className="w-3.5 h-3.5" /> Revoke
+                        </button>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
@@ -472,13 +563,16 @@ export const MembersManagement: React.FC = () => {
 
       {/* Member Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold mb-4">
-              {editingMember ? 'Edit Member' : 'Add New Member'}
-            </h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md flex flex-col max-h-[90vh]">
+            <div className="px-6 pt-6 pb-4 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-lg font-semibold">
+                {editingMember ? 'Edit Member' : 'Add New Member'}
+              </h2>
+            </div>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input
@@ -634,8 +728,9 @@ export const MembersManagement: React.FC = () => {
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
+            </div>
+
+              <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0 flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}

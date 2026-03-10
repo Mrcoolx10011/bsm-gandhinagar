@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users, Heart, Award, Target, Eye, Calendar, Sun, TreePine, BookOpen, Globe, Shield, Flower } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { aboutUsContent } from '../data/aboutUsContent';
 
 export const AboutUs: React.FC = () => {
@@ -348,20 +349,24 @@ export const AboutUs: React.FC = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center max-w-2xl mx-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-orange-600 px-10 py-4 rounded-xl font-bold text-lg hover:bg-yellow-50 transition-all duration-300 shadow-xl"
-              >
-                Become a Member
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="border-2 border-yellow-300 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-yellow-300 hover:text-orange-700 transition-all duration-300"
-              >
-                Support Our Cause
-              </motion.button>
+              <Link to="/members#join">
+                <motion.span
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-block bg-white text-orange-600 px-10 py-4 rounded-xl font-bold text-lg hover:bg-yellow-50 transition-all duration-300 shadow-xl cursor-pointer"
+                >
+                  Become a Member
+                </motion.span>
+              </Link>
+              <Link to="/donations">
+                <motion.span
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-block border-2 border-yellow-300 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-yellow-300 hover:text-orange-700 transition-all duration-300 cursor-pointer"
+                >
+                  Support Our Cause
+                </motion.span>
+              </Link>
             </div>
           </motion.div>
         </div>

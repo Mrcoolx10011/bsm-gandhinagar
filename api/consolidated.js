@@ -615,22 +615,28 @@ async function handleMembers(req, res, db) {
     switch (req.method) {
       case 'GET':
         log('🔍 Fetching members from database...');
-        const members = await collection.find({}).toArray();
-        log(`📊 Found ${members.length} members in database`);
-        if (members.length > 0) {
-          log('📋 Sample member:', JSON.stringify(members[0], null, 2));
-        }
+        // Public GET: show approved members + legacy members (no approved field = existed before approval system)
+        // Exclude only explicitly pending new registrations (approved === false)
+        // Admin GET (with ?all=true + valid token) returns everyone
+        const isAdminRequest = req.query.all === 'true' && verifyToken(req.headers.authorization?.replace('Bearer ', ''));
+        const memberQuery = isAdminRequest
+          ? {}
+          : { approved: { $ne: false } };
+        const members = await collection.find(memberQuery).sort({ createdAt: -1 }).toArray();
+        log(`📊 Found ${members.length} members (admin: ${isAdminRequest})`);
         return res.status(200).json(members);
 
       case 'POST':
         log('🆕 Creating new member:', req.body);
         const newMember = {
           ...req.body,
+          status: 'pending',
+          approved: false,
           createdAt: new Date(),
           updatedAt: new Date()
         };
         const result = await collection.insertOne(newMember);
-        log('✅ Member created successfully:', result.insertedId);
+        log('✅ Member registration saved (pending approval):', result.insertedId);
         return res.status(201).json({ _id: result.insertedId, ...newMember });
 
       case 'PUT':
@@ -1309,19 +1315,47 @@ async function handleDonations(req, res, db) {
       
       const updateData = { ...req.body, updatedAt: new Date() };
       log('📝 Update data:', updateData);
-      
+
+      // Fetch existing donation BEFORE updating so we can detect approval change
+      const existingDonation = await collection.findOne({ _id: objectId });
+      if (!existingDonation) {
+        console.error('❌ Donation not found:', updateId);
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+
       const updateResult = await collection.updateOne(
         { _id: objectId },
         { $set: updateData }
       );
       
       log('📝 Update result:', { matchedCount: updateResult.matchedCount, modifiedCount: updateResult.modifiedCount });
-      
-      if (updateResult.matchedCount === 0) {
-        console.error('❌ Donation not found:', updateId);
-        return res.status(404).json({ error: 'Donation not found' });
+
+      // If admin is approving a donation → increment campaign raised + donors
+      if (updateData.approved === true && !existingDonation.approved) {
+        const campaignTitle = existingDonation.campaign;
+        const donationAmount = Number(existingDonation.amount) || 0;
+        if (campaignTitle && donationAmount > 0) {
+          await db.collection('campaigns').updateOne(
+            { title: campaignTitle },
+            { $inc: { raised: donationAmount, donors: 1 }, $set: { updatedAt: new Date() } }
+          );
+          log(`✅ Campaign "${campaignTitle}" raised +${donationAmount}, donors +1`);
+        }
       }
-      
+
+      // If admin is disapproving a previously approved donation → reverse the increment
+      if (updateData.approved === false && existingDonation.approved) {
+        const campaignTitle = existingDonation.campaign;
+        const donationAmount = Number(existingDonation.amount) || 0;
+        if (campaignTitle && donationAmount > 0) {
+          await db.collection('campaigns').updateOne(
+            { title: campaignTitle },
+            { $inc: { raised: -donationAmount, donors: -1 }, $set: { updatedAt: new Date() } }
+          );
+          log(`↩️  Campaign "${campaignTitle}" raised -${donationAmount}, donors -1 (disapproved)`);
+        }
+      }
+
       const updatedDonation = await collection.findOne({ _id: objectId });
       log('✅ Donation updated successfully');
       return res.status(200).json(updatedDonation);

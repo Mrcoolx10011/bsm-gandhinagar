@@ -408,9 +408,9 @@ export const Donations: React.FC = () => {
           message: formData.message,
           razorpay_payment_id: paymentId,
           razorpay_order_id: orderId,
-          transactionId: paymentId, // Add transaction ID for admin display
-          status: 'completed',
-          approved: true,
+          transactionId: paymentId,
+          // status and approved are intentionally omitted — backend defaults to pending/false
+          // campaign raised amount only updates after admin approval
         }),
       });
 
@@ -713,62 +713,86 @@ export const Donations: React.FC = () => {
             </div>
           ) : campaigns.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {campaigns.map((campaign, index) => (
+              {campaigns.map((campaign, index) => {
+                const raised = campaign.raised || 0;
+                const target = campaign.target || 1;
+                const percent = Math.min(Math.round((raised / target) * 100), 100);
+                return (
                 <motion.div
                   key={campaign._id || campaign.id || `campaign-${index}`}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden"
+                  className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col border border-gray-100 hover:shadow-xl transition-shadow duration-300"
                 >
-                  <img
-                    src={campaign.image}
-                    alt={campaign.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {/* Image */}
+                  <div className="relative w-full h-52 bg-gray-100 flex-shrink-0 overflow-hidden">
+                    {campaign.image ? (
+                      <img
+                        src={campaign.image}
+                        alt={campaign.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`${campaign.image ? 'hidden' : ''} absolute inset-0 flex items-center justify-center bg-orange-50`}>
+                      <Heart className="w-16 h-16 text-orange-200" />
+                    </div>
+                    {campaign.category && (
+                      <span className="absolute top-3 left-3 bg-orange-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+                        {campaign.category}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-5 flex flex-col flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 leading-tight line-clamp-2">
                       {campaign.title}
                     </h3>
-                    
-                    <p className="text-gray-600 text-sm mb-4">
+
+                    <p className="text-gray-500 text-sm mb-4 line-clamp-3 leading-relaxed flex-1">
                       {campaign.description}
                     </p>
-                    
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm text-gray-600 mb-2">
-                        <span>Raised: ₹{(campaign.raised || 0).toLocaleString()}</span>
-                        <span>Goal: ₹{(campaign.target || 1).toLocaleString()}</span>
+
+                    {/* Progress */}
+                    <div className="mb-3">
+                      <div className="flex justify-between text-xs font-medium text-gray-500 mb-1">
+                        <span>Raised: <span className="text-orange-600 font-bold">₹{raised.toLocaleString('en-IN')}</span></span>
+                        <span>Goal: <span className="text-gray-700 font-semibold">₹{(campaign.target || 0).toLocaleString('en-IN')}</span></span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                         <div
-                          className="bg-orange-600 h-2 rounded-full"
-                          style={{ width: `${Math.min(((campaign.raised || 0) / (campaign.target || 1)) * 100, 100)}%` }}
-                        ></div>
+                          className="bg-gradient-to-r from-orange-500 to-orange-600 h-2.5 rounded-full transition-all duration-700"
+                          style={{ width: `${percent}%` }}
+                        />
                       </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1" />
-                        {campaign.donors} donors
+
+                    {/* Stats */}
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5 text-orange-400" />
+                        <span>{(campaign.donors || 0).toLocaleString()} donors</span>
                       </div>
-                      <div className="flex items-center">
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                        {Math.round((campaign.raised / campaign.target) * 100)}% funded
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5 text-orange-400" />
+                        <span className="font-semibold text-orange-600">{percent}% funded</span>
                       </div>
                     </div>
-                    
-                    <button 
+
+                    <button
                       onClick={() => handleCampaignDonate(campaign.title)}
-                      className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
+                      className="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors shadow-sm"
                     >
                       Donate to Campaign
                     </button>
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">

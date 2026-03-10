@@ -1,7 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Phone, Mail, User, MessageCircle } from 'lucide-react';
+import { Search, MapPin, Phone, Mail, User, MessageCircle, X, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMemberImageAlt } from '../utils/seo';
+
+interface JoinForm {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  membershipType: string;
+}
 
 interface Member {
   id: string;
@@ -133,21 +141,34 @@ export const Members: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [members, setMembers] = useState<Member[]>(mockMembers);
 
+  // Registration modal state
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinSubmitting, setJoinSubmitting] = useState(false);
+  const [joinSuccess, setJoinSuccess] = useState(false);
+  const [joinError, setJoinError] = useState('');
+  const [joinForm, setJoinForm] = useState<JoinForm>({
+    name: '', email: '', phone: '', location: '', membershipType: 'Community Member',
+  });
+
   // Fetch members from API
   const fetchMembers = async () => {
     try {
       const response = await fetch('/api/consolidated?endpoint=members');
       if (response.ok) {
         const data = await response.json();
-        const transformedMembers = data.map((member: any) => ({
-          id: member.id || member._id,
-          name: member.name,
-          role: member.role || member.membershipType || 'Member',
-          phone: member.phone,
-          email: member.email,
-          location: member.location || member.address || 'Location not specified',
-          image: member.image || member.profileImage,
-        }));
+        // Show legacy members (no approved field) + explicitly approved members
+        // Hide only new registrations explicitly set to approved=false (pending admin review)
+        const transformedMembers = data
+          .filter((member: any) => member.approved !== false)
+          .map((member: any) => ({
+            id: member.id || member._id,
+            name: member.name,
+            role: member.role || member.membershipType || 'Member',
+            phone: member.phone,
+            email: member.email,
+            location: member.location || member.address || 'Location not specified',
+            image: member.image || member.profileImage,
+          }));
         setMembers(transformedMembers);
       } else {
         setMembers(mockMembers);
@@ -161,6 +182,45 @@ export const Members: React.FC = () => {
   useEffect(() => {
     fetchMembers();
   }, []);
+
+  // Open registration modal when URL has #join hash
+  useEffect(() => {
+    if (window.location.hash === '#join') {
+      setShowJoinModal(true);
+    }
+  }, []);
+
+  const handleJoinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setJoinSubmitting(true);
+    setJoinError('');
+    try {
+      const response = await fetch('/api/consolidated?endpoint=members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...joinForm,
+          status: 'pending',
+          joinDate: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error('Submission failed');
+      setJoinSuccess(true);
+      setJoinForm({ name: '', email: '', phone: '', location: '', membershipType: 'Community Member' });
+    } catch {
+      setJoinError('Something went wrong. Please try again or contact us directly.');
+    } finally {
+      setJoinSubmitting(false);
+    }
+  };
+
+  const closeJoinModal = () => {
+    setShowJoinModal(false);
+    setJoinSuccess(false);
+    setJoinError('');
+    // Remove hash from URL without page reload
+    history.replaceState(null, '', window.location.pathname);
+  };
 
   // Get unique locations for filter tags
   const locations = useMemo(() => {
@@ -211,10 +271,21 @@ export const Members: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed"
+            className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8"
           >
             Meet our dedicated team members who work tirelessly to preserve and promote Bihar's rich cultural heritage across India.
           </motion.p>
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowJoinModal(true)}
+            className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            Become a Member
+          </motion.button>
         </div>
       </section>
 
@@ -515,6 +586,141 @@ export const Members: React.FC = () => {
                     Email
                   </a>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== Join / Registration Modal ===== */}
+      <AnimatePresence>
+        {showJoinModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={closeJoinModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 rounded-t-2xl text-white relative">
+                <button
+                  onClick={closeJoinModal}
+                  className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+                <h2 className="text-2xl font-bold mb-1">Become a Member</h2>
+                <p className="text-white/80 text-sm">Join our community and preserve Bihar's heritage</p>
+              </div>
+
+              <div className="p-6">
+                {joinSuccess ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-8"
+                  >
+                    <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Application Submitted!</h3>
+                    <p className="text-gray-600 mb-6">Thank you for joining! Our team will review your application and get in touch with you shortly.</p>
+                    <button
+                      onClick={closeJoinModal}
+                      className="bg-orange-500 text-white px-8 py-3 rounded-xl font-semibold hover:bg-orange-600 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleJoinSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={joinForm.name}
+                        onChange={(e) => setJoinForm(f => ({ ...f, name: e.target.value }))}
+                        placeholder="Enter your full name"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                      <input
+                        type="email"
+                        required
+                        value={joinForm.email}
+                        onChange={(e) => setJoinForm(f => ({ ...f, email: e.target.value }))}
+                        placeholder="your@email.com"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        value={joinForm.phone}
+                        onChange={(e) => setJoinForm(f => ({ ...f, phone: e.target.value }))}
+                        placeholder="+91 98765 43210"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">City / Location *</label>
+                      <input
+                        type="text"
+                        required
+                        value={joinForm.location}
+                        onChange={(e) => setJoinForm(f => ({ ...f, location: e.target.value }))}
+                        placeholder="e.g. Patna, Bihar"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Membership Type</label>
+                      <select
+                        value={joinForm.membershipType}
+                        onChange={(e) => setJoinForm(f => ({ ...f, membershipType: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all bg-white"
+                      >
+                        <option>Community Member</option>
+                        <option>Active Member</option>
+                        <option>Lifetime Member</option>
+                        <option>Volunteer</option>
+                      </select>
+                    </div>
+
+                    {joinError && (
+                      <p className="text-red-500 text-sm bg-red-50 px-4 py-3 rounded-lg">{joinError}</p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={joinSubmitting}
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {joinSubmitting ? (
+                        <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</>
+                      ) : (
+                        'Submit Application'
+                      )}
+                    </button>
+
+                    <p className="text-xs text-gray-400 text-center">Membership is free. By joining, you agree to our community guidelines.</p>
+                  </form>
+                )}
               </div>
             </motion.div>
           </motion.div>
