@@ -189,4 +189,9 @@ process.on('SIGINT', () => {
     console.log('✅ Server closed');
     process.exit(0);
   });
+  // Force-exit after 2s if connections are still open
+  setTimeout(() => {
+    console.log('⚡ Force exit');
+    process.exit(0);
+  }, 2000).unref();
 });

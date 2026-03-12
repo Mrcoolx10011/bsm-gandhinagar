@@ -24,12 +24,15 @@ const log = process.env.NODE_ENV !== 'production' ? console.log : () => {};
 
 const JWT_SECRET = process.env.JWT_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
-    console.warn('⚠️ WARNING: JWT_SECRET env var is not set. Using insecure fallback. Set JWT_SECRET in Vercel environment variables.');
+    throw new Error('FATAL: JWT_SECRET environment variable must be set in production');
   }
   return 'dev-only-insecure-secret-do-not-use-in-production';
 })();
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+if (!process.env.ADMIN_PASSWORD && process.env.NODE_ENV === 'production') {
+  throw new Error('FATAL: ADMIN_PASSWORD environment variable must be set in production');
+}
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'dev-only-change-me';
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 
 // Debug environment variables (no credentials logged)
@@ -459,7 +462,8 @@ module.exports = async function handler(req, res) {
   if ((req.method === 'POST' || req.method === 'PUT') && req.headers['content-type']?.includes('application/json')) {
     try {
       // Check if body is already parsed by development server
-      if (req.body && Object.keys(req.body).length > 0) {
+      // Body is already parsed by dev server (req.body set to {} or a real object)
+      if (req.body !== undefined && req.body !== null) {
         log('📥 Body already parsed by dev server:', req.body);
       } else {
         log('📥 Parsing JSON body manually...');
@@ -540,6 +544,10 @@ module.exports = async function handler(req, res) {
         return await handlePosts(req, res, db);
       case 'campaigns':
         return await handleCampaigns(req, res, db);
+      case 'admin-users':
+        return await handleAdminUsers(req, res, db);
+      case 'backup':
+        return await handleBackup(req, res, db);
       case 'admin':
         log('🎯 Processing endpoint: admin (entering case)');
         log('🔍 Admin handler debug:', { method: req.method, hasBody: !!req.body, bodyKeys: Object.keys(req.body || {}) });
@@ -1909,6 +1917,314 @@ function handleCampaignsDevelopmentMode(req, res) {
   }
 }
 
+// ============================================
+// BACKUP SYSTEM
+// ============================================
+
+const BACKUP_COLLECTIONS = ['members', 'events', 'event_registrations', 'donations', 'campaigns', 'inquiries', 'posts', 'content', 'admin_users'];
+const AUTO_BACKUP_LIMIT = 3;
+const AUTO_BACKUP_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+
+async function createBackup(db, type, label) {
+  const backupLabel = label || (type === 'auto'
+    ? `Auto-backup ${new Date().toISOString().slice(0, 10)}`
+    : type === 'pre-restore'
+      ? `Pre-restore snapshot ${new Date().toISOString().replace('T', ' ').slice(0, 19)}`
+      : `Manual backup ${new Date().toISOString().replace('T', ' ').slice(0, 19)}`);
+
+  const data = {};
+  let sizeBytes = 0;
+  // Fetch all collections in parallel
+  const results = await Promise.all(
+    BACKUP_COLLECTIONS.map(col =>
+      db.collection(col).find({}).toArray().catch(() => [])
+    )
+  );
+  BACKUP_COLLECTIONS.forEach((col, i) => { data[col] = results[i]; });
+  const json = JSON.stringify(data);
+  sizeBytes = Buffer.byteLength(json, 'utf8');
+
+  const doc = { label: backupLabel, type, createdAt: new Date(), sizeBytes, collections: BACKUP_COLLECTIONS, data };
+  const result = await db.collection('backups').insertOne(doc);
+
+  // Prune auto-backups: keep only the 3 most recent
+  if (type === 'auto') {
+    const autoBackups = await db.collection('backups')
+      .find({ type: 'auto' })
+      .sort({ createdAt: -1 })
+      .toArray();
+    if (autoBackups.length > AUTO_BACKUP_LIMIT) {
+      const toDelete = autoBackups.slice(AUTO_BACKUP_LIMIT).map(b => b._id);
+      await db.collection('backups').deleteMany({ _id: { $in: toDelete } });
+    }
+  }
+
+  return result.insertedId;
+}
+
+async function triggerAutoBackupIfDue(db) {
+  if (!db) return;
+  try {
+    const last = await db.collection('backups').findOne({ type: 'auto' }, { sort: { createdAt: -1 } });
+    const isDue = !last || (Date.now() - new Date(last.createdAt).getTime()) > AUTO_BACKUP_INTERVAL_MS;
+    if (isDue) {
+      await createBackup(db, 'auto');
+      log('✅ Auto-backup created');
+    }
+  } catch (e) {
+    console.error('Auto-backup failed:', e.message);
+  }
+}
+
+async function handleBackup(req, res, db) {
+  // All routes require valid admin token
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!verifyToken(token)) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+
+  const { action, id } = req.query;
+
+  // LIST backups (metadata only, no data field)
+  if (req.method === 'GET' && !action) {
+    const backups = await db.collection('backups')
+      .find({}, { projection: { data: 0 } })
+      .sort({ createdAt: -1 })
+      .toArray();
+    return res.status(200).json(backups);
+  }
+
+  // DOWNLOAD full backup JSON
+  if (req.method === 'GET' && action === 'download') {
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const { ObjectId } = require('mongodb');
+    const backup = await db.collection('backups').findOne({ _id: new ObjectId(id) });
+    if (!backup) return res.status(404).json({ error: 'Backup not found' });
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="backup-${backup.label.replace(/[^a-z0-9]/gi, '_')}.json"`);
+    return res.status(200).json({ label: backup.label, createdAt: backup.createdAt, type: backup.type, data: backup.data });
+  }
+
+  // CREATE backup manually
+  if (req.method === 'POST' && action === 'create') {
+    const label = req.body?.label || null;
+    const insertedId = await createBackup(db, 'manual', label);
+    return res.status(201).json({ message: 'Backup created successfully', id: insertedId });
+  }
+
+  // RESTORE backup
+  if (req.method === 'POST' && action === 'restore') {
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const { ObjectId } = require('mongodb');
+    const backup = await db.collection('backups').findOne({ _id: new ObjectId(id) });
+    if (!backup) return res.status(404).json({ error: 'Backup not found' });
+
+    // Save current state as a safety pre-restore snapshot
+    try {
+      await createBackup(db, 'pre-restore');
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to create safety snapshot before restore. Restore aborted.' });
+    }
+
+    // Replace each collection with backup data
+    const errors = [];
+    for (const col of BACKUP_COLLECTIONS) {
+      try {
+        await db.collection(col).deleteMany({});
+        if (backup.data[col]?.length > 0) {
+          // Strip _id so MongoDB can re-insert cleanly, preserving original _ids via insertMany
+          await db.collection(col).insertMany(backup.data[col]);
+        }
+      } catch (e) {
+        errors.push(`${col}: ${e.message}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      return res.status(207).json({ message: 'Restore completed with some errors', errors });
+    }
+    return res.status(200).json({ message: 'Restore completed successfully. A pre-restore snapshot was saved.' });
+  }
+
+  // DELETE a backup
+  if (req.method === 'DELETE' && action === 'delete') {
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const { ObjectId } = require('mongodb');
+    await db.collection('backups').deleteOne({ _id: new ObjectId(id) });
+    return res.status(200).json({ message: 'Backup deleted' });
+  }
+
+  return res.status(400).json({ error: 'Unknown action' });
+}
+
+// ============================================
+// ADMIN USERS — password change with OTP via Slack
+// ============================================
+
+// In-memory OTP store: key = username, value = { otp, expiresAt }
+const pendingOtps = new Map();
+
+async function handleAdminUsers(req, res, db) {
+  // All routes require a valid token
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!verifyToken(token)) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const decoded = verifyToken(token);
+  const { action } = req.query;
+
+  // ── POST ?action=request-otp ──────────────────────────────────────────────
+  if (req.method === 'POST' && action === 'request-otp') {
+    const { currentPassword } = req.body;
+    if (!currentPassword) {
+      return res.status(400).json({ error: 'Current password is required' });
+    }
+
+    // Verify current password (MongoDB user or env-var fallback)
+    let valid = false;
+    if (db) {
+      const mongoUser = await db.collection('admin_users').findOne({ username: decoded.username }).catch(() => null);
+      if (mongoUser) {
+        valid = bcrypt.compareSync(currentPassword, mongoUser.passwordHash);
+      }
+    }
+    if (!valid && decoded.username === ADMIN_USERNAME) {
+      const isBcryptHash = ADMIN_PASSWORD.startsWith('$2a$') || ADMIN_PASSWORD.startsWith('$2b$');
+      valid = isBcryptHash
+        ? bcrypt.compareSync(currentPassword, ADMIN_PASSWORD)
+        : currentPassword === ADMIN_PASSWORD;
+    }
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Generate 6-digit OTP, valid for 10 minutes
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    pendingOtps.set(decoded.username, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+
+    // Send OTP to Slack
+    if (!SLACK_WEBHOOK_URL) {
+      return res.status(503).json({ error: 'Slack is not configured. Cannot send OTP. Set SLACK_WEBHOOK_URL in Vercel env vars.' });
+    }
+    try {
+      const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false });
+      await fetch(SLACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blocks: [
+            { type: 'header', text: { type: 'plain_text', text: '🔑 Admin Password Change OTP', emoji: true } },
+            { type: 'section', text: { type: 'mrkdwn', text: `*Admin \`${decoded.username}\` has requested a password change.*` } },
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*OTP Code:*\n\`${otp}\`` },
+              { type: 'mrkdwn', text: `*Expires:*\n10 minutes (${istTime} IST)` }
+            ]},
+            { type: 'context', elements: [{ type: 'mrkdwn', text: '⚠️ Do NOT share this OTP with anyone. It will be used once.' }] }
+          ]
+        })
+      });
+    } catch (e) {
+      console.error('Slack OTP send failed:', e.message);
+      return res.status(503).json({ error: 'Failed to send OTP to Slack. Try again.' });
+    }
+
+    return res.status(200).json({ message: 'OTP sent to Slack. Enter it below to confirm your password change.' });
+  }
+
+  // ── POST ?action=change-password ─────────────────────────────────────────
+  if (req.method === 'POST' && action === 'change-password') {
+    const { otp, newPassword } = req.body;
+    if (!otp || !newPassword) {
+      return res.status(400).json({ error: 'OTP and new password are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    }
+
+    const pending = pendingOtps.get(decoded.username);
+    if (!pending) {
+      return res.status(400).json({ error: 'No OTP requested. Please request an OTP first.' });
+    }
+    if (Date.now() > pending.expiresAt) {
+      pendingOtps.delete(decoded.username);
+      return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+    if (otp.trim() !== pending.otp) {
+      return res.status(401).json({ error: 'Incorrect OTP.' });
+    }
+
+    // OTP valid — hash new password and save to MongoDB
+    pendingOtps.delete(decoded.username);
+    const passwordHash = bcrypt.hashSync(newPassword, 12);
+
+    if (!db) {
+      return res.status(503).json({ error: 'Database not available. Cannot persist password change.' });
+    }
+    await db.collection('admin_users').updateOne(
+      { username: decoded.username },
+      { $set: { username: decoded.username, passwordHash, updatedAt: new Date() } },
+      { upsert: true }
+    );
+
+    // Notify Slack
+    if (SLACK_WEBHOOK_URL) {
+      const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false });
+      fetch(SLACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blocks: [
+            { type: 'header', text: { type: 'plain_text', text: '✅ Admin Password Changed', emoji: true } },
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*Admin:*\n${decoded.username}` },
+              { type: 'mrkdwn', text: `*Time:*\n${istTime} IST` }
+            ]},
+            { type: 'context', elements: [{ type: 'mrkdwn', text: 'Password was changed successfully and session has been invalidated.' }] }
+          ]
+        })
+      }).catch(() => {});
+    }
+
+    return res.status(200).json({ message: 'Password updated successfully. Please log in again.' });
+  }
+
+  // ── POST ?action=update-profile ───────────────────────────────────────────
+  if (req.method === 'POST' && action === 'update-profile') {
+    const { username: newUsername, email } = req.body || {};
+    if (!newUsername || typeof newUsername !== 'string' || newUsername.trim().length < 2) {
+      return res.status(400).json({ error: 'Username must be at least 2 characters' });
+    }
+    const trimmedUsername = newUsername.trim();
+    const trimmedEmail = (email || '').trim();
+
+    // Persist to MongoDB if available
+    if (db) {
+      await db.collection('admin_users').updateOne(
+        { username: decoded.username },
+        { $set: { username: trimmedUsername, email: trimmedEmail, updatedAt: new Date() } },
+        { upsert: true }
+      ).catch(() => null);
+    }
+
+    // Issue a fresh JWT with updated username + email so refresh restores the new values
+    const newToken = jwt.sign(
+      { username: trimmedUsername, email: trimmedEmail, role: 'admin' },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    return res.status(200).json({
+      token: newToken,
+      user: { id: 'admin', username: trimmedUsername, email: trimmedEmail, role: 'admin' }
+    });
+  }
+
+  return res.status(400).json({ error: 'Unknown action' });
+}
+
 // Auth API Handler (dedicated authentication endpoint)
 async function handleAuth(req, res, db) {
   log('🔐 Auth request:', {
@@ -1939,13 +2255,25 @@ async function handleAuth(req, res, db) {
 
     log('🔑 Login attempt:', { username, hasPassword: !!password });
 
-    // Backward-compatible password check: supports plain text or bcrypt hash in env var
-    const isBcryptHash = ADMIN_PASSWORD.startsWith('$2a$') || ADMIN_PASSWORD.startsWith('$2b$');
-    const passwordMatch = isBcryptHash
-      ? bcrypt.compareSync(password, ADMIN_PASSWORD)
-      : password === ADMIN_PASSWORD;
+    // Check MongoDB admin_users collection first, then fall back to env var
+    let mongoUser = null;
+    if (db) {
+      try {
+        mongoUser = await db.collection('admin_users').findOne({ username });
+      } catch (e) { /* ignore, fall back to env var */ }
+    }
 
-    if (username === ADMIN_USERNAME && passwordMatch) {
+    let passwordMatch = false;
+    if (mongoUser) {
+      passwordMatch = bcrypt.compareSync(password, mongoUser.passwordHash);
+    } else if (username === ADMIN_USERNAME) {
+      const isBcryptHash = ADMIN_PASSWORD.startsWith('$2a$') || ADMIN_PASSWORD.startsWith('$2b$');
+      passwordMatch = isBcryptHash
+        ? bcrypt.compareSync(password, ADMIN_PASSWORD)
+        : password === ADMIN_PASSWORD;
+    }
+
+    if (passwordMatch) {
       const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
       log('✅ Login successful for:', username);
       
@@ -1976,6 +2304,9 @@ async function handleAuth(req, res, db) {
         // Continue with login even if Slack fails
       }
       
+      // Fire-and-forget auto-backup check on login
+      triggerAutoBackupIfDue(db).catch(() => {});
+
       return res.status(200).json({ 
         token, 
         user: { 
@@ -2023,19 +2354,44 @@ async function handleAdmin(req, res, db) {
   // Handle admin login - check for login in the endpoint or body
   if (req.method === 'POST' && (req.query.action === 'login' || req.body?.action === 'login' || req.url?.includes('/login'))) {
     const { username, password } = req.body;
-    
-    log('🔑 Credential comparison:', {
-      received: { username, password },
-      expected: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
-      usernameMatch: username === ADMIN_USERNAME,
-      passwordMatch: password === ADMIN_PASSWORD,
-      envVars: {
-        ADMIN_USERNAME: process.env.ADMIN_USERNAME,
-        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD
-      }
-    });
-    
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+
+    // Rate limiting: max 10 attempts per IP per 15 minutes
+    const ip = getClientIP(req);
+    const now = Date.now();
+    const window = 15 * 60 * 1000;
+    const entry = loginAttempts.get(ip) || { count: 0, resetAt: now + window };
+    if (now > entry.resetAt) {
+      entry.count = 0;
+      entry.resetAt = now + window;
+    }
+    if (entry.count >= 10) {
+      return res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' });
+    }
+    entry.count++;
+    loginAttempts.set(ip, entry);
+
+    log('🔑 Login attempt:', { username, hasPassword: !!password });
+
+    // Check MongoDB admin_users first (stores hashed passwords from Settings),
+    // then fall back to env-var for initial / non-DB logins
+    let mongoUser = null;
+    if (db) {
+      try {
+        mongoUser = await db.collection('admin_users').findOne({ username });
+      } catch (e) { /* ignore, fall back to env var */ }
+    }
+
+    let passwordMatch = false;
+    if (mongoUser) {
+      passwordMatch = bcrypt.compareSync(password, mongoUser.passwordHash);
+    } else if (username === ADMIN_USERNAME) {
+      const isBcryptHash = ADMIN_PASSWORD.startsWith('$2a$') || ADMIN_PASSWORD.startsWith('$2b$');
+      passwordMatch = isBcryptHash
+        ? bcrypt.compareSync(password, ADMIN_PASSWORD)
+        : password === ADMIN_PASSWORD;
+    }
+
+    if (passwordMatch) {
       const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
       log('✅ Admin login successful');
       
@@ -2066,6 +2422,9 @@ async function handleAdmin(req, res, db) {
         // Continue with login even if Slack fails
       }
       
+      // Fire-and-forget auto-backup check on login
+      triggerAutoBackupIfDue(db).catch(() => {});
+
       return res.status(200).json({ token, user: { username, role: 'admin' } });
     } else {
       log('❌ Admin login failed - credential mismatch');
@@ -2073,11 +2432,14 @@ async function handleAdmin(req, res, db) {
     }
   }
 
-  // Check if this is a public admin stats request
+  // Require authentication for all admin data requests
   const { type } = req.query;
-  
-  // For dashboard stats, allow public access temporarily
+
   if (req.method === 'GET' && type) {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!verifyToken(token)) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
     log(`📊 Public admin stats request for: ${type}`);
     
     switch (type) {
